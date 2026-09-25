@@ -10,6 +10,8 @@ x-service-environment: &service-environment
   REDIS_URI: ${REDIS_URI:?REDIS_URI is required}
   PLATFORM_SYSTEM_ID: ${PLATFORM_SYSTEM_ID:?PLATFORM_SYSTEM_ID is required}
   INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL is required}
+  INTERNAL_REQUEST_TIMEOUT_SECONDS: ${INTERNAL_REQUEST_TIMEOUT_SECONDS:?INTERNAL_REQUEST_TIMEOUT_SECONDS is required}
+  INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS: ${INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS:?INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS is required}
 
 x-object-storage-environment: &object-storage-environment
   OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT is required}
@@ -27,12 +29,19 @@ x-app-healthcheck: &app-healthcheck
   start_period: 60s
   retries: 3
 
+x-container-logging: &container-logging
+  driver: json-file
+  options:
+    max-size: ${CONTAINER_LOG_MAX_SIZE:?CONTAINER_LOG_MAX_SIZE is required}
+    max-file: ${CONTAINER_LOG_MAX_FILES:?CONTAINER_LOG_MAX_FILES is required}
+
 services:
   mongodb:
     image: mongo:7.0@sha256:35a5926f71f8b6cb19206bee928c5a85f241a8be99f20c81abe35ae78a73415d
     container_name: veriq_mongodb
     init: true
     restart: always
+    logging: *container-logging
     command:
       - --replSet
       - rs0
@@ -54,6 +63,7 @@ services:
     image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
     container_name: veriq_redis
     restart: always
+    logging: *container-logging
     ports:
       - 6379:6379
     volumes:
@@ -66,6 +76,7 @@ services:
     container_name: veriq_rabbitmq
     init: true
     restart: always
+    logging: *container-logging
     ports:
       - 5672:5672
       - 15672:15672
@@ -89,6 +100,7 @@ services:
     image: traefik:v3.7.6@sha256:21a3d83696379bac6434bb32e1dde0aff0e84ef2abd053ed3db87d3f45e749b2
     container_name: veriq_traefik
     restart: always
+    logging: *container-logging
     command:
       - --api.dashboard=false
       - --providers.docker=true
@@ -112,6 +124,7 @@ services:
     image: fholzer/nginx-brotli@sha256:e0aa855b74b7cdd0bb13a8cb1599e3af9b6210a98fb6234081b551899bfb924c
     container_name: veriq_nginx
     restart: always
+    logging: *container-logging
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
@@ -135,16 +148,19 @@ services:
       dockerfile: ./frontend/Dockerfile
       target: runner
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_NOTIFICATION_ENABLED: "true"
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+        NEXT_PUBLIC_NOTIFICATION_ENABLED: ${NEXT_PUBLIC_NOTIFICATION_ENABLED:?NEXT_PUBLIC_NOTIFICATION_ENABLED is required}
+        NEXT_BUILD_DIST_DIR: ${NEXT_BUILD_DIST_DIR:?NEXT_BUILD_DIST_DIR is required}
     container_name: veriq_frontend
     restart: always
+    logging: *container-logging
     ports:
       - 3000:3000
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_NOTIFICATION_ENABLED: "true"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+      NEXT_PUBLIC_NOTIFICATION_ENABLED: ${NEXT_PUBLIC_NOTIFICATION_ENABLED:?NEXT_PUBLIC_NOTIFICATION_ENABLED is required}
+      NEXT_BUILD_DIST_DIR: ${NEXT_BUILD_DIST_DIR:?NEXT_BUILD_DIST_DIR is required}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -163,6 +179,7 @@ services:
       dockerfile: ./notification/Dockerfile
     container_name: veriq_notification
     restart: always
+    logging: *container-logging
     ports:
       - 8004:8000
     labels:
@@ -172,12 +189,11 @@ services:
     environment:
       <<: *service-environment
       NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:?NOTIFICATION_DB_NAME is required}
+      AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
     depends_on:
       - authentication
       - mongodb
       - redis
-    volumes:
-      - ./backend/logs/notification:/app/logs
     networks:
       - veriq_network
 
@@ -193,6 +209,7 @@ services:
       dockerfile: ./ai/Dockerfile
     container_name: veriq_ai
     restart: always
+    logging: *container-logging
     ports:
       - 8015:8000
       - 38470-38479:38470-38479
@@ -203,23 +220,26 @@ services:
     environment:
       <<: [*service-environment, *object-storage-environment]
       AI_DB_NAME: ${AI_DB_NAME:?AI_DB_NAME is required}
+      AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
+      CONTENT_URL: ${CONTENT_URL:?CONTENT_URL is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
       DOCKER_HOST: ${DOCKER_HOST:?DOCKER_HOST is required}
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       HF_TOKEN: ${HF_TOKEN:?HF_TOKEN is required}
+      HF_HOME: ${HF_HOME:?HF_HOME is required}
       HF_INFERENCE_URL: ${HF_INFERENCE_URL:?HF_INFERENCE_URL is required}
       LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
       PRIMARY_MODEL_URL: ${PRIMARY_MODEL_URL:?PRIMARY_MODEL_URL is required}
       PRIMARY_MODEL_HEALTH_URL: ${PRIMARY_MODEL_HEALTH_URL:?PRIMARY_MODEL_HEALTH_URL is required}
       MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
+      AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:?AI_REQUEST_TIMEOUT_SECONDS is required}
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
       NEO4J_URI: ${NEO4J_URI:?NEO4J_URI is required}
       NEO4J_USER: ${NEO4J_USER:?NEO4J_USER is required}
       NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
-      TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
       AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
       AGENT_ROUTE_CONFIDENCE_THRESHOLD: ${AGENT_ROUTE_CONFIDENCE_THRESHOLD:?AGENT_ROUTE_CONFIDENCE_THRESHOLD is required}
       AGENT_EXECUTION_TIMEOUT_SECONDS: ${AGENT_EXECUTION_TIMEOUT_SECONDS:?AGENT_EXECUTION_TIMEOUT_SECONDS is required}
@@ -238,10 +258,10 @@ services:
       AGENT_ARCHIVE_MAX_FILES: ${AGENT_ARCHIVE_MAX_FILES:?AGENT_ARCHIVE_MAX_FILES is required}
       AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: ${AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES:?AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES is required}
       AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: ${AGENT_ARCHIVE_MAX_COMPRESSION_RATIO:?AGENT_ARCHIVE_MAX_COMPRESSION_RATIO is required}
-      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
-      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
-      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
-      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-Veriq}
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:?LANGSMITH_TRACING is required}
+      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:?LANGSMITH_ENDPOINT is required}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:?LANGSMITH_API_KEY is required}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:?LANGSMITH_PROJECT is required}
     depends_on:
       mongodb:
         condition: service_started
@@ -265,22 +285,25 @@ services:
       dockerfile: ./testing/Dockerfile
     container_name: veriq_testing
     restart: always
+    logging: *container-logging
     ports:
       - 8017:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.testing.rule=PathPrefix(`/kiem-thu`)
+      - traefik.http.routers.testing.rule=PathPrefix(`/kiem-thu`) || PathPrefix(`/noi-bo/kiem-thu`)
       - traefik.http.routers.testing.priority=110
       - traefik.http.services.testing.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
-      TESTING_DB_NAME: ${TESTING_DB_NAME:-testing}
-      AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
-      WORKER_URL: http://worker:8000
-      AI_URL: http://ai:8000
+      TESTING_DB_NAME: ${TESTING_DB_NAME:?TESTING_DB_NAME is required}
+      AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
+      WORKER_URL: ${WORKER_URL:?WORKER_URL is required}
+      AI_URL: ${AI_URL:?AI_URL is required}
       AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:?AI_REQUEST_TIMEOUT_SECONDS is required}
-      CONTENT_URL: http://content:8000
-      CLOUD_URL: http://cloud:8000
+      CONTENT_URL: ${CONTENT_URL:?CONTENT_URL is required}
+      CLOUD_URL: ${CLOUD_URL:?CLOUD_URL is required}
+      MAX_REQUIREMENT_UPLOAD_SIZE_BYTES: ${MAX_REQUIREMENT_UPLOAD_SIZE_BYTES:?MAX_REQUIREMENT_UPLOAD_SIZE_BYTES is required}
+      MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES: ${MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES:?MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES is required}
     depends_on:
       - mongodb
       - ai
@@ -294,6 +317,7 @@ services:
     image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
     container_name: veriq_qdrant
     restart: always
+    logging: *container-logging
     ports:
       - 6333:6333
       - 6334:6334
@@ -306,6 +330,7 @@ services:
     image: neo4j:5.26.12-community
     container_name: veriq_neo4j
     restart: always
+    logging: *container-logging
     environment:
       NEO4J_AUTH: ${NEO4J_USER:?NEO4J_USER is required}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
       NEO4J_server_memory_heap_initial__size: 256m
@@ -332,6 +357,12 @@ services:
     image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
     container_name: veriq_prometheus
     restart: always
+    logging: *container-logging
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:?PROMETHEUS_RETENTION_TIME is required}
+      - --storage.tsdb.retention.size=${PROMETHEUS_RETENTION_SIZE:?PROMETHEUS_RETENTION_SIZE is required}
     ports:
       - 127.0.0.1:9090:9090
     volumes:
@@ -349,6 +380,7 @@ services:
     image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
     container_name: veriq_grafana
     restart: always
+    logging: *container-logging
     ports:
       - 127.0.0.1:3001:3000
     environment:
@@ -379,6 +411,7 @@ services:
       dockerfile: ./authentication/Dockerfile
     container_name: veriq_authentication
     restart: always
+    logging: *container-logging
     ports:
       - 8007:8000
     labels:
@@ -389,21 +422,35 @@ services:
     environment:
       <<: *service-environment
       AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
-      TESTING_DB_NAME: ${TESTING_DB_NAME:?TESTING_DB_NAME is required}
-      WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
-      AI_INTERNAL_URL: http://ai:8000
-      AI_PROVIDER: huggingface
-      AI_PROVIDER_CONFIGURED: "true"
+      AI_INTERNAL_URL: ${AI_INTERNAL_URL:?AI_INTERNAL_URL is required}
+      AUTHENTICATION_INTERNAL_URL: ${AUTHENTICATION_INTERNAL_URL:?AUTHENTICATION_INTERNAL_URL is required}
+      CLOUD_INTERNAL_URL: ${CLOUD_INTERNAL_URL:?CLOUD_INTERNAL_URL is required}
+      CONTENT_INTERNAL_URL: ${CONTENT_INTERNAL_URL:?CONTENT_INTERNAL_URL is required}
+      TESTING_INTERNAL_URL: ${TESTING_INTERNAL_URL:?TESTING_INTERNAL_URL is required}
+      AI_PROVIDER: ${AI_PROVIDER:?AI_PROVIDER is required}
+      AI_PROVIDER_CONFIGURED: ${AI_PROVIDER_CONFIGURED:?AI_PROVIDER_CONFIGURED is required}
       LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-      WORKER_INTERNAL_URL: http://worker:8000
+      MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
+      AGENT_DEFAULT_MAX_OUTPUT_TOKENS: ${AGENT_DEFAULT_MAX_OUTPUT_TOKENS:?AGENT_DEFAULT_MAX_OUTPUT_TOKENS is required}
+      DEFAULT_STORAGE_LIMIT_BYTES: ${DEFAULT_STORAGE_LIMIT_BYTES:?DEFAULT_STORAGE_LIMIT_BYTES is required}
+      MAX_STORAGE_LIMIT_BYTES: ${MAX_STORAGE_LIMIT_BYTES:?MAX_STORAGE_LIMIT_BYTES is required}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
+      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
+      WORKER_INTERNAL_URL: ${WORKER_INTERNAL_URL:?WORKER_INTERNAL_URL is required}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:?ACCESS_TOKEN_EXPIRE_MINUTES is required}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:?REFRESH_TOKEN_EXPIRE_DAYS is required}
+      EMAIL_VERIFICATION_EXPIRE_MINUTES: ${EMAIL_VERIFICATION_EXPIRE_MINUTES:?EMAIL_VERIFICATION_EXPIRE_MINUTES is required}
+      PASSWORD_RESET_EXPIRE_MINUTES: ${PASSWORD_RESET_EXPIRE_MINUTES:?PASSWORD_RESET_EXPIRE_MINUTES is required}
+      PASSWORD_RESET_CODE_DIGITS: ${PASSWORD_RESET_CODE_DIGITS:?PASSWORD_RESET_CODE_DIGITS is required}
+      PASSKEY_CHALLENGE_EXPIRE_SECONDS: ${PASSKEY_CHALLENGE_EXPIRE_SECONDS:?PASSKEY_CHALLENGE_EXPIRE_SECONDS is required}
+      ADMIN_OPERATION_EXPIRE_MINUTES: ${ADMIN_OPERATION_EXPIRE_MINUTES:?ADMIN_OPERATION_EXPIRE_MINUTES is required}
       GOOGLE_AUTH_URL: ${GOOGLE_AUTH_URL:?GOOGLE_AUTH_URL is required}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:?GOOGLE_REDIRECT_URI is required}
       GOOGLE_TOKEN_URL: ${GOOGLE_TOKEN_URL:?GOOGLE_TOKEN_URL is required}
       GOOGLE_USERINFO_URL: ${GOOGLE_USERINFO_URL:?GOOGLE_USERINFO_URL is required}
+      GOOGLE_OAUTH_STATE_EXPIRE_SECONDS: ${GOOGLE_OAUTH_STATE_EXPIRE_SECONDS:?GOOGLE_OAUTH_STATE_EXPIRE_SECONDS is required}
       PASSKEY_ALLOWED_ORIGINS: ${PASSKEY_ALLOWED_ORIGINS:?PASSKEY_ALLOWED_ORIGINS is required}
       PASSKEY_RP_ID: ${PASSKEY_RP_ID:?PASSKEY_RP_ID is required}
       PASSKEY_RP_NAME: ${PASSKEY_RP_NAME:?PASSKEY_RP_NAME is required}
@@ -412,12 +459,11 @@ services:
       SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
       SMTP_PASS: ${SMTP_PASS:?SMTP_PASS is required}
       SMTP_PORT: ${SMTP_PORT:?SMTP_PORT is required}
+      SMTP_TIMEOUT_SECONDS: ${SMTP_TIMEOUT_SECONDS:?SMTP_TIMEOUT_SECONDS is required}
       SMTP_USER: ${SMTP_USER:?SMTP_USER is required}
     depends_on:
       - mongodb
       - redis
-    volumes:
-      - ./backend/logs/authentication:/app/logs
     networks:
       - veriq_network
   content:
@@ -427,6 +473,7 @@ services:
       dockerfile: ./content/Dockerfile
     container_name: veriq_content
     restart: always
+    logging: *container-logging
     ports:
       - 8010:8000
     labels:
@@ -436,6 +483,14 @@ services:
     environment:
       <<: *service-environment
       CONTENT_DB_NAME: ${CONTENT_DB_NAME:?CONTENT_DB_NAME is required}
+      AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
+      AI_URL: ${AI_URL:?AI_URL is required}
+      NOTIFICATION_URL: ${NOTIFICATION_URL:?NOTIFICATION_URL is required}
+      DOCUMENT_PASSWORD_MAX_ATTEMPTS: ${DOCUMENT_PASSWORD_MAX_ATTEMPTS:?DOCUMENT_PASSWORD_MAX_ATTEMPTS is required}
+      DOCUMENT_PASSWORD_RATE_LIMIT_SECONDS: ${DOCUMENT_PASSWORD_RATE_LIMIT_SECONDS:?DOCUMENT_PASSWORD_RATE_LIMIT_SECONDS is required}
+      DOCUMENT_PREVIEW_DEFAULT_PAGES: ${DOCUMENT_PREVIEW_DEFAULT_PAGES:?DOCUMENT_PREVIEW_DEFAULT_PAGES is required}
+      DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE: ${DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE:?DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE is required}
+      DOCUMENT_PREVIEW_BLOCKS_PER_PAGE: ${DOCUMENT_PREVIEW_BLOCKS_PER_PAGE:?DOCUMENT_PREVIEW_BLOCKS_PER_PAGE is required}
       OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT is required}
       OBJECT_STORAGE_PUBLIC_URL: ${OBJECT_STORAGE_PUBLIC_URL:?OBJECT_STORAGE_PUBLIC_URL is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
@@ -444,8 +499,6 @@ services:
       - mongodb
       - redis
       - rabbitmq
-    volumes:
-      - ./backend/logs/content:/app/logs
     networks:
       - veriq_network
 
@@ -456,6 +509,7 @@ services:
       dockerfile: ./cloud/Dockerfile
     container_name: veriq_cloud
     restart: always
+    logging: *container-logging
     ports:
       - 8008:8000
     labels:
@@ -465,15 +519,19 @@ services:
     environment:
       <<: [*service-environment, *object-storage-environment]
       CLOUD_DB_NAME: ${CLOUD_DB_NAME:?CLOUD_DB_NAME is required}
+      AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
       OBJECT_STORAGE_LEGACY_BUCKET: ${OBJECT_STORAGE_LEGACY_BUCKET:?OBJECT_STORAGE_LEGACY_BUCKET is required}
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:?MAX_UPLOAD_SIZE_BYTES is required}
+      DEFAULT_STORAGE_LIMIT_BYTES: ${DEFAULT_STORAGE_LIMIT_BYTES:?DEFAULT_STORAGE_LIMIT_BYTES is required}
+      OBJECT_STORAGE_COMPRESSION_MIN_BYTES: ${OBJECT_STORAGE_COMPRESSION_MIN_BYTES:?OBJECT_STORAGE_COMPRESSION_MIN_BYTES is required}
+      OBJECT_STORAGE_COMPRESSION_QUALITY: ${OBJECT_STORAGE_COMPRESSION_QUALITY:?OBJECT_STORAGE_COMPRESSION_QUALITY is required}
+      OBJECT_STORAGE_COMPRESSION_RATIO_THRESHOLD: ${OBJECT_STORAGE_COMPRESSION_RATIO_THRESHOLD:?OBJECT_STORAGE_COMPRESSION_RATIO_THRESHOLD is required}
+      OBJECT_STORAGE_TEMP_RETENTION_DAYS: ${OBJECT_STORAGE_TEMP_RETENTION_DAYS:?OBJECT_STORAGE_TEMP_RETENTION_DAYS is required}
     depends_on:
       - authentication
       - mongodb
       - redis
-    volumes:
-      - ./backend/logs/cloud:/app/logs
     networks:
       - veriq_network
 
@@ -484,6 +542,7 @@ services:
       dockerfile: ./worker/Dockerfile
     container_name: veriq_worker
     restart: always
+    logging: *container-logging
     ports:
       - 8009:8000
     labels:
@@ -498,7 +557,9 @@ services:
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
       WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
-      TESTING_URL: http://testing:8000
+      WORKER_REQUEST_TIMEOUT_SECONDS: ${WORKER_REQUEST_TIMEOUT_SECONDS:?WORKER_REQUEST_TIMEOUT_SECONDS is required}
+      WORKER_EXECUTION_TIMEOUT_SECONDS: ${WORKER_EXECUTION_TIMEOUT_SECONDS:?WORKER_EXECUTION_TIMEOUT_SECONDS is required}
+      TESTING_URL: ${TESTING_URL:?TESTING_URL is required}
     depends_on:
       mongodb:
         condition: service_started

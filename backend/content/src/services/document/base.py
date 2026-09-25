@@ -23,10 +23,9 @@ def serialize_document(document):
 
 
 def is_admin(current_user) -> bool:
-    role = getattr(current_user, "role", "") if current_user else ""
-    from src.core.dependency import Role
+    from src.core.dependency import SystemRole
 
-    return str(getattr(role, "value", role)).lower() == Role.ADMIN.value
+    return bool(current_user and current_user.system_role == SystemRole.ADMIN)
 
 
 async def can_read_full(document: dict, current_user) -> bool:

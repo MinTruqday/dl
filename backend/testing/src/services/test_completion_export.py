@@ -4,6 +4,11 @@ import json
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from src.services.domain_policy import domain_policy
+
+
+COMPLETION_POLICY = domain_policy("completion")
+
 
 def display(value):
     if value is None:
@@ -86,7 +91,7 @@ def export_pdf(report):
         )
         font_name = "DejaVuSans"
     except (OSError, ValueError):
-        pass
+        font_name = "Helvetica"
     stream = io.BytesIO()
     page = canvas.Canvas(stream, pagesize=A4)
     _, height = A4
@@ -113,5 +118,5 @@ def export_pdf(report):
 def export_completion_report(report, format_name):
     exporters = {"csv": export_csv, "docx": export_docx, "pdf": export_pdf}
     if format_name not in exporters:
-        raise ValueError("COMPLETION_REPORT_EXPORT_FORMAT_UNSUPPORTED")
+        raise ValueError(COMPLETION_POLICY["error_codes"]["export_format_unsupported"])
     return exporters[format_name](report)

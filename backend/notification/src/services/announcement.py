@@ -1,3 +1,5 @@
+import json
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -7,12 +9,12 @@ from pymongo.errors import DuplicateKeyError
 from src.clients.authentication import AuthenticationClient
 from src.core.infrastructure.redis import redis
 from src.repositories.announcement import AnnouncementRepository
-from src.schemas.announcement import AnnouncementCreate
+from src.schemas.announcement import AnnouncementCreate, AnnouncementSettings
 
 
 class AnnouncementService:
     @staticmethod
-    async def get_announcements(user_id: str, skip: int, limit: int, db):
+    async def get_announcements(user_id: str, skip: int, limit: int):
         cursor = (
             AnnouncementRepository.find({"target_user_id": user_id})
             .sort("created_at", -1)
@@ -29,7 +31,7 @@ class AnnouncementService:
         return {"items": docs, "total": total, "unread": unread}
 
     @staticmethod
-    async def mark_as_read(notif_id: str, user_id: str, db):
+    async def mark_as_read(notif_id: str, user_id: str):
         result = await AnnouncementRepository.update_one(
             {"_id": notif_id, "target_user_id": user_id}, {"$set": {"is_read": True}}
         )
@@ -41,14 +43,14 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
-    async def mark_all_as_read(user_id: str, db):
+    async def mark_all_as_read(user_id: str):
         await AnnouncementRepository.update_many(
             {"target_user_id": user_id, "is_read": False}, {"$set": {"is_read": True}}
         )
         return {"success": True}
 
     @staticmethod
-    async def delete_announcement(notif_id: str, user_id: str, db):
+    async def delete_announcement(notif_id: str, user_id: str):
         result = await AnnouncementRepository.delete_one(
             {"_id": notif_id, "target_user_id": user_id}
         )
@@ -59,7 +61,7 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
-    async def create_announcement(data: AnnouncementCreate, db):
+    async def create_announcement(data: AnnouncementCreate):
         if data.idempotency_key:
             existing = await AnnouncementRepository.find_one(
                 {"idempotency_key": data.idempotency_key}
@@ -88,8 +90,6 @@ class AnnouncementService:
             )
             return {"id": str(existing["_id"]), "duplicate": True}
         try:
-            import json
-
             await redis.publish(
                 f"user_announcements:{data.target_user_id}",
                 json.dumps({"title": data.title, "body": data.body}),
@@ -98,5 +98,13 @@ class AnnouncementService:
             logger.exception("Failed to distribute real-time notification")
         return {"id": notif_id}
 
+    @staticmethod
+    async def settings(user_id: str):
+        values = await AnnouncementRepository.get_settings(user_id)
+        return values or AnnouncementSettings().model_dump()
 
-import uuid
+    @staticmethod
+    async def update_settings(user_id: str, settings: AnnouncementSettings):
+        values = settings.model_dump()
+        await AnnouncementRepository.update_settings(user_id, values)
+        return values

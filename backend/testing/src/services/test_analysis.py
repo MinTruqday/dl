@@ -3,111 +3,46 @@ import re
 
 from fastapi import HTTPException
 from pydantic import ValidationError
-from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, next_key, now, page_payload
-from src.core.database import database
 from src.domain.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
 from src.repositories.test_condition import test_condition_repository
+from src.repositories import test_analysis_repository
+from src.services.domain_policy import domain_policy
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
-from src.services.quality_policy import evaluate_rules
+from src.services.test_analysis_basis import (
+    BASIS_COLLECTIONS,
+    deterministic_testability_findings,
+    list_test_basis,
+    resolve_basis,
+)
 
-BASIS_COLLECTIONS = {
-    "REQUIREMENT_VERSION": "requirement_versions",
-    "ACCEPTANCE_CRITERION": "acceptance_criteria",
-    "API_OPERATION": "api_operations",
-    "KNOWLEDGE_SOURCE": "requirement_documents",
-    "BUSINESS_RULE": "business_rules",
-    "RISK_RANKING": "risk_rankings",
-    "DEFECT": "defects",
-    "REGULATION": "requirement_documents",
-}
+TEST_ANALYSIS_POLICY = domain_policy("test_analysis")
+
+__all__ = ["list_test_basis"]
 
 
-def basis_text(value):
-    for field in (
-        "plain_text_projection",
-        "plain_text",
-        "normalized_content",
-        "description",
-        "title",
-        "name",
-    ):
-        if value.get(field):
-            return str(value[field])[:4000]
-    return ""
-
-
-async def resolve_basis(project_id, refs):
-    snapshots = []
-    seen = set()
-    for ref in refs:
-        key = (ref.artifact_type, ref.artifact_id, ref.artifact_version_id)
-        if key in seen:
-            raise HTTPException(status_code=422, detail={"code": "DUPLICATE_TEST_BASIS_REF"})
-        seen.add(key)
-        collection = BASIS_COLLECTIONS[ref.artifact_type]
-        identifier = ref.artifact_version_id or ref.artifact_id
-        query = {"_id": identifier, "project_id": project_id}
-        if ref.artifact_type == "REGULATION":
-            query["source_type"] = "REGULATION"
-        value = await database.value[collection].find_one(query)
-        if not value:
-            global_query = {"_id": identifier}
-            if ref.artifact_type == "REGULATION":
-                global_query["source_type"] = "REGULATION"
-            exists = await database.value[collection].find_one(global_query, {"_id": 1})
-            code = "TEST_BASIS_PROJECT_MISMATCH" if exists else "TEST_BASIS_NOT_FOUND"
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": code,
-                    "artifact_type": ref.artifact_type,
-                    "artifact_id": identifier,
-                },
-            )
-        text = basis_text(value)
-        if ref.artifact_type == "REQUIREMENT_VERSION":
-            criteria = await database.value.acceptance_criteria.find(
-                {"requirement_version_id": identifier, "project_id": project_id}
-            ).to_list(200)
-            parts = [text]
-            parts.extend(
-                str(item.get("plain_text") or "").strip()
-                for item in criteria
-                if str(item.get("plain_text") or "").strip()
-            )
-            parts.extend(
-                str(item).strip() for item in value.get("business_rules", []) if str(item).strip()
-            )
-            text = "\n".join(part for part in parts if part)
-        snapshots.append(
-            {
-                **ref.model_dump(),
-                "resolved_id": identifier,
-                "title": value.get("title")
-                or value.get("name")
-                or value.get("filename")
-                or identifier,
-                "status": value.get("status"),
-                "source_hash": value.get("normalized_content_hash") or value.get("content_hash"),
-                "text": text,
-            }
-        )
-    return snapshots
-
-
-async def get_condition_for_user(condition_id, user, permission="testcondition.read"):
+async def get_condition_for_user(condition_id, user, permission=None):
+    policy = TEST_ANALYSIS_POLICY
     condition = await test_condition_repository.get(condition_id)
     if not condition:
-        raise HTTPException(status_code=404, detail={"code": "TEST_CONDITION_NOT_FOUND"})
-    await get_project(condition["project_id"], user, permission)
+        raise HTTPException(
+            status_code=404,
+            detail={"code": policy["error_codes"]["condition_not_found"]},
+        )
+    await get_project(
+        condition["project_id"],
+        user,
+        permission or policy["permissions"]["condition_read"],
+    )
     return condition
 
 
 async def list_conditions(project_id, user, q, status, risk, testability_status, page, page_size):
-    await get_project(project_id, user, "testcondition.read")
+    await get_project(
+        project_id, user, TEST_ANALYSIS_POLICY["permissions"]["condition_read"]
+    )
     query = {"project_id": project_id}
     if q:
         query["$or"] = [
@@ -127,20 +62,23 @@ async def list_conditions(project_id, user, q, status, risk, testability_status,
 
 
 async def create_condition(project_id, payload, user):
-    await get_project(project_id, user, "testcondition.create")
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["condition_create"])
     basis_snapshots = await resolve_basis(project_id, payload.basis_refs)
     timestamp = now()
     value = {
-        "_id": new_id("TCON"),
+        "_id": new_id(policy["condition_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(),
         "condition_key": payload.condition_key
-        or await next_key(project_id, "test_condition", "TCON"),
+        or await next_key(
+            project_id, policy["condition_counter"], policy["condition_id_prefix"]
+        ),
         "basis_snapshots": basis_snapshots,
-        "status": "DRAFT",
+        "status": policy["draft_status"],
         "reviewed_by": [],
         "approval_history": [],
-        "revision": 1,
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -149,12 +87,13 @@ async def create_condition(project_id, payload, user):
         await test_condition_repository.create(value)
     except DuplicateKeyError as error:
         raise HTTPException(
-            status_code=409, detail={"code": "TEST_CONDITION_KEY_EXISTS"}
+            status_code=409,
+            detail={"code": policy["error_codes"]["condition_key_exists"]},
         ) from error
     await audit(
         user.id,
-        "test_condition_created",
-        "TestCondition",
+        policy["events"]["condition_created"],
+        policy["condition_entity_type"],
         value["_id"],
         project_id,
         {"basis_count": len(basis_snapshots), "origin": value["origin"]},
@@ -163,9 +102,15 @@ async def create_condition(project_id, payload, user):
 
 
 async def update_condition(condition_id, payload, user):
-    condition = await get_condition_for_user(condition_id, user, "testcondition.update")
-    if condition["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "TEST_CONDITION_IMMUTABLE"})
+    policy = TEST_ANALYSIS_POLICY
+    condition = await get_condition_for_user(
+        condition_id, user, policy["permissions"]["condition_update"]
+    )
+    if condition["status"] != policy["draft_status"]:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": policy["error_codes"]["condition_immutable"]},
+        )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if payload.basis_refs is not None:
@@ -175,14 +120,20 @@ async def update_condition(condition_id, payload, user):
     TestConditionCreate.model_validate({**condition, **changes})
     changes["updated_at"] = now()
     updated = await test_condition_repository.update(
-        condition_id, condition["project_id"], payload.expected_revision, {"DRAFT"}, changes
+        condition_id,
+        condition["project_id"],
+        payload.expected_revision,
+        {policy["draft_status"]},
+        changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+        )
     await audit(
         user.id,
-        "test_condition_updated",
-        "TestCondition",
+        policy["events"]["condition_updated"],
+        policy["condition_entity_type"],
         condition_id,
         condition["project_id"],
         {"fields": sorted(field for field in changes if field != "updated_at")},
@@ -191,26 +142,20 @@ async def update_condition(condition_id, payload, user):
 
 
 async def transition_condition(condition_id, payload, user, action):
-    permission = (
-        "testcondition.review"
-        if action == "submit"
-        else "testcondition.approve"
-        if action == "approve"
-        else "testcondition.archive"
+    policy = TEST_ANALYSIS_POLICY
+    transition = policy["condition_transitions"][action]
+    condition = await get_condition_for_user(
+        condition_id, user, transition["permission"]
     )
-    condition = await get_condition_for_user(condition_id, user, permission)
-    transitions = {
-        "submit": ({"DRAFT"}, "IN_REVIEW"),
-        "approve": ({"IN_REVIEW"}, "APPROVED"),
-        "archive": ({"DRAFT", "APPROVED"}, "ARCHIVED"),
-    }
-    sources, target = transitions[action]
+    sources = set(transition["sources"])
+    target = transition["target"]
     if action in {"submit", "approve"}:
         try:
             TestConditionCreate.model_validate(condition)
         except ValidationError as error:
             raise HTTPException(
-                status_code=409, detail={"code": "TEST_CONDITION_INCOMPLETE"}
+                status_code=409,
+                detail={"code": policy["error_codes"]["condition_incomplete"]},
             ) from error
     changes = {"status": target, "updated_at": now()}
     if action == "submit":
@@ -221,10 +166,13 @@ async def transition_condition(condition_id, payload, user, action):
         open_blockers = [
             finding
             for finding in condition.get("analysis_findings", [])
-            if finding.get("status") == "OPEN" and finding.get("severity") in {"CRITICAL", "HIGH"}
+            if finding.get("status") == policy["open_status"]
+            and finding.get("severity") in set(policy["finding_blocking_severities"])
         ]
         if open_blockers:
-            raise HTTPException(status_code=409, detail={"code": "OPEN_TESTABILITY_FINDINGS"})
+            raise HTTPException(
+                status_code=409, detail={"code": policy["error_codes"]["open_findings"]}
+            )
         changes.update(
             {
                 "approved_by": user.id,
@@ -233,7 +181,12 @@ async def transition_condition(condition_id, payload, user, action):
                 "approved_snapshot_hash": condition_hash(condition),
                 "approval_history": [
                     *condition.get("approval_history", []),
-                    {"actor_id": user.id, "action": "APPROVED", "note": payload.note, "at": now()},
+                    {
+                        "actor_id": user.id,
+                        "action": policy["approval_action"],
+                        "note": payload.note,
+                        "at": now(),
+                    },
                 ],
             }
         )
@@ -245,16 +198,14 @@ async def transition_condition(condition_id, payload, user, action):
         condition_id, condition["project_id"], payload.expected_revision, sources, changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "TEST_CONDITION_TRANSITION_CONFLICT"})
-    event = {
-        "submit": "test_condition_submitted",
-        "approve": "test_condition_approved",
-        "archive": "test_condition_archived",
-    }[action]
+        raise HTTPException(
+            status_code=409,
+            detail={"code": policy["error_codes"]["condition_transition_conflict"]},
+        )
     await audit(
         user.id,
-        event,
-        "TestCondition",
+        transition["event"],
+        policy["condition_entity_type"],
         condition_id,
         condition["project_id"],
         {"from": condition["status"], "to": target, "note": payload.note},
@@ -263,10 +214,17 @@ async def transition_condition(condition_id, payload, user, action):
 
 
 async def resolve_finding(condition_id, finding_id, payload, user):
-    condition = await get_condition_for_user(condition_id, user, "testanalysis.resolve_finding")
-    if condition["status"] == "ARCHIVED":
+    policy = TEST_ANALYSIS_POLICY
+    condition = await get_condition_for_user(
+        condition_id, user, policy["permissions"]["resolve_finding"]
+    )
+    if condition["status"] == policy["archived_status"]:
         raise HTTPException(
-            status_code=409, detail={"code": "ARTIFACT_ARCHIVED", "artifact_type": "TEST_CONDITION"}
+            status_code=409,
+            detail={
+                "code": policy["error_codes"]["artifact_archived"],
+                "artifact_type": policy["condition_artifact_type"],
+            },
         )
     found = False
     findings = []
@@ -275,9 +233,10 @@ async def resolve_finding(condition_id, finding_id, payload, user):
             findings.append(finding)
             continue
         found = True
-        if finding.get("status") != "OPEN":
+        if finding.get("status") != policy["open_status"]:
             raise HTTPException(
-                status_code=409, detail={"code": "ANALYSIS_FINDING_ALREADY_RESOLVED"}
+                status_code=409,
+                detail={"code": policy["error_codes"]["finding_already_resolved"]},
             )
         findings.append(
             {
@@ -290,20 +249,24 @@ async def resolve_finding(condition_id, finding_id, payload, user):
             }
         )
     if not found:
-        raise HTTPException(status_code=404, detail={"code": "FINDING_NOT_FOUND"})
+        raise HTTPException(
+            status_code=404, detail={"code": policy["error_codes"]["finding_not_found"]}
+        )
     updated = await test_condition_repository.update(
         condition_id,
         condition["project_id"],
         payload.expected_revision,
-        {"DRAFT", "IN_REVIEW", "APPROVED"},
+        set(policy["condition_mutable_finding_statuses"]),
         {"analysis_findings": findings, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+        )
     await audit(
         user.id,
-        "test_analysis_finding_resolved",
-        "TestCondition",
+        policy["events"]["finding_resolved"],
+        policy["condition_entity_type"],
         condition_id,
         condition["project_id"],
         {
@@ -316,13 +279,17 @@ async def resolve_finding(condition_id, finding_id, payload, user):
 
 
 async def run_ai_analysis(project_id, payload, user):
-    await get_project(project_id, user, "testanalysis.run_ai")
-    existing = await database.value.ai_results.find_one(
-        {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["run_ai"])
+    existing = await test_analysis_repository.find_ai_result(
+        project_id, payload.idempotency_key
     )
     if existing:
-        if existing.get("result_type") != "TEST_CONDITION_CANDIDATES":
-            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+        if existing.get("result_type") != policy["ai_result_type"]:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": policy["error_codes"]["idempotency_reused"]},
+            )
         return existing
     basis_snapshots = await resolve_basis(project_id, payload.basis_refs)
     evidence = [
@@ -330,7 +297,7 @@ async def run_ai_analysis(project_id, payload, user):
             "artifact_type": item["artifact_type"],
             "artifact_id": item["artifact_id"],
             "artifact_version_id": item.get("artifact_version_id") or item["resolved_id"],
-            "authority": "PROJECT_BASELINE",
+            "authority": policy["basis_authority"],
             "text": item["text"],
         }
         for item in basis_snapshots
@@ -350,17 +317,17 @@ async def run_ai_analysis(project_id, payload, user):
     candidates = [
         {
             **item,
-            "candidate_id": f"TCON-CAND-{index}",
-            "status": "CANDIDATE",
+            "candidate_id": f"{policy['candidate_prefix']}{index}",
+            "status": policy["candidate_status"],
             "candidate_only": True,
             "basis_refs": [ref.model_dump() for ref in payload.basis_refs],
         }
         for index, item in enumerate(raw_candidates, 1)
     ]
     value = {
-        "_id": new_id("AIR"),
+        "_id": new_id(policy["ai_result_id_prefix"]),
         "project_id": project_id,
-        "result_type": "TEST_CONDITION_CANDIDATES",
+        "result_type": policy["ai_result_type"],
         "candidates": candidates,
         "basis_snapshots": basis_snapshots,
         "candidate_only": True,
@@ -371,15 +338,15 @@ async def run_ai_analysis(project_id, payload, user):
         "created_at": now(),
     }
     try:
-        await database.value.ai_results.insert_one(value)
+        await test_analysis_repository.insert_ai_result(value)
     except DuplicateKeyError:
-        return await database.value.ai_results.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        return await test_analysis_repository.find_ai_result(
+            project_id, payload.idempotency_key
         )
     await audit(
         user.id,
-        "test_analysis_ai_candidates_generated",
-        "AIResult",
+        policy["events"]["ai_generated"],
+        policy["ai_result_entity_type"],
         value["_id"],
         project_id,
         {"candidate_count": len(candidates), "status": value["status"]},
@@ -388,23 +355,21 @@ async def run_ai_analysis(project_id, payload, user):
 
 
 async def condition_coverage(project_id, user):
-    await get_project(project_id, user, "testcondition.read")
-    conditions = await database.value.test_conditions.find(
-        {"project_id": project_id, "status": {"$ne": "ARCHIVED"}}
-    ).to_list(5000)
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["condition_read"])
+    conditions = await test_analysis_repository.list_conditions(
+        project_id, policy["archived_status"], policy["condition_limit"]
+    )
     condition_ids = [item["_id"] for item in conditions]
-    scenarios = await database.value.test_scenarios.find(
-        {"project_id": project_id, "test_condition_ids": {"$in": condition_ids}}
-    ).to_list(5000)
-    case_versions = await database.value.test_case_versions.find(
-        {
-            "project_id": project_id,
-            "$or": [
-                {"test_condition_ids": {"$in": condition_ids}},
-                {"scenario_id": {"$in": [item["_id"] for item in scenarios]}},
-            ],
-        }
-    ).to_list(10000)
+    scenarios = await test_analysis_repository.list_scenarios(
+        project_id, condition_ids, policy["scenario_limit"]
+    )
+    case_versions = await test_analysis_repository.list_case_versions(
+        project_id,
+        condition_ids,
+        [item["_id"] for item in scenarios],
+        policy["case_version_limit"],
+    )
     rows = []
     for condition in conditions:
         linked_scenarios = [
@@ -436,134 +401,75 @@ async def condition_coverage(project_id, user):
     }
 
 
-async def list_test_basis(project_id, user, artifact_type="", query_text="", limit=200):
-    await get_project(project_id, user, "testanalysis.read")
-    types = [artifact_type] if artifact_type else list(BASIS_COLLECTIONS)
-    items = []
-    for kind in types:
-        collection_name = BASIS_COLLECTIONS.get(kind)
-        if not collection_name:
-            raise HTTPException(status_code=422, detail={"code": "TEST_BASIS_TYPE_INVALID"})
-        query = {"project_id": project_id}
-        if query_text:
-            pattern = {"$regex": re.escape(query_text), "$options": "i"}
-            query["$or"] = [
-                {"title": pattern},
-                {"name": pattern},
-                {"plain_text_projection": pattern},
-            ]
-        values = await database.value[collection_name].find(query).limit(limit).to_list(limit)
-        for value in values:
-            items.append(
-                {
-                    "artifact_type": kind,
-                    "artifact_id": value["_id"],
-                    "artifact_version_id": value["_id"] if kind.endswith("VERSION") else None,
-                    "title": value.get("title")
-                    or value.get("name")
-                    or value.get("filename")
-                    or value["_id"],
-                    "status": value.get("status"),
-                }
-            )
-    return {"items": items[:limit], "total": min(len(items), limit)}
-
-
-def deterministic_testability_findings(basis_snapshots):
-    findings = []
-    for snapshot in basis_snapshots:
-        text = str(snapshot.get("text") or "").strip()
-        evidence = [
-            {
-                "artifact_type": snapshot["artifact_type"],
-                "artifact_id": snapshot["artifact_id"],
-                "artifact_version_id": snapshot.get("artifact_version_id")
-                or snapshot.get("resolved_id"),
-            }
-        ]
-        rules = evaluate_rules("test_basis", {"text": text})
-        for index, rule in enumerate(rules, 1):
-            findings.append(
-                {
-                    "candidate_id": f"DET-{snapshot['resolved_id']}-{index}",
-                    "category": rule["category"],
-                    "severity": rule["severity"],
-                    "title": rule["message"],
-                    "description": rule["message"],
-                    "suggestion": rule["suggestion"],
-                    "evidence_refs": evidence,
-                    "reason_codes": [rule["rule_id"]],
-                    "candidate_only": True,
-                }
-            )
-    return findings
-
-
 async def run_deterministic_analysis(project_id, payload, user):
-    await get_project(project_id, user, "testanalysis.execute")
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["execute"])
     snapshots = await resolve_basis(project_id, payload.basis_refs)
     findings = deterministic_testability_findings(snapshots)
     await audit(
         user.id,
-        "test_analysis_executed",
-        "Project",
+        policy["events"]["analysis_executed"],
+        policy["project_entity_type"],
         project_id,
         project_id,
         {
             "basis_count": len(snapshots),
             "finding_count": len(findings),
-            "engine": "deterministic_rules",
+            "engine": policy["deterministic_engine"],
         },
     )
     return {
-        "status": "SUCCESS",
-        "engine": "deterministic_rules",
+        "status": policy["success_status"],
+        "engine": policy["deterministic_engine"],
         "findings": findings,
         "basis_snapshots": snapshots,
     }
 
 
 async def list_analysis_findings(project_id, user, status="", limit=500):
-    await get_project(project_id, user, "testanalysis.read")
+    await get_project(
+        project_id, user, TEST_ANALYSIS_POLICY["permissions"]["analysis_read"]
+    )
     query = {"project_id": project_id}
     if status:
         query["status"] = status
-    items = (
-        await database.value.test_analysis_findings.find(query)
-        .sort("updated_at", -1)
-        .limit(limit)
-        .to_list(limit)
-    )
+    items = await test_analysis_repository.list_findings(query, limit)
     return {"items": items, "total": len(items)}
 
 
 async def create_analysis_finding(project_id, payload, user):
-    await get_project(project_id, user, "testanalysis.finding.create")
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["finding_create"])
     ref_type = payload.artifact_type.upper()
     collection_name = BASIS_COLLECTIONS.get(ref_type)
     if not collection_name:
-        raise HTTPException(status_code=422, detail={"code": "TEST_BASIS_TYPE_INVALID"})
+        raise HTTPException(
+            status_code=422, detail={"code": policy["error_codes"]["basis_type_invalid"]}
+        )
     identifier = payload.artifact_version_id or payload.artifact_id
-    if not await database.value[collection_name].find_one(
-        {"_id": identifier, "project_id": project_id}, {"_id": 1}
+    if not await test_analysis_repository.find_basis(
+        collection_name, identifier, project_id
     ):
-        raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_REFERENCE"})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["error_codes"]["cross_project_reference"]},
+        )
     timestamp = now()
     value = {
-        "_id": new_id("AFND"),
+        "_id": new_id(policy["finding_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(),
-        "status": "OPEN",
-        "revision": 1,
+        "status": policy["open_status"],
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
-    await database.value.test_analysis_findings.insert_one(value)
+    await test_analysis_repository.insert_finding(value)
     await audit(
         user.id,
-        "analysis_finding_created",
-        "AnalysisFinding",
+        policy["events"]["finding_created"],
+        policy["finding_entity_type"],
         value["_id"],
         project_id,
         {"category": value["category"], "severity": value["severity"]},
@@ -572,33 +478,42 @@ async def create_analysis_finding(project_id, payload, user):
 
 
 async def assign_analysis_finding(finding_id, payload, user):
-    finding = await database.value.test_analysis_findings.find_one({"_id": finding_id})
+    policy = TEST_ANALYSIS_POLICY
+    finding = await test_analysis_repository.find_finding(finding_id)
     if not finding:
-        raise HTTPException(status_code=404, detail={"code": "ANALYSIS_FINDING_NOT_FOUND"})
-    await get_project(finding["project_id"], user, "testanalysis.finding.assign")
-    member = await database.value.project_members.find_one(
-        {"project_id": finding["project_id"], "user_id": payload.owner_id, "status": "ACTIVE"}
+        raise HTTPException(
+            status_code=404,
+            detail={"code": policy["error_codes"]["analysis_finding_not_found"]},
+        )
+    await get_project(finding["project_id"], user, policy["permissions"]["finding_assign"])
+    member = await test_analysis_repository.find_active_member(
+        finding["project_id"], payload.owner_id, policy["active_member_status"]
     )
     if not member:
-        raise HTTPException(status_code=422, detail={"code": "PROJECT_MEMBER_NOT_FOUND"})
-    updated = await database.value.test_analysis_findings.find_one_and_update(
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["error_codes"]["project_member_not_found"]},
+        )
+    updated = await test_analysis_repository.update_finding(
         {
             "_id": finding_id,
             "revision": payload.expected_revision,
-            "status": {"$in": ["OPEN", "IN_PROGRESS"]},
+            "status": {"$in": policy["finding_active_statuses"]},
         },
         {
-            "$set": {"owner_id": payload.owner_id, "status": "IN_PROGRESS", "updated_at": now()},
-            "$inc": {"revision": 1},
+            "owner_id": payload.owner_id,
+            "status": policy["in_progress_status"],
+            "updated_at": now(),
         },
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "STALE_REVISION"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["stale_revision"]}
+        )
     await audit(
         user.id,
-        "analysis_finding_assigned",
-        "AnalysisFinding",
+        policy["events"]["finding_assigned"],
+        policy["finding_entity_type"],
         finding_id,
         finding["project_id"],
         {"owner_id": payload.owner_id},
@@ -607,21 +522,36 @@ async def assign_analysis_finding(finding_id, payload, user):
 
 
 async def transition_analysis_finding(finding_id, payload, user, verify=False):
-    finding = await database.value.test_analysis_findings.find_one({"_id": finding_id})
+    policy = TEST_ANALYSIS_POLICY
+    finding = await test_analysis_repository.find_finding(finding_id)
     if not finding:
-        raise HTTPException(status_code=404, detail={"code": "ANALYSIS_FINDING_NOT_FOUND"})
-    permission = "testanalysis.verify_finding" if verify else "testanalysis.resolve_finding"
+        raise HTTPException(
+            status_code=404,
+            detail={"code": policy["error_codes"]["analysis_finding_not_found"]},
+        )
+    permission = (
+        policy["permissions"]["verify_finding"]
+        if verify
+        else policy["permissions"]["resolve_finding"]
+    )
     await get_project(finding["project_id"], user, permission)
-    if (verify and finding.get("status") != "RESOLVED") or (
-        not verify and finding.get("status") not in {"OPEN", "IN_PROGRESS"}
+    if (verify and finding.get("status") != policy["resolved_status"]) or (
+        not verify and finding.get("status") not in policy["finding_active_statuses"]
     ):
-        if finding.get("status") in {"RESOLVED", "VERIFIED", "ACCEPTED_RISK"}:
+        if finding.get("status") in policy["finding_terminal_statuses"]:
             raise HTTPException(
-                status_code=409, detail={"code": "ANALYSIS_FINDING_ALREADY_RESOLVED"}
+                status_code=409,
+                detail={"code": policy["error_codes"]["finding_already_resolved"]},
             )
-        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
-    source = "RESOLVED" if verify else {"$in": ["OPEN", "IN_PROGRESS"]}
-    target = "VERIFIED" if verify else "RESOLVED"
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["invalid_transition"]}
+        )
+    source = (
+        policy["resolved_status"]
+        if verify
+        else {"$in": policy["finding_active_statuses"]}
+    )
+    target = policy["verified_status"] if verify else policy["resolved_status"]
     changes = {
         "status": target,
         "updated_at": now(),
@@ -630,17 +560,20 @@ async def transition_analysis_finding(finding_id, payload, user, verify=False):
     }
     changes["verified_by" if verify else "resolved_by"] = user.id
     changes["verified_at" if verify else "resolved_at"] = now()
-    updated = await database.value.test_analysis_findings.find_one_and_update(
+    updated = await test_analysis_repository.update_finding(
         {"_id": finding_id, "revision": payload.expected_revision, "status": source},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+        changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["invalid_transition"]}
+        )
     await audit(
         user.id,
-        "analysis_finding_verified" if verify else "analysis_finding_resolved",
-        "AnalysisFinding",
+        policy["events"]["analysis_finding_verified"]
+        if verify
+        else policy["events"]["analysis_finding_resolved"],
+        policy["finding_entity_type"],
         finding_id,
         finding["project_id"],
         {},
@@ -649,12 +582,15 @@ async def transition_analysis_finding(finding_id, payload, user, verify=False):
 
 
 async def review_condition(condition_id, payload, user):
-    condition = await get_condition_for_user(condition_id, user, "testcondition.review")
+    policy = TEST_ANALYSIS_POLICY
+    condition = await get_condition_for_user(
+        condition_id, user, policy["permissions"]["condition_review"]
+    )
     updated = await test_condition_repository.update(
         condition_id,
         condition["project_id"],
         payload.expected_revision,
-        {"IN_REVIEW"},
+        {policy["review_status"]},
         {
             "reviewed_by": list(dict.fromkeys([*condition.get("reviewed_by", []), user.id])),
             "review_note": payload.note,
@@ -662,11 +598,13 @@ async def review_condition(condition_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "STALE_REVISION"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["error_codes"]["stale_revision"]}
+        )
     await audit(
         user.id,
-        "test_condition_reviewed",
-        "TestCondition",
+        policy["events"]["condition_reviewed"],
+        policy["condition_entity_type"],
         condition_id,
         condition["project_id"],
         {"note": payload.note},
@@ -675,29 +613,36 @@ async def review_condition(condition_id, payload, user):
 
 
 async def bulk_prioritize_conditions(project_id, payload, user):
-    await get_project(project_id, user, "testcondition.bulk.update")
+    policy = TEST_ANALYSIS_POLICY
+    await get_project(project_id, user, policy["permissions"]["condition_bulk_update"])
     results = []
     for item in payload.items:
         condition = await test_condition_repository.get(item["condition_id"], project_id)
         if not condition:
-            raise HTTPException(status_code=404, detail={"code": "TEST_CONDITION_NOT_FOUND"})
+            raise HTTPException(
+                status_code=404,
+                detail={"code": policy["error_codes"]["condition_not_found"]},
+            )
         updated = await test_condition_repository.update(
             item["condition_id"],
             project_id,
             int(item["expected_revision"]),
-            {"DRAFT"},
+            {policy["draft_status"]},
             {"priority": item["priority"], "updated_at": now()},
         )
         if not updated:
             raise HTTPException(
                 status_code=409,
-                detail={"code": "STALE_REVISION", "condition_id": item["condition_id"]},
+                detail={
+                    "code": policy["error_codes"]["stale_revision"],
+                    "condition_id": item["condition_id"],
+                },
             )
         results.append(updated)
         await audit(
             user.id,
-            "test_condition_updated",
-            "TestCondition",
+            policy["events"]["condition_updated"],
+            policy["condition_entity_type"],
             item["condition_id"],
             project_id,
             {"fields": ["priority"]},

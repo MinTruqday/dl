@@ -53,10 +53,10 @@ def parse(value):
 
 @tool
 async def get_project_context(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy Project và dashboard trong đúng tenant hiện tại"""
+    """Read a project and dashboard within the current tenant"""
     project = await call("GET", f"/du-an/{project_id}", config)
     dashboard = await call("GET", f"/du-an/{project_id}/tong-quan", config)
     return json.dumps(
@@ -66,11 +66,11 @@ async def get_project_context(
 
 @tool
 async def search_project_knowledge(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
-    query: Annotated[str, Field(min_length=1, description="Truy vấn hiện vật")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
+    query: Annotated[str, Field(min_length=1, description="Artifact search query")],
     config: RunnableConfig = None,
 ) -> str:
-    """Tìm bằng chứng trong phạm vi một dự án kiểm thử"""
+    """Search for evidence within one testing project"""
     return await call(
         "POST",
         f"/du-an/{project_id}/tri-thuc/tim-kiem",
@@ -81,21 +81,21 @@ async def search_project_knowledge(
 
 @tool
 async def get_requirement_version(
-    requirement_id: Annotated[str, Field(description="Mã Requirement")],
+    requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy Requirement cùng phiên bản hiện tại và Acceptance Criteria"""
+    """Read a requirement with its current version and acceptance criteria"""
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
 @tool
 async def compare_requirement_versions(
-    requirement_id: Annotated[str, Field(description="Mã Requirement")],
-    from_version_id: Annotated[str, Field(description="Phiên bản nguồn")],
-    to_version_id: Annotated[str, Field(description="Phiên bản đích")],
+    requirement_id: Annotated[str, Field(description="Requirement identifier")],
+    from_version_id: Annotated[str, Field(description="Source version identifier")],
+    to_version_id: Annotated[str, Field(description="Target version identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """So sánh ngữ nghĩa hai phiên bản của cùng Requirement"""
+    """Compare two versions of the same requirement semantically"""
     return await call(
         "POST",
         f"/yeu-cau/{requirement_id}/so-sanh",
@@ -106,75 +106,75 @@ async def compare_requirement_versions(
 
 @tool
 async def get_acceptance_criteria(
-    requirement_id: Annotated[str, Field(description="Mã Requirement")],
+    requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy Acceptance Criteria có version và authority"""
+    """Read versioned acceptance criteria with authority metadata"""
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
 @tool
 async def get_trace_links(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy ma trận Trace Link gồm trạng thái xác nhận"""
+    """Read the trace link matrix including confirmation status"""
     return await call("GET", f"/du-an/{project_id}/truy-vet", config)
 
 
 @tool
 async def search_test_cases(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
-    query: Annotated[str, Field(description="Từ khóa ca kiểm thử")] = "",
+    project_id: Annotated[str, Field(description="Testing project identifier")],
+    query: Annotated[str, Field(description="Test case search query")] = "",
     config: RunnableConfig = None,
 ) -> str:
-    """Tìm ca kiểm thử trong đúng phạm vi dự án"""
+    """Search for test cases within the project boundary"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu?q={query}", config)
 
 
 @tool
 async def get_test_case_version(
-    test_case_id: Annotated[str, Field(description="Mã Test Case")], config: RunnableConfig = None
+    test_case_id: Annotated[str, Field(description="Test case identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy toàn bộ lịch sử Test Case Version bất biến"""
+    """Read the immutable test case version history"""
     return await call("GET", f"/ca-kiem-thu/{test_case_id}/phien-ban", config)
 
 
 @tool
 async def get_test_results(
-    test_run_id: Annotated[str, Field(description="Mã Test Run")], config: RunnableConfig = None
+    test_run_id: Annotated[str, Field(description="Test run identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy snapshot Test Run kết quả và Defect liên quan"""
+    """Read a test run snapshot with results and related defects"""
     return await call("GET", f"/lan-chay-kiem-thu/{test_run_id}", config)
 
 
 @tool
 async def get_historical_defects(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy lịch sử Defect để làm evidence cho đề xuất kiểm thử"""
+    """Read defect history as evidence for testing proposals"""
     return await call("GET", f"/du-an/{project_id}/loi", config)
 
 
 @tool
 async def find_near_duplicates(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Tìm các Test Case gần trùng và trả bằng chứng cấu trúc"""
+    """Find near duplicate test cases and return structured evidence"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu/trung-lap", config)
 
 
 @tool
 async def create_test_case_draft(
-    project_id: Annotated[str, Field(description="Mã dự án kiểm thử")],
+    project_id: Annotated[str, Field(description="Testing project identifier")],
     draft_json: Annotated[
-        str, Field(description="Bản nháp ca kiểm thử dạng JSON có nội dung Tiptap")
+        str, Field(description="Test case draft JSON containing Tiptap documents")
     ],
     config: RunnableConfig = None,
 ) -> str:
-    """Tạo Test Case Draft để con người rà soát"""
+    """Create a test case draft for human review"""
     payload = parse(draft_json)
     return (
         await call("POST", f"/du-an/{project_id}/ban-nhap-ca-kiem-thu", config, payload)
@@ -186,11 +186,11 @@ async def create_test_case_draft(
 @tool
 async def create_trace_link_suggestion(
     trace_json: Annotated[
-        str, Field(description="TraceLink JSON với evidence confidence và project_id")
+        str, Field(description="Trace link JSON with evidence confidence and project identifier")
     ],
     config: RunnableConfig = None,
 ) -> str:
-    """Tạo Trace Link suggestion không tự xác nhận"""
+    """Create an unconfirmed trace link suggestion"""
     payload = parse(trace_json)
     if payload:
         payload["origin"] = "ai_suggested"
@@ -203,44 +203,44 @@ async def create_trace_link_suggestion(
 
 @tool
 async def create_impact_analysis(
-    change_set_id: Annotated[str, Field(description="Mã Change Set")], config: RunnableConfig = None
+    change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
-    """Chạy impact analysis có evidence trên Change Set"""
+    """Run evidence grounded impact analysis for a change set"""
     return await call("POST", f"/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", config)
 
 
 @tool
 async def create_maintenance_proposal(
-    impact_analysis_id: Annotated[str, Field(description="Mã Impact Analysis")],
+    impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Tạo proposal bảo trì ở trạng thái chờ con người duyệt"""
+    """Create a maintenance proposal pending human review"""
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
 @tool
 async def create_regression_recommendation(
-    change_set_id: Annotated[str, Field(description="Mã Change Set")], config: RunnableConfig = None
+    change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
-    """Tạo khuyến nghị regression dựa trên rủi ro trace và lịch sử lỗi"""
+    """Create a regression recommendation from risk traceability and defect history"""
     return await call("POST", f"/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", config)
 
 
 @tool
 async def confirm_trace_link(
-    trace_link_id: Annotated[str, Field(description="Mã Trace Link")], config: RunnableConfig = None
+    trace_link_id: Annotated[str, Field(description="Trace link identifier")], config: RunnableConfig = None
 ) -> str:
-    """Xác nhận Trace Link sau quyết định rõ ràng của con người"""
+    """Confirm a trace link after an explicit human decision"""
     return await call("POST", f"/lien-ket-truy-vet/{trace_link_id}/xac-nhan", config)
 
 
 @tool
 async def baseline_requirement_version(
-    requirement_version_id: Annotated[str, Field(description="Mã Requirement Version")],
-    expected_revision: Annotated[int, Field(ge=1, description="Revision hiện tại")],
+    requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
+    expected_revision: Annotated[int, Field(ge=1, description="Current revision")],
     config: RunnableConfig = None,
 ) -> str:
-    """Baseline Requirement Version sau phê duyệt rõ ràng của con người"""
+    """Baseline a requirement version after explicit human approval"""
     return await call(
         "POST",
         f"/phien-ban-yeu-cau/{requirement_version_id}/chot-chuan",
@@ -251,12 +251,12 @@ async def baseline_requirement_version(
 
 @tool
 async def approve_test_case_version(
-    test_case_draft_id: Annotated[str, Field(description="Mã Test Case Draft")],
-    expected_revision: Annotated[int, Field(ge=1, description="Revision hiện tại")],
-    change_reason: Annotated[str, Field(description="Lý do phê duyệt")],
+    test_case_draft_id: Annotated[str, Field(description="Test case draft identifier")],
+    expected_revision: Annotated[int, Field(ge=1, description="Current revision")],
+    change_reason: Annotated[str, Field(description="Approval reason")],
     config: RunnableConfig = None,
 ) -> str:
-    """Đóng băng Test Case Draft thành version sau phê duyệt của con người"""
+    """Freeze a test case draft into a version after human approval"""
     return await call(
         "POST",
         f"/ban-nhap-ca-kiem-thu/{test_case_draft_id}/dong-bang",
@@ -267,14 +267,14 @@ async def approve_test_case_version(
 
 @tool
 async def mark_test_case_obsolete(
-    test_case_id: Annotated[str, Field(description="Mã Test Case")],
-    expected_current_version_id: Annotated[str, Field(description="Phiên bản hiện tại")],
+    test_case_id: Annotated[str, Field(description="Test case identifier")],
+    expected_current_version_id: Annotated[str, Field(description="Current version identifier")],
     reason: Annotated[
-        str, Field(min_length=2, description="Lý do obsolete đã được người dùng xác nhận")
+        str, Field(min_length=2, description="User confirmed obsolescence reason")
     ],
     config: RunnableConfig = None,
 ) -> str:
-    """Đánh dấu Test Case obsolete sau quyết định rõ ràng của con người"""
+    """Mark a test case obsolete after an explicit human decision"""
     return await call(
         "POST",
         f"/ca-kiem-thu/{test_case_id}/ngung-hieu-luc",
@@ -285,12 +285,12 @@ async def mark_test_case_obsolete(
 
 @tool
 async def apply_test_case_revision(
-    proposal_id: Annotated[str, Field(description="Mã Maintenance Proposal")],
-    expected_revision: Annotated[int, Field(ge=1, description="Revision của proposal")],
-    patch_json: Annotated[str, Field(description="JSON chỉnh sửa đã được người dùng duyệt")] = "{}",
+    proposal_id: Annotated[str, Field(description="Maintenance proposal identifier")],
+    expected_revision: Annotated[int, Field(ge=1, description="Proposal revision")],
+    patch_json: Annotated[str, Field(description="User approved patch JSON")] = "{}",
     config: RunnableConfig = None,
 ) -> str:
-    """Áp dụng Test Case revision qua proposal đã được con người chấp nhận"""
+    """Apply a test case revision through a human accepted proposal"""
     patch = parse(patch_json)
     return await call(
         "POST",
@@ -299,21 +299,21 @@ async def apply_test_case_revision(
         {
             "expected_revision": expected_revision,
             "patch": patch or {},
-            "review_note": "Đã phê duyệt qua công cụ tác tử kiểm thử",
+            "review_note": "Approved through the testing agent tool",
         },
     )
 
 
 @tool
 async def retrieve_project_evidence(
-    project_id: Annotated[str, Field(description="Mã Project")],
-    query: Annotated[str, Field(min_length=1, description="Truy vấn bằng chứng")],
+    project_id: Annotated[str, Field(description="Project identifier")],
+    query: Annotated[str, Field(min_length=1, description="Evidence query")],
     artifact_types: Annotated[
-        str, Field(description="Danh sách loại artifact phân tách bằng dấu phẩy")
+        str, Field(description="Comma separated artifact type list")
     ] = "",
     config: RunnableConfig = None,
 ) -> str:
-    """Truy xuất bằng chứng knowledge trong đúng Project"""
+    """Retrieve knowledge evidence within the project boundary"""
     types = [value.strip() for value in artifact_types.split(",") if value.strip()]
     return await call(
         "POST",
@@ -325,27 +325,27 @@ async def retrieve_project_evidence(
 
 @tool
 async def get_requirement(
-    requirement_id: Annotated[str, Field(description="Mã Requirement")],
+    requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Lấy Requirement cùng current version"""
+    """Read a requirement with its current version"""
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
 @tool
 async def get_change_facts(
-    change_set_id: Annotated[str, Field(description="Mã Change Set")], config: RunnableConfig = None
+    change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy Change Set và Change Facts đã lưu"""
+    """Read a stored change set and its change facts"""
     return await call("GET", f"/bo-thay-doi/{change_set_id}", config)
 
 
 @tool
 async def lint_requirement(
-    requirement_version_id: Annotated[str, Field(description="Mã Requirement Version")],
+    requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Kiểm tra chất lượng Requirement Version"""
+    """Evaluate requirement version quality"""
     return await call(
         "POST",
         f"/phien-ban-yeu-cau/{requirement_version_id}/ai/kiem-tra",
@@ -359,29 +359,29 @@ async def lint_requirement(
 
 @tool
 async def get_traceability_links(
-    project_id: Annotated[str, Field(description="Mã Project")], config: RunnableConfig = None
+    project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy Traceability Links trong Project"""
+    """Read traceability links within a project"""
     return await call("GET", f"/du-an/{project_id}/truy-vet", config)
 
 
 @tool
 async def search_related_testcases(
-    project_id: Annotated[str, Field(description="Mã Project")],
-    query: Annotated[str, Field(description="Nội dung liên quan")],
+    project_id: Annotated[str, Field(description="Project identifier")],
+    query: Annotated[str, Field(description="Relevant content query")],
     config: RunnableConfig = None,
 ) -> str:
-    """Tìm Test Case liên quan trong Project"""
+    """Find related test cases within a project"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu?q={query}", config)
 
 
 @tool
 async def generate_test_scenarios(
-    requirement_version_id: Annotated[str, Field(description="Mã Requirement Version")],
-    instruction: Annotated[str, Field(description="Chỉ dẫn sinh scenario")] = "",
+    requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
+    instruction: Annotated[str, Field(description="Scenario generation instruction")] = "",
     config: RunnableConfig = None,
 ) -> str:
-    """Sinh Test Scenario Draft từ Requirement Version"""
+    """Generate a test scenario draft from a requirement version"""
     return await call(
         "POST",
         f"/phien-ban-yeu-cau/{requirement_version_id}/ai/sinh-kich-ban",
@@ -392,11 +392,11 @@ async def generate_test_scenarios(
 
 @tool
 async def generate_testcases(
-    requirement_version_id: Annotated[str, Field(description="Mã Requirement Version")],
-    instruction: Annotated[str, Field(description="Chỉ dẫn sinh Test Case")] = "",
+    requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
+    instruction: Annotated[str, Field(description="Test case generation instruction")] = "",
     config: RunnableConfig = None,
 ) -> str:
-    """Sinh Test Case Draft có cấu trúc từ Requirement Version"""
+    """Generate a structured test case draft from a requirement version"""
     return await call(
         "POST",
         f"/phien-ban-yeu-cau/{requirement_version_id}/ai/sinh-ca-kiem-thu",
@@ -407,91 +407,91 @@ async def generate_testcases(
 
 @tool
 async def lint_testcase(
-    test_case_draft_id: Annotated[str, Field(description="Mã Test Case Draft")],
+    test_case_draft_id: Annotated[str, Field(description="Test case draft identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Kiểm tra chất lượng Test Case Draft"""
+    """Evaluate test case draft quality"""
     return await call("POST", f"/ban-nhap-ca-kiem-thu/{test_case_draft_id}/kiem-tra", config)
 
 
 @tool
 async def find_duplicate_testcases(
-    project_id: Annotated[str, Field(description="Mã Project")], config: RunnableConfig = None
+    project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
-    """Tìm Test Case trùng hoặc gần trùng"""
+    """Find duplicate or near duplicate test cases"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu/trung-lap", config)
 
 
 @tool
 async def calculate_coverage(
-    project_id: Annotated[str, Field(description="Mã Project")], config: RunnableConfig = None
+    project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
-    """Tính deterministic coverage cho Project"""
+    """Compute deterministic project coverage"""
     return await call("GET", f"/du-an/{project_id}/do-phu", config)
 
 
 @tool
 async def analyze_change_impact(
-    change_set_id: Annotated[str, Field(description="Mã Change Set")], config: RunnableConfig = None
+    change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
-    """Phân tích ảnh hưởng của Change Set"""
+    """Analyze the impact of a change set"""
     return await call("POST", f"/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", config)
 
 
 @tool
 async def propose_testcase_revision(
-    impact_analysis_id: Annotated[str, Field(description="Mã Impact Analysis")],
+    impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Sinh proposal sửa Test Case chờ duyệt"""
+    """Generate a test case update proposal pending review"""
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
 @tool
 async def propose_new_testcase(
-    impact_analysis_id: Annotated[str, Field(description="Mã Impact Analysis")],
+    impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Sinh proposal tạo Test Case mới chờ duyệt"""
+    """Generate a new test case proposal pending review"""
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
 @tool
 async def propose_obsolete_testcase(
-    impact_analysis_id: Annotated[str, Field(description="Mã Impact Analysis")],
+    impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
 ) -> str:
-    """Sinh proposal obsolete Test Case chờ duyệt"""
+    """Generate a test case obsolescence proposal pending review"""
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
 @tool
 async def suggest_regression_scope(
-    change_set_id: Annotated[str, Field(description="Mã Change Set")], config: RunnableConfig = None
+    change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
-    """Đề xuất phạm vi regression từ Change Set"""
+    """Recommend regression scope from a change set"""
     return await call("POST", f"/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", config)
 
 
 @tool
 async def get_execution_history(
-    project_id: Annotated[str, Field(description="Mã Project")], config: RunnableConfig = None
+    project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy lịch sử Test Run và execution trong Project"""
+    """Read project test run and execution history"""
     return await call("GET", f"/du-an/{project_id}/lan-chay-kiem-thu", config)
 
 
 @tool
 async def get_bug_history(
-    project_id: Annotated[str, Field(description="Mã Project")], config: RunnableConfig = None
+    project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
-    """Lấy lịch sử Defect trong Project"""
+    """Read project defect history"""
     return await call("GET", f"/du-an/{project_id}/loi", config)
 
 
 @tool
 async def link_bug_candidates(
-    defect_id: Annotated[str, Field(description="Mã Defect")], config: RunnableConfig = None
+    defect_id: Annotated[str, Field(description="Defect identifier")], config: RunnableConfig = None
 ) -> str:
-    """Tìm trace candidate cho Defect"""
+    """Find trace candidates for a defect"""
     return await call("GET", f"/loi/{defect_id}/ung-vien-truy-vet", config)

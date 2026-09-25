@@ -4,18 +4,30 @@ from pydantic import BaseModel
 
 
 class Settings(BaseModel):
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "Veriq")
-    VERSION: str = os.getenv("VERSION", "1.0.0")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "development-only-secret")
-    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017")
-    TESTING_DB_NAME: str = os.getenv("TESTING_DB_NAME", "testing")
-    PROJECT_CREATION_POLICY: str = os.getenv("PROJECT_CREATION_POLICY", "AUTHENTICATED")
-    AI_URL: str = os.getenv("AI_URL", "http://ai:8000")
-    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900"))
-    CONTENT_URL: str = os.getenv("CONTENT_URL", "http://content:8000")
-    WORKER_URL: str = os.getenv("WORKER_URL", "http://worker:8000")
-    CLOUD_URL: str = os.getenv("CLOUD_URL", "http://cloud:8000")
+    PROJECT_NAME: str = os.environ["PROJECT_NAME"]
+    VERSION: str = os.environ["VERSION"]
+    SECRET_KEY: str = os.environ["SECRET_KEY"]
+    CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
+    INTERNAL_REQUEST_TIMEOUT_SECONDS: float = float(
+        os.environ["INTERNAL_REQUEST_TIMEOUT_SECONDS"]
+    )
+    INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS: float = float(
+        os.environ["INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS"]
+    )
+    MONGODB_URI: str = os.environ["MONGODB_URI"]
+    TESTING_DB_NAME: str = os.environ["TESTING_DB_NAME"]
+    AUTHENTICATION_URL: str = os.environ["AUTHENTICATION_URL"]
+    AI_URL: str = os.environ["AI_URL"]
+    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.environ["AI_REQUEST_TIMEOUT_SECONDS"])
+    CONTENT_URL: str = os.environ["CONTENT_URL"]
+    WORKER_URL: str = os.environ["WORKER_URL"]
+    CLOUD_URL: str = os.environ["CLOUD_URL"]
+    MAX_REQUIREMENT_UPLOAD_SIZE_BYTES: int = int(
+        os.environ["MAX_REQUIREMENT_UPLOAD_SIZE_BYTES"]
+    )
+    MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES: int = int(
+        os.environ["MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES"]
+    )
 
 
 settings = Settings()

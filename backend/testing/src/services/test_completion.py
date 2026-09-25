@@ -1,280 +1,76 @@
-import json
-
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.core.database import database
 from src.domain.test_completion import completion_hash, completion_snapshot
 from src.repositories.test_completion import (
-    find_completion,
-    list_completions,
+    find_active_member,
+    find_completion_by_idempotency_key,
+    find_monitoring_snapshot,
+    find_test_plan,
+    insert_completion,
+    maintenance_summary,
     next_completion_sequence,
     update_completion,
 )
-from src.services.design_assistance import ai_contract_metadata, request_design_assistance
-from src.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
+from src.services.exit_criteria import quality_gate_status
+from src.services.domain_policy import domain_policy
+from src.services.test_completion_assistance import completion_ai_result
+from src.services.test_completion_policy import (
+    default_completion_recommendation,
+    reevaluate_completion_exit_criteria,
+    validate_completion_readiness,
+)
+from src.services.test_completion_query import (
+    get_completion_for_user,
+    list_completion_reports,
+    validate_people,
+)
+from src.services.test_completion_sources import completion_sources, handover_records
+from src.services.test_completion_updates import (
+    add_completion_lesson,
+    add_completion_residual_risk,
+    manage_completion_handover,
+)
 
-OPEN_DEFECT_STATUSES = {"NEW", "CONFIRMED", "IN_PROGRESS", "READY_FOR_RETEST", "REOPENED"}
+COMPLETION_POLICY = domain_policy("completion")
+OPEN_DEFECT_STATUSES = set(COMPLETION_POLICY["open_defect_statuses"])
 
-
-async def validate_people(project_id, user_ids):
-    values = {value for value in user_ids if value}
-    if not values:
-        return
-    count = await database.value.project_members.count_documents(
-        {"project_id": project_id, "user_id": {"$in": sorted(values)}, "status": "ACTIVE"}
-    )
-    if count != len(values):
-        raise HTTPException(status_code=422, detail={"code": "COMPLETION_OWNER_INVALID"})
-
-
-def default_completion_recommendation(gate, unresolved_items, residual_risks):
-    if gate == "FAIL" or any(
-        item.get("severity") in {"blocker", "critical", "BLOCKER", "CRITICAL"}
-        for item in unresolved_items
-        if isinstance(item, dict)
-    ):
-        return "NOT_READY"
-    if gate != "PASS":
-        return "CONTINUE_TESTING"
-    if residual_risks:
-        return "READY_WITH_RISK"
-    return "READY_FOR_RELEASE"
-
-
-async def reevaluate_completion_exit_criteria(plan, snapshot, completed_run_ids):
-    evaluations = evaluate_exit_criteria(
-        plan.get("quality_targets", []), snapshot.get("metrics") or {}, completed_run_ids
-    )
-    criterion_ids = {item["criterion_id"] for item in evaluations}
-    evaluations.extend(
-        dict(item)
-        for item in snapshot.get("exit_criteria_evaluation", [])
-        if item.get("criterion_id") not in criterion_ids
-    )
-    overrides = (
-        await database.value.test_monitoring_overrides.find({"snapshot_id": snapshot["_id"]})
-        .sort("created_at", 1)
-        .to_list(1000)
-    )
-    latest = {item["criterion_id"]: item for item in overrides}
-    for item in evaluations:
-        override = latest.get(item["criterion_id"])
-        if override:
-            item.update({"status": override["status"], "overridden": True, "override": override})
-    return evaluations
-
-
-async def get_completion_for_user(report_id, user, permission="testcompletion.read"):
-    report = await find_completion(report_id)
-    if not report:
-        raise HTTPException(status_code=404, detail={"code": "COMPLETION_REPORT_NOT_FOUND"})
-    await get_project(report["project_id"], user, permission)
-    return report
-
-
-async def list_completion_reports(project_id, release_id, status, limit, user):
-    await get_project(project_id, user, "testcompletion.read")
-    return await list_completions(project_id, release_id, status, limit)
-
-
-async def completion_sources(project_id, snapshot, plan, build_id):
-    release_id = snapshot.get("release_id") or plan.get("release_id")
-    if not release_id:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_RELEASE_REQUIRED"})
-    release = await database.value.releases.find_one({"_id": release_id, "project_id": project_id})
-    if not release:
-        raise HTTPException(status_code=422, detail={"code": "INVALID_RELEASE"})
-    build = await database.value.builds.find_one({"_id": build_id, "project_id": project_id})
-    if not build:
-        raise HTTPException(status_code=422, detail={"code": "INVALID_BUILD"})
-    if build.get("release_id") and build["release_id"] != release_id:
-        raise HTTPException(status_code=422, detail={"code": "BUILD_RELEASE_MISMATCH"})
-    strategy_version_id = plan.get("strategy_version_id")
-    if not strategy_version_id:
-        raise HTTPException(
-            status_code=409, detail={"code": "COMPLETION_STRATEGY_VERSION_REQUIRED"}
-        )
-    strategy = await database.value.test_strategies.find_one(
-        {"_id": strategy_version_id, "project_id": project_id}
-    )
-    if (
-        not strategy
-        or not strategy.get("snapshot_hash")
-        or strategy.get("snapshot_hash") != plan.get("strategy_snapshot_hash")
-    ):
-        raise HTTPException(
-            status_code=409, detail={"code": "COMPLETION_STRATEGY_SNAPSHOT_INVALID"}
-        )
-    source_state = snapshot.get("source_state") or {}
-    run_states = [item for item in source_state.get("runs", []) if item.get("id")]
-    run_ids = [item["id"] for item in run_states]
-    run_records = (
-        await database.value.test_runs.find(
-            {"_id": {"$in": run_ids}, "project_id": project_id}
-        ).to_list(10000)
-        if run_ids
-        else []
-    )
-    runs_by_id = {item["_id"]: item for item in run_records}
-    runs = [
-        {
-            **runs_by_id.get(item["id"], {}),
-            "_id": item["id"],
-            "revision": item.get("revision"),
-            "status": item.get("status"),
-            "frozen_scope_hash": item.get("scope_hash"),
-            "test_case_version_ids": item.get(
-                "test_case_version_ids",
-                runs_by_id.get(item["id"], {}).get("test_case_version_ids", []),
-            ),
-            "release_id": item.get("release_id", runs_by_id.get(item["id"], {}).get("release_id")),
-            "build_id": item.get("build_id", runs_by_id.get(item["id"], {}).get("build_id")),
-            "environment_id": item.get(
-                "environment_id", runs_by_id.get(item["id"], {}).get("environment_id")
-            ),
-        }
-        for item in run_states
-    ]
-    result_states = [item for item in source_state.get("results", []) if item.get("id")]
-    result_ids = [item["id"] for item in result_states]
-    result_records = (
-        await database.value.test_results.find(
-            {"_id": {"$in": result_ids}, "project_id": project_id}
-        ).to_list(50000)
-        if result_ids
-        else []
-    )
-    results_by_id = {item["_id"]: item for item in result_records}
-    results = [
-        {
-            **results_by_id.get(item["id"], {}),
-            "_id": item["id"],
-            "revision": item.get("revision"),
-            "status": item.get("status"),
-        }
-        for item in result_states
-    ]
-    defect_states = [item for item in source_state.get("defects", []) if item.get("id")]
-    defect_ids = [item["id"] for item in defect_states]
-    defect_records = (
-        await database.value.defects.find(
-            {"_id": {"$in": defect_ids}, "project_id": project_id}
-        ).to_list(10000)
-        if defect_ids
-        else []
-    )
-    defects_by_id = {item["_id"]: item for item in defect_records}
-    defects = [
-        {
-            **defects_by_id.get(item["id"], {}),
-            "_id": item["id"],
-            "revision": item.get("revision"),
-            "status": item.get("status"),
-            "severity": item.get("severity"),
-        }
-        for item in defect_states
-    ]
-    environment_ids = sorted(
-        {item.get("environment_id") for item in runs if item.get("environment_id")}
-    )
-    environments = (
-        await database.value.test_environments.find(
-            {"_id": {"$in": environment_ids}, "project_id": project_id}
-        ).to_list(1000)
-        if environment_ids
-        else []
-    )
-    data_sets = await database.value.data_sets.find(
-        {"project_id": project_id, "status": {"$ne": "ARCHIVED"}},
-        {"_id": 1, "name": 1, "revision": 1, "status": 1},
-    ).to_list(5000)
-    automation = await database.value.automation_script_drafts.find(
-        {"project_id": project_id, "status": {"$in": ["APPROVED", "EXPORTED"]}},
-        {"_id": 1, "status": 1, "revision": 1, "framework": 1, "language": 1},
-    ).to_list(5000)
-    status_reports = await database.value.test_status_reports.find(
-        {
-            "project_id": project_id,
-            "release_id": release_id,
-            "status": {"$in": ["APPROVED", "PUBLISHED"]},
-        },
-        {"_id": 1, "status": 1, "approved_snapshot_hash": 1},
-    ).to_list(5000)
-    archived_testcases = await database.value.test_cases.find(
-        {"project_id": project_id, "status": {"$in": ["ARCHIVED", "OBSOLETE"]}},
-        {"_id": 1, "status": 1, "current_version_id": 1},
-    ).to_list(5000)
-    archived_documents = await database.value.requirement_documents.find(
-        {"project_id": project_id, "status": "ARCHIVED"}, {"_id": 1, "content_hash": 1}
-    ).to_list(5000)
-    return (
-        release,
-        build,
-        strategy,
-        runs,
-        results,
-        defects,
-        environments,
-        data_sets,
-        automation,
-        status_reports,
-        archived_testcases,
-        archived_documents,
-    )
-
-
-def handover_records(artifact_type, items, storage_prefix):
-    records = []
-    for raw_item in items:
-        item = raw_item if isinstance(raw_item, dict) else {"id": raw_item}
-        artifact_id = str(item.get("_id") or item.get("id") or "")
-        if not artifact_id:
-            continue
-        records.append(
-            {
-                "artifact_type": artifact_type,
-                "artifact_id": artifact_id,
-                "artifact_version_id": artifact_id
-                if artifact_type in {"TEST_CASE_VERSION", "STATUS_REPORT"}
-                else None,
-                "handover_to": "Dự án",
-                "storage_location": f"{storage_prefix}/{artifact_id}",
-                "status": "READY",
-                "note": "",
-            }
-        )
-    return records
+__all__ = [
+    "add_completion_lesson",
+    "add_completion_residual_risk",
+    "list_completion_reports",
+    "manage_completion_handover",
+]
 
 
 async def create_completion_report(project_id, payload, user):
-    await get_project(project_id, user, "testcompletion.create")
+    policy = COMPLETION_POLICY
+    statuses = policy["statuses"]
+    types = policy["artifact_types"]
+    codes = policy["error_codes"]
+    await get_project(project_id, user, policy["permissions"]["create"])
     if payload.idempotency_key:
-        existing = await database.value.test_completion_reports.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await find_completion_by_idempotency_key(
+            project_id, payload.idempotency_key
         )
         if existing:
             if (
                 existing.get("monitoring_snapshot_id") != payload.snapshot_id
                 or existing.get("build_id") != payload.build_id
             ):
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(status_code=409, detail={"code": codes["idempotency_reused"]})
             return existing
-    snapshot = await database.value.test_monitoring_snapshots.find_one(
-        {"_id": payload.snapshot_id, "project_id": project_id}
-    )
+    snapshot = await find_monitoring_snapshot(project_id, payload.snapshot_id)
     if not snapshot:
-        raise HTTPException(status_code=422, detail={"code": "INVALID_MONITORING_SNAPSHOT"})
-    plan = await database.value.test_plans.find_one(
-        {"_id": snapshot["test_plan_id"], "project_id": project_id}
-    )
+        raise HTTPException(status_code=422, detail={"code": codes["snapshot_invalid"]})
+    plan = await find_test_plan(project_id, snapshot["test_plan_id"])
     if (
         not plan
-        or plan.get("status") != "APPROVED"
+        or plan.get("status") != statuses["approved"]
         or plan.get("approved_snapshot_hash") != snapshot.get("plan_snapshot_hash")
     ):
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_PLAN_SNAPSHOT_INVALID"})
+        raise HTTPException(status_code=409, detail={"code": codes["plan_snapshot_invalid"]})
     sources = await completion_sources(project_id, snapshot, plan, payload.build_id)
     (
         release,
@@ -293,7 +89,10 @@ async def create_completion_report(project_id, payload, user):
     residual_risks = [item.model_dump() for item in payload.residual_risks]
     improvement_actions = [item.model_dump() for item in payload.improvement_actions]
     lessons_learned = [
-        {**item.model_dump(), "lesson_id": item.lesson_id or new_id("LESSON")}
+        {
+            **item.model_dump(),
+            "lesson_id": item.lesson_id or new_id(policy["id_prefixes"]["lesson"]),
+        }
         for item in payload.lessons_learned
     ]
     supplied_handover = [item.model_dump() for item in payload.testware_handover]
@@ -307,18 +106,20 @@ async def create_completion_report(project_id, payload, user):
             *[item.get("owner_id") for item in lessons_learned],
         ],
     )
-    if any(item.get("treatment") != "PENDING" for item in residual_risks):
+    if any(item.get("treatment") != statuses["pending"] for item in residual_risks):
         raise HTTPException(
-            status_code=422, detail={"code": "RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED"}
+            status_code=422, detail={"code": codes["risk_decision_endpoint_required"]}
         )
-    completed_run_ids = sorted(item["_id"] for item in runs if item.get("status") == "COMPLETED")
+    completed_run_ids = sorted(
+        item["_id"] for item in runs if item.get("status") == statuses["completed"]
+    )
     metrics = snapshot.get("metrics") or {}
     exit_evaluation = await reevaluate_completion_exit_criteria(plan, snapshot, completed_run_ids)
     gate = quality_gate_status(exit_evaluation)
     open_defects = [item for item in defects if item.get("status") in OPEN_DEFECT_STATUSES]
     generated_unresolved = [
         {
-            "type": "DEFECT",
+            "type": types["defect"],
             "defect_id": item["_id"],
             "title": item.get("title"),
             "severity": item.get("severity"),
@@ -330,7 +131,7 @@ async def create_completion_report(project_id, payload, user):
     omitted = [
         {
             "item_id": result["_id"],
-            "item_type": "TEST_RESULT",
+            "item_type": types["test_result"],
             "reason": result.get("reason") or result.get("notes") or "",
             "source_refs": [
                 value
@@ -339,7 +140,7 @@ async def create_completion_report(project_id, payload, user):
             ],
         }
         for result in results
-        if result.get("status") in {"NOT_RUN", "IN_PROGRESS", "SKIPPED"}
+        if result.get("status") in set(policy["result_omission_statuses"])
     ]
     unexecuted_scope = [*omitted, *supplied_unexecuted]
     unresolved_items = [*generated_unresolved, *payload.unresolved_items]
@@ -359,18 +160,18 @@ async def create_completion_report(project_id, payload, user):
     ]
     testware = [
         *handover_records(
-            "TEST_CASE_VERSION",
+            types["test_case_version"],
             (snapshot.get("source_state") or {}).get("test_case_versions", []),
             "test-case-versions",
         ),
-        *handover_records("DATA_SET", data_sets, "data-sets"),
-        *handover_records("AUTOMATION_SCRIPT", automation, "automation-scripts"),
-        *handover_records("STATUS_REPORT", status_reports, "status-reports"),
+        *handover_records(types["data_set"], data_sets, "data-sets"),
+        *handover_records(types["automation_script"], automation, "automation-scripts"),
+        *handover_records(types["status_report"], status_reports, "status-reports"),
         *supplied_handover,
     ]
     archived = [
-        {"type": "TEST_CASE", "items": archived_testcases},
-        {"type": "REQUIREMENT_DOCUMENT", "items": archived_documents},
+        {"type": types["test_case"], "items": archived_testcases},
+        {"type": types["requirement_document"], "items": archived_documents},
         *payload.archived_artifacts,
     ]
     environment_closure = [
@@ -387,25 +188,20 @@ async def create_completion_report(project_id, payload, user):
     if payload.recommendation and payload.recommendation != recommendation:
         raise HTTPException(
             status_code=422,
-            detail={"code": "COMPLETION_RECOMMENDATION_MISMATCH", "expected": recommendation},
+            detail={"code": codes["recommendation_mismatch"], "expected": recommendation},
         )
-    maintenance_summary = {
-        "impact_analysis_count": await database.value.impact_analyses.count_documents(
-            {"project_id": project_id}
-        ),
-        "pending_proposal_count": await database.value.maintenance_proposals.count_documents(
-            {"project_id": project_id, "status": "PENDING"}
-        ),
-        "applied_proposal_count": await database.value.maintenance_proposals.count_documents(
-            {"project_id": project_id, "status": {"$in": ["APPLIED", "EDITED_ACCEPTED"]}}
-        ),
-    }
+    source_filters = policy["source_filters"]
+    maintenance = await maintenance_summary(
+        project_id,
+        source_filters["maintenance_pending_status"],
+        source_filters["maintenance_applied_statuses"],
+    )
     timestamp = now()
     sequence = await next_completion_sequence(project_id, release["_id"])
     report = {
-        "_id": new_id("TCP"),
+        "_id": new_id(policy["id_prefixes"]["report"]),
         "project_id": project_id,
-        "completion_key": f"TCP-{sequence:04d}",
+        "completion_key": f"{policy['id_prefixes']['report_key']}{sequence:04d}",
         "idempotency_key": payload.idempotency_key,
         "test_plan_id": plan["_id"],
         "release_id": release["_id"],
@@ -457,7 +253,7 @@ async def create_completion_report(project_id, payload, user):
             "resolved": metrics.get("resolved", 0),
             "reopened": metrics.get("reopened", 0),
         },
-        "maintenance_summary": maintenance_summary,
+        "maintenance_summary": maintenance,
         "unexecuted_scope": unexecuted_scope,
         "unresolved_items": unresolved_items,
         "residual_risks": residual_risks,
@@ -476,7 +272,7 @@ async def create_completion_report(project_id, payload, user):
         "residual_risk_summary": "",
         "recommendation_rationale": "",
         "sign_offs": [],
-        "status": "DRAFT",
+        "status": statuses["draft"],
         "sequence": sequence,
         "revision": 1,
         "review_history": [],
@@ -486,12 +282,10 @@ async def create_completion_report(project_id, payload, user):
         "updated_at": timestamp,
     }
     try:
-        await database.value.test_completion_reports.insert_one(report)
+        await insert_completion(report)
     except DuplicateKeyError:
         existing = (
-            await database.value.test_completion_reports.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
-            )
+            await find_completion_by_idempotency_key(project_id, payload.idempotency_key)
             if payload.idempotency_key
             else None
         )
@@ -501,12 +295,12 @@ async def create_completion_report(project_id, payload, user):
             existing.get("monitoring_snapshot_id") != payload.snapshot_id
             or existing.get("build_id") != payload.build_id
         ):
-            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+            raise HTTPException(status_code=409, detail={"code": codes["idempotency_reused"]})
         return existing
     await audit(
         user.id,
-        "completion_report_created",
-        "TestCompletionReport",
+        policy["events"]["created"],
+        policy["entity_type"],
         report["_id"],
         project_id,
         {"release_id": release["_id"], "snapshot_id": snapshot["_id"], "quality_gate_status": gate},
@@ -515,16 +309,20 @@ async def create_completion_report(project_id, payload, user):
 
 
 async def update_completion_report(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.update")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
+    policy = COMPLETION_POLICY
+    statuses = policy["statuses"]
+    types = policy["artifact_types"]
+    codes = policy["error_codes"]
+    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
+    if report["status"] != statuses["draft"]:
+        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
     changes = payload.model_dump(exclude_unset=True, exclude_none=True)
     changes.pop("expected_revision", None)
     if "unresolved_items" in changes:
         generated = [
             item
             for item in report.get("unresolved_items", [])
-            if isinstance(item, dict) and item.get("type") == "DEFECT"
+            if isinstance(item, dict) and item.get("type") == types["defect"]
         ]
         identities = {
             (item.get("defect_id"), item.get("type"))
@@ -533,22 +331,22 @@ async def update_completion_report(report_id, payload, user):
         }
         if any((item.get("defect_id"), item.get("type")) not in identities for item in generated):
             raise HTTPException(
-                status_code=422, detail={"code": "GENERATED_COMPLETION_FACT_IMMUTABLE"}
+                status_code=422, detail={"code": codes["generated_fact_immutable"]}
             )
     if "unexecuted_scope" in changes:
         existing = {
             item.get("item_id")
             for item in report.get("unexecuted_scope", [])
-            if item.get("item_type") == "TEST_RESULT"
+            if item.get("item_type") == types["test_result"]
         }
         incoming = {
             item.get("item_id")
             for item in changes["unexecuted_scope"]
-            if item.get("item_type") == "TEST_RESULT"
+            if item.get("item_type") == types["test_result"]
         }
         if not existing <= incoming:
             raise HTTPException(
-                status_code=422, detail={"code": "GENERATED_COMPLETION_FACT_IMMUTABLE"}
+                status_code=422, detail={"code": codes["generated_fact_immutable"]}
             )
     if (
         "residual_risks" in changes
@@ -571,7 +369,7 @@ async def update_completion_report(report_id, payload, user):
             not incoming_risk_ids <= set(existing_risks)
             or not set(existing_risks) <= incoming_risk_ids
         ):
-            await get_project(report["project_id"], user, "testcompletion.risk.manage")
+            await get_project(report["project_id"], user, policy["permissions"]["risk_manage"])
         for item in changes["residual_risks"]:
             previous = existing_risks.get(item.get("risk_id")) or {}
             decision = (
@@ -584,30 +382,34 @@ async def update_completion_report(report_id, payload, user):
                 previous.get("acceptance_reason"),
                 previous.get("accepted_by"),
             )
-            if item.get("treatment") != "PENDING" and decision != previous_decision:
+            if item.get("treatment") != statuses["pending"] and decision != previous_decision:
                 raise HTTPException(
                     status_code=422,
                     detail={
-                        "code": "RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED",
+                        "code": codes["risk_decision_endpoint_required"],
                         "risk_id": item.get("risk_id"),
                     },
                 )
     if "lessons_learned" in changes and len(changes["lessons_learned"]) > len(
         report.get("lessons_learned", [])
     ):
-        await get_project(report["project_id"], user, "testcompletion.lesson.create")
+        await get_project(report["project_id"], user, policy["permissions"]["lesson_create"])
     if "testware_handover" in changes:
-        await get_project(report["project_id"], user, "testcompletion.handover.manage")
+        await get_project(report["project_id"], user, policy["permissions"]["handover_manage"])
     changes["updated_at"] = now()
     updated = await update_completion(
-        report_id, report["project_id"], payload.expected_revision, {"DRAFT"}, changes
+        report_id,
+        report["project_id"],
+        payload.expected_revision,
+        {statuses["draft"]},
+        changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "test_completion_report_updated",
-        "TestCompletionReport",
+        policy["events"]["updated"],
+        policy["entity_type"],
         report_id,
         report["project_id"],
         {"fields": sorted(changes)},
@@ -615,219 +417,59 @@ async def update_completion_report(report_id, payload, user):
     return updated
 
 
-async def add_completion_residual_risk(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.risk.manage")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
-    risk = payload.risk.model_dump()
-    if risk["treatment"] != "PENDING":
-        raise HTTPException(
-            status_code=422, detail={"code": "RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED"}
-        )
-    if any(item.get("risk_id") == risk["risk_id"] for item in report.get("residual_risks", [])):
-        raise HTTPException(status_code=409, detail={"code": "RESIDUAL_RISK_DUPLICATE"})
-    await validate_people(report["project_id"], [risk["owner_id"]])
-    updated = await update_completion(
-        report_id,
-        report["project_id"],
-        payload.expected_revision,
-        {"DRAFT"},
-        {"residual_risks": [*report.get("residual_risks", []), risk], "updated_at": now()},
-    )
-    if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "test_completion_residual_risk_added",
-        "TestCompletionReport",
-        report_id,
-        report["project_id"],
-        {"risk_id": risk["risk_id"]},
-    )
-    return updated
-
-
-async def add_completion_lesson(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.lesson.create")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
-    lesson = {
-        **payload.lesson.model_dump(),
-        "lesson_id": payload.lesson.lesson_id or new_id("LESSON"),
-    }
-    await validate_people(report["project_id"], [lesson.get("owner_id")])
-    updated = await update_completion(
-        report_id,
-        report["project_id"],
-        payload.expected_revision,
-        {"DRAFT"},
-        {"lessons_learned": [*report.get("lessons_learned", []), lesson], "updated_at": now()},
-    )
-    if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "test_completion_lesson_added",
-        "TestCompletionReport",
-        report_id,
-        report["project_id"],
-        {"lesson_id": lesson["lesson_id"], "category": lesson["category"]},
-    )
-    return updated
-
-
-async def manage_completion_handover(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.handover.manage")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
-    item = payload.item.model_dump()
-    identity = (item["artifact_type"], item["artifact_id"], item.get("artifact_version_id"))
-    handover = [
-        value
-        for value in report.get("testware_handover", [])
-        if (value.get("artifact_type"), value.get("artifact_id"), value.get("artifact_version_id"))
-        != identity
-    ]
-    handover.append(item)
-    updated = await update_completion(
-        report_id,
-        report["project_id"],
-        payload.expected_revision,
-        {"DRAFT"},
-        {"testware_handover": handover, "updated_at": now()},
-    )
-    if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "test_completion_handover_managed",
-        "TestCompletionReport",
-        report_id,
-        report["project_id"],
-        {
-            "artifact_type": item["artifact_type"],
-            "artifact_id": item["artifact_id"],
-            "status": item["status"],
-        },
-    )
-    return updated
-
-
-async def completion_ai_result(report, payload, user, capability, result_type):
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
-    existing = await database.value.ai_results.find_one(
-        {"project_id": report["project_id"], "idempotency_key": payload.idempotency_key}
-    )
-    if existing:
-        if (
-            existing.get("result_type") != result_type
-            or existing.get("subject_id") != report["_id"]
-        ):
-            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
-        return existing
-    evidence = [
-        {
-            "artifact_type": "test_completion_report",
-            "artifact_id": report["_id"],
-            "authority": "PROJECT_RECORD",
-            "text": json.dumps(
-                {
-                    key: report.get(key)
-                    for key in (
-                        "execution_summary",
-                        "coverage_summary",
-                        "defect_summary",
-                        "unresolved_items",
-                        "residual_risks",
-                        "exit_criteria_evaluation",
-                        "quality_gate_status",
-                        "deviations",
-                        "environment_closure",
-                        "lessons_learned",
-                        "improvement_actions",
-                        "recommendation",
-                    )
-                },
-                ensure_ascii=False,
-                default=str,
-            ),
-        }
-    ]
-    instruction = json.dumps(
-        {"user_instruction": payload.instruction}, ensure_ascii=False
-    )
-    ai = await request_design_assistance(capability, report["project_id"], instruction, evidence)
-    result = {
-        "_id": new_id("AIR"),
-        "project_id": report["project_id"],
-        "result_type": result_type,
-        "subject_id": report["_id"],
-        "candidate_only": True,
-        "human_confirmation_required": True,
-        "suggestions": ai.get("suggestions", []),
-        **ai_contract_metadata(ai),
-        "idempotency_key": payload.idempotency_key,
-        "created_by": user.id,
-        "created_at": now(),
-    }
-    try:
-        await database.value.ai_results.insert_one(result)
-    except DuplicateKeyError:
-        return await database.value.ai_results.find_one(
-            {"project_id": report["project_id"], "idempotency_key": payload.idempotency_key}
-        )
-    await audit(
-        user.id,
-        f"{capability}_generated",
-        "AIResult",
-        result["_id"],
-        report["project_id"],
-        {"report_id": report["_id"], "candidate_count": len(result["suggestions"])},
-    )
-    return result
-
-
 async def generate_completion_narrative(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.update")
+    policy = COMPLETION_POLICY
+    action = policy["ai_actions"]["narrative"]
+    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
     return await completion_ai_result(
         report,
         payload,
         user,
-        "completion_report_narrative",
-        "COMPLETION_REPORT_NARRATIVE",
+        action["task"],
+        action["result_type"],
     )
 
 
 async def cluster_completion_lessons(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.update")
+    policy = COMPLETION_POLICY
+    action = policy["ai_actions"]["lesson_clusters"]
+    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
     if not report.get("lessons_learned"):
-        raise HTTPException(status_code=422, detail={"code": "LESSONS_LEARNED_REQUIRED"})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["error_codes"]["lessons_required"]},
+        )
     return await completion_ai_result(
         report,
         payload,
         user,
-        "lessons_learned_clustering",
-        "LESSONS_LEARNED_CLUSTERS",
+        action["task"],
+        action["result_type"],
     )
 
 
 async def decide_residual_risk(report_id, risk_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.review")
-    if report["status"] not in {"DRAFT", "IN_REVIEW"}:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
-    membership = await database.value.project_members.find_one(
-        {"project_id": report["project_id"], "user_id": user.id, "status": "ACTIVE"}
+    policy = COMPLETION_POLICY
+    statuses = policy["statuses"]
+    codes = policy["error_codes"]
+    report = await get_completion_for_user(report_id, user, policy["permissions"]["review"])
+    mutable_statuses = {statuses["draft"], statuses["in_review"]}
+    if report["status"] not in mutable_statuses:
+        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+    membership = await find_active_member(
+        report["project_id"],
+        user.id,
+        policy["source_filters"]["active_membership_status"],
     )
     risks = [dict(item) for item in report.get("residual_risks", [])]
     risk = next((item for item in risks if item.get("risk_id") == risk_id), None)
     if not risk:
-        raise HTTPException(status_code=404, detail={"code": "RESIDUAL_RISK_NOT_FOUND"})
-    if risk.get("owner_id") != user.id and (membership or {}).get("project_role") not in {
-        "QA",
-        "BA",
-    }:
-        raise HTTPException(status_code=403, detail={"code": "RESIDUAL_RISK_DECISION_DENIED"})
+        raise HTTPException(status_code=404, detail={"code": codes["risk_not_found"]})
+    if (
+        risk.get("owner_id") != user.id
+        and (membership or {}).get("project_role") not in set(policy["qa_roles"])
+    ):
+        raise HTTPException(status_code=403, detail={"code": codes["risk_decision_denied"]})
     risk.update(
         {
             "treatment": payload.acceptance,
@@ -835,27 +477,29 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
             "acceptance_reason": payload.reason,
             "accepted_by": user.id,
             "accepted_at": now(),
-            "status": "CLOSED" if payload.acceptance in {"ACCEPTED", "AVOID"} else "MONITORING",
+            "status": statuses["closed"]
+            if payload.acceptance in set(policy["risk_closed_decisions"])
+            else statuses["monitoring"],
         }
     )
     updated = await update_completion(
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {"DRAFT", "IN_REVIEW"},
+        mutable_statuses,
         {"residual_risks": risks, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     event = (
-        "residual_risk_accepted"
-        if payload.acceptance == "ACCEPTED"
-        else "test_completion_residual_risk_decided"
+        policy["events"]["risk_accepted"]
+        if payload.acceptance == policy["risk_closed_decisions"][0]
+        else policy["events"]["risk_decided"]
     )
     await audit(
         user.id,
         event,
-        "TestCompletionReport",
+        policy["entity_type"],
         report_id,
         report["project_id"],
         {"risk_id": risk_id, "acceptance": payload.acceptance, "reason": payload.reason},
@@ -864,14 +508,19 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
 
 
 async def sign_off_completion(report_id, payload, user):
-    report = await get_completion_for_user(report_id, user, "testcompletion.review")
-    if report["status"] != "IN_REVIEW":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_SIGN_OFF_STATE_INVALID"})
-    membership = await database.value.project_members.find_one(
-        {"project_id": report["project_id"], "user_id": user.id, "status": "ACTIVE"}
+    policy = COMPLETION_POLICY
+    statuses = policy["statuses"]
+    codes = policy["error_codes"]
+    report = await get_completion_for_user(report_id, user, policy["permissions"]["review"])
+    if report["status"] != statuses["in_review"]:
+        raise HTTPException(status_code=409, detail={"code": codes["sign_off_state_invalid"]})
+    membership = await find_active_member(
+        report["project_id"],
+        user.id,
+        policy["source_filters"]["active_membership_status"],
     )
     if not membership:
-        raise HTTPException(status_code=403, detail={"code": "PROJECT_MEMBERSHIP_REQUIRED"})
+        raise HTTPException(status_code=403, detail={"code": codes["membership_required"]})
     sign_offs = [item for item in report.get("sign_offs", []) if item.get("user_id") != user.id]
     sign_offs.append(
         {
@@ -886,15 +535,15 @@ async def sign_off_completion(report_id, payload, user):
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {"IN_REVIEW"},
+        {statuses["in_review"]},
         {"sign_offs": sign_offs, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "test_completion_signed_off",
-        "TestCompletionReport",
+        policy["events"]["signed_off"],
+        policy["entity_type"],
         report_id,
         report["project_id"],
         {"decision": payload.decision, "role": membership.get("project_role")},
@@ -902,109 +551,50 @@ async def sign_off_completion(report_id, payload, user):
     return updated
 
 
-async def validate_completion_readiness(report):
-    project = (
-        await database.value.projects.find_one({"_id": report["project_id"]}, {"settings": 1}) or {}
-    )
-    settings = project.get("settings") or {}
-    mandatory_incomplete = [
-        item.get("run_id")
-        for item in (report.get("scope_snapshot") or {}).get("runs", [])
-        if item.get("mandatory", True) and item.get("status") != "COMPLETED"
-    ]
-    if mandatory_incomplete:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "COMPLETION_REPORT_NOT_READY",
-                "reason_code": "COMPLETION_MANDATORY_RUNS_INCOMPLETE",
-                "run_ids": mandatory_incomplete,
-            },
-        )
-    blocker_threshold = int(settings.get("completion_open_blocker_threshold", 0) or 0)
-    open_blockers = int((report.get("defect_summary") or {}).get("open_blocker", 0) or 0)
-    if open_blockers > blocker_threshold:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "COMPLETION_REPORT_NOT_READY",
-                "reason_code": "COMPLETION_OPEN_BLOCKER_THRESHOLD_EXCEEDED",
-                "open_blockers": open_blockers,
-                "threshold": blocker_threshold,
-            },
-        )
-    ownerless_critical = [
-        item.get("risk_id")
-        for item in report.get("residual_risks", [])
-        if item.get("severity") == "CRITICAL" and not item.get("owner_id")
-    ]
-    if ownerless_critical:
-        raise HTTPException(
-            status_code=409,
-            detail={"code": "RESIDUAL_RISK_OWNER_REQUIRED", "risk_ids": ownerless_critical},
-        )
-    failed_criteria = [
-        item.get("criterion_id")
-        for item in report.get(
-            "exit_criteria_evaluations", report.get("exit_criteria_evaluation", [])
-        )
-        if item.get("status") == "FAIL"
-    ]
-    if failed_criteria:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "COMPLETION_REPORT_NOT_READY",
-                "reason_code": "COMPLETION_EXIT_CRITERIA_FAILED",
-                "criterion_ids": failed_criteria,
-            },
-        )
-    reasonless_scope = [
-        item.get("item_id")
-        for item in report.get("unexecuted_scope", [])
-        if not str(item.get("reason") or "").strip()
-    ]
-    if reasonless_scope:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "COMPLETION_REPORT_NOT_READY",
-                "reason_code": "COMPLETION_UNEXECUTED_SCOPE_REASON_REQUIRED",
-                "item_ids": reasonless_scope,
-            },
-        )
-
-
-async def transition_completion(report_id, payload, user, source, target, permission, action):
-    report = await get_completion_for_user(report_id, user, permission)
-    if target == "APPROVED":
+async def transition_completion(report_id, payload, user, transition_action):
+    policy = COMPLETION_POLICY
+    statuses = policy["statuses"]
+    codes = policy["error_codes"]
+    transition = policy["transitions"][transition_action]
+    source = transition["source"]
+    target = transition["target"]
+    report = await get_completion_for_user(report_id, user, transition["permission"])
+    if target == statuses["approved"]:
         await validate_completion_readiness(report)
         qa_approved = any(
-            item.get("role") == "QA" and item.get("decision") == "APPROVE"
+            item.get("role") == policy["qa_sign_off_role"]
+            and item.get("decision") == policy["approve_decision"]
             for item in report.get("sign_offs", [])
         )
         if not qa_approved:
-            raise HTTPException(status_code=409, detail={"code": "QA_SIGN_OFF_REQUIRED"})
+            raise HTTPException(status_code=409, detail={"code": codes["qa_sign_off_required"]})
         if any(
-            item.get("treatment", item.get("acceptance")) == "PENDING"
+            item.get("treatment", item.get("acceptance")) == statuses["pending"]
             for item in report.get("residual_risks", [])
         ):
             raise HTTPException(
-                status_code=409, detail={"code": "RESIDUAL_RISK_ACCEPTANCE_REQUIRED"}
+                status_code=409, detail={"code": codes["risk_acceptance_required"]}
             )
-        if any(item.get("decision") == "REJECT" for item in report.get("sign_offs", [])):
-            raise HTTPException(status_code=409, detail={"code": "COMPLETION_REJECTION_UNRESOLVED"})
+        if any(
+            item.get("decision") == policy["reject_decision"]
+            for item in report.get("sign_offs", [])
+        ):
+            raise HTTPException(status_code=409, detail={"code": codes["rejection_unresolved"]})
     timestamp = now()
     event = {"actor_id": user.id, "action": target, "note": payload.note, "at": timestamp}
-    history_field = "approval_history" if target in {"APPROVED", "CLOSED"} else "review_history"
+    history_field = (
+        "approval_history"
+        if target in set(policy["history_statuses"])
+        else "review_history"
+    )
     changes = {
         "status": target,
         "updated_at": timestamp,
         history_field: [*report.get(history_field, []), event],
     }
-    if target == "IN_REVIEW":
+    if target == statuses["in_review"]:
         changes.update({"submitted_by": user.id, "submitted_at": timestamp})
-    elif target == "DRAFT":
+    elif target == statuses["draft"]:
         changes.update(
             {
                 "reviewed_by": user.id,
@@ -1013,7 +603,7 @@ async def transition_completion(report_id, payload, user, source, target, permis
                 "sign_offs": [],
             }
         )
-    elif target == "APPROVED":
+    elif target == statuses["approved"]:
         changes.update(
             {
                 "approved_by": user.id,
@@ -1022,7 +612,7 @@ async def transition_completion(report_id, payload, user, source, target, permis
                 "approved_snapshot_hash": completion_hash(report),
             }
         )
-    elif target == "CLOSED":
+    elif target == statuses["closed"]:
         changes.update({"closed_by": user.id, "closed_at": timestamp})
     updated = await update_completion(
         report_id, report["project_id"], payload.expected_revision, {source}, changes
@@ -1030,12 +620,12 @@ async def transition_completion(report_id, payload, user, source, target, permis
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": "COMPLETION_TRANSITION_CONFLICT", "expected_status": source},
+            detail={"code": codes["transition_conflict"], "expected_status": source},
         )
     await audit(
         user.id,
-        action,
-        "TestCompletionReport",
+        transition["event"],
+        policy["entity_type"],
         report_id,
         report["project_id"],
         {"from": source, "to": target, "note": payload.note},

@@ -8,7 +8,7 @@ class MongoClient:
 
     def get_db(self):
         if not database.mongodb:
-            raise Exception("MongoDB is not initialized")
+            raise RuntimeError("MongoDB is not initialized")
         return database.mongodb[self.db_name]
 
     async def find_one(self, collection: str, query: dict, projection: dict = None, **kwargs):
@@ -54,8 +54,8 @@ class MongoClient:
     async def delete_many(self, collection: str, filter: dict):
         return await self.get_db()[collection].delete_many(filter)
 
-    async def count_documents(self, collection: str, filter: dict = {}):
-        return await self.get_db()[collection].count_documents(filter)
+    async def count_documents(self, collection: str, filter: dict | None = None):
+        return await self.get_db()[collection].count_documents(filter or {})
 
     def query(self, collection: str):
         return QueryBuilder(self, collection)
@@ -85,8 +85,8 @@ class QueryBuilder:
         self._skip = s
         return self
 
-    def limit(self, l: int):
-        self._limit = l
+    def limit(self, limit_value: int):
+        self._limit = limit_value
         return self
 
     async def execute(self):

@@ -2,6 +2,10 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10 \
+    UV_HTTP_TIMEOUT=120 \
+    UV_HTTP_RETRIES=10 \
     HF_HOME=/home/appuser/.cache/huggingface \
     TMPDIR=/home/appuser/.cache/tmp
 
@@ -10,23 +14,13 @@ WORKDIR /app
 COPY ai/requirements.txt .
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     libgomp1 \
     libgl1 \
     libglib2.0-0 \
-    ffmpeg \
-    git \
-    ripgrep \
     && mkdir -p /home/appuser/.cache/tmp \
     && pip install --no-cache-dir uv==0.12.3 \
     && uv pip install --system --no-cache \
         --index-strategy unsafe-best-match -r requirements.txt \
-    && apt-get purge -y build-essential \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 

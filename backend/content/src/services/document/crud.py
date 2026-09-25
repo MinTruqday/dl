@@ -4,13 +4,13 @@ import unicodedata
 import uuid
 from datetime import datetime, timezone
 
-import httpx
 from fastapi import HTTPException
 from loguru import logger
 
 from src.clients.knowledge import knowledge_client
+from src.clients.notification import notification_client
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.redis import redis
+from src.repositories.cache import DocumentCacheRepository
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
 from src.services.document.base import can_read_full, is_admin, pwd_context, serialize_document
@@ -52,12 +52,9 @@ class DocumentCrudService:
 
         if doc_data.get("file_url"):
             try:
-                async with httpx.AsyncClient(timeout=5.0) as client:
-                    await client.post(
-                        f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                        params={"document_id": doc_data["_id"], "user_id": str(current_user.id)},
-                        headers={"X-Internal-Token": settings.SECRET_KEY},
-                    )
+                await knowledge_client.index_document(
+                    doc_data["_id"], str(current_user.id)
+                )
             except Exception:
                 logger.exception("Create ingest webhook failed")
 
@@ -174,27 +171,17 @@ class DocumentCrudService:
 
         await DocumentRepository.update_one({"_id": document_id}, {"$set": update_dict})
 
-        if settings.NOTIFICATION_URL:
-            try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.post(
-                        f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
-                        json={
-                            "target_user_id": user_id,
-                            "title": "Document successfully updated",
-                            "body": "The specified document content has been successfully synchronized and updated",
-                            "type": "DOCUMENT_UPDATE",
-                        },
-                        headers={"X-Internal-Token": settings.SECRET_KEY},
-                    )
-                    response.raise_for_status()
-            except Exception:
-                logger.exception("Document update notification dispatch failed")
+        try:
+            await notification_client.send(
+                target_user_id=user_id,
+                title="Document successfully updated",
+                body="The specified document content has been successfully synchronized and updated",
+                notification_type="DOCUMENT_UPDATE",
+            )
+        except Exception:
+            logger.exception("Document update notification dispatch failed")
 
-        if redis:
-            await redis.delete(f"document:{document_id}")
-            if document.get("slug"):
-                await redis.delete(f"document:slug:{document.get('slug')}")
+        await DocumentCacheRepository.invalidate_document(document_id, document.get("slug"))
 
         updated = await DocumentRepository.find_one({"_id": document_id})
         return serialize_document(updated)
@@ -249,10 +236,7 @@ class DocumentCrudService:
 
         await DocumentRepository.update_one({"_id": document_id}, {"$set": update_data})
 
-        if redis:
-            await redis.delete(f"document:{document_id}")
-            if document.get("slug"):
-                await redis.delete(f"document:slug:{document.get('slug')}")
+        await DocumentCacheRepository.invalidate_document(document_id, document.get("slug"))
 
         if update_data.get("file_url"):
             await DocumentRepository.update_one(
@@ -263,16 +247,9 @@ class DocumentCrudService:
                 },
             )
             try:
-                async with httpx.AsyncClient(timeout=5.0) as client:
-                    response = await client.post(
-                        f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                        params={
-                            "document_id": document_id,
-                            "user_id": document.get("creator_id", ""),
-                        },
-                        headers={"X-Internal-Token": settings.SECRET_KEY},
-                    )
-                    response.raise_for_status()
+                await knowledge_client.index_document(
+                    document_id, document.get("creator_id", "")
+                )
             except Exception:
                 await DocumentRepository.update_one(
                     {"_id": document_id},
@@ -304,13 +281,9 @@ class DocumentCrudService:
             {"$set": {"indexing_status": "queued"}, "$unset": {"indexing_error": ""}},
         )
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.post(
-                    f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                    params={"document_id": document_id, "user_id": document.get("creator_id", "")},
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
+            await knowledge_client.index_document(
+                document_id, document.get("creator_id", "")
+            )
         except Exception:
             await DocumentRepository.update_one(
                 {"_id": document_id},
@@ -388,30 +361,29 @@ class DocumentCrudService:
                     "title": document.get("title"),
                     "is_password_protected": True,
                 }
-            rate_limit_key = None
-            if redis:
-                rate_limit_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
-                attempts = await redis.get(rate_limit_key)
-                if attempts and int(attempts) >= 5:
-                    raise HTTPException(
-                        status_code=429,
-                        detail="Truy cập bị tạm khóa do vi phạm giới hạn thử mật khẩu tài liệu",
-                    )
+            attempts = await DocumentCacheRepository.password_attempts(document_id, user_id)
+            if attempts >= settings.DOCUMENT_PASSWORD_MAX_ATTEMPTS:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Truy cập bị tạm khóa do vi phạm giới hạn thử mật khẩu tài liệu",
+                )
             if not pwd_context.verify(password, document.get("access_password_hash")):
-                if rate_limit_key and redis:
-                    await redis.incr(rate_limit_key)
-                    await redis.expire(rate_limit_key, 900)
+                await DocumentCacheRepository.record_password_failure(document_id, user_id)
                 raise HTTPException(
                     status_code=403,
                     detail="Thông tin xác thực không chính xác hoặc không khớp với hồ sơ bảo mật",
                 )
-            if rate_limit_key and redis:
-                await redis.delete(rate_limit_key)
+            await DocumentCacheRepository.clear_password_failures(document_id, user_id)
 
         can_view_full_content = await can_read_full(document, current_user)
         if not can_view_full_content and document.get("status") == DocumentStatus.PUBLISHED:
-            preview_limit = max(0, int(document.get("preview_pages", 5) or 0))
-            document["content"] = (document.get("content") or "")[: preview_limit * 1000]
+            preview_limit = max(
+                0,
+                int(document.get("preview_pages", settings.DOCUMENT_PREVIEW_DEFAULT_PAGES) or 0),
+            )
+            document["content"] = (document.get("content") or "")[
+                : preview_limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+            ]
 
         serialized = serialize_document(document)
         serialized["can_read_full"] = can_view_full_content
@@ -547,18 +519,24 @@ class DocumentCrudService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
-        limit = doc.get("preview_pages", 5)
+        limit = doc.get("preview_pages", settings.DOCUMENT_PREVIEW_DEFAULT_PAGES)
         raw_content = doc.get("content", "")
         preview_content = ""
         try:
             parsed = json.loads(raw_content)
             if "blocks" in parsed:
-                parsed["blocks"] = parsed["blocks"][: limit * 5]
+                parsed["blocks"] = parsed["blocks"][
+                    : limit * settings.DOCUMENT_PREVIEW_BLOCKS_PER_PAGE
+                ]
                 preview_content = json.dumps(parsed)
             else:
-                preview_content = raw_content[: limit * 1000]
+                preview_content = raw_content[
+                    : limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+                ]
         except (TypeError, ValueError, json.JSONDecodeError):
-            preview_content = raw_content[: limit * 1000]
+            preview_content = raw_content[
+                : limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+            ]
 
         return {
             "title": doc.get("title"),

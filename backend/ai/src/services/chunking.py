@@ -7,21 +7,32 @@ from uuid import NAMESPACE_URL, uuid5
 from loguru import logger
 
 from src.services.embedding import embedder
+from src.core.policies import document_policy
 
 
 class ChunkingService:
-    """Docling structure -> semantic refinement -> deterministic size guard."""
-
-    STRUCTURAL_BOUNDARIES = {"title", "section_header", "chapter", "heading"}
-
     def __init__(
         self,
-        min_chars: int = 200,
-        target_chars: int = 900,
-        max_chars: int = 1600,
-        semantic_threshold: float = 0.55,
-        soft_threshold: float = 0.72,
+        min_chars: int | None = None,
+        target_chars: int | None = None,
+        max_chars: int | None = None,
+        semantic_threshold: float | None = None,
+        soft_threshold: float | None = None,
     ):
+        policy = document_policy()["chunking"]
+        min_chars = min_chars or policy["minimum_characters"]
+        target_chars = target_chars or policy["target_characters"]
+        max_chars = max_chars or policy["maximum_characters"]
+        semantic_threshold = (
+            semantic_threshold
+            if semantic_threshold is not None
+            else policy["semantic_similarity_minimum"]
+        )
+        soft_threshold = (
+            soft_threshold
+            if soft_threshold is not None
+            else policy["soft_boundary_similarity_minimum"]
+        )
         if not 0 < min_chars <= target_chars <= max_chars:
             raise ValueError("chunk_size_bounds_invalid")
         self.min_chars = min_chars
@@ -29,6 +40,10 @@ class ChunkingService:
         self.max_chars = max_chars
         self.semantic_threshold = semantic_threshold
         self.soft_threshold = soft_threshold
+        self.structural_boundaries = set(policy["structural_boundaries"])
+        self.paragraph_pattern = policy["paragraph_pattern"]
+        self.heading_pattern = policy["heading_pattern"]
+        self.sentence_boundary_pattern = policy["sentence_boundary_pattern"]
         logger.info("Initializing unified document ChunkingService")
 
     async def chunk_document(
@@ -70,7 +85,7 @@ class ChunkingService:
                     "type": item_type,
                     "level": item.get("level"),
                     "page_no": item.get("page_no"),
-                    "hard_boundary": item_type in self.STRUCTURAL_BOUNDARIES,
+                    "hard_boundary": item_type in self.structural_boundaries,
                 }
             )
             previous_text = text
@@ -88,14 +103,13 @@ class ChunkingService:
             for text, item_type in self._markdown_units(markdown)
         ]
 
-    @staticmethod
-    def _markdown_units(markdown: str) -> List[tuple[str, str]]:
+    def _markdown_units(self, markdown: str) -> List[tuple[str, str]]:
         units = []
-        for part in re.split(r"\n\s*\n+", markdown):
+        for part in re.split(self.paragraph_pattern, markdown):
             text = part.strip()
             if not text:
                 continue
-            item_type = "section_header" if re.match(r"^#{1,6}\s+", text) else "text"
+            item_type = "section_header" if re.match(self.heading_pattern, text) else "text"
             units.append((text, item_type))
         return units
 
@@ -176,7 +190,7 @@ class ChunkingService:
 
         sentences = [
             sentence.strip()
-            for sentence in re.split(r"(?<=[.!?。！？])\s+", text)
+            for sentence in re.split(self.sentence_boundary_pattern, text)
             if sentence.strip()
         ]
         pieces: List[str] = []

@@ -8,8 +8,8 @@ from typing import List, Optional
 from fastapi import HTTPException
 
 from src.clients.knowledge import knowledge_client
-from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
+from src.repositories.folder import FolderRepository
 from src.services.document.base import can_read_full
 
 
@@ -74,8 +74,8 @@ class DocumentBulkService:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "creator_id": user_id}
         if folder_id:
-            folder = await mongo.find_one(
-                "workspace_folders", {"_id": folder_id, "creator_id": user_id}
+            folder = await FolderRepository.find_one(
+                {"_id": folder_id, "creator_id": user_id}
             )
             if not folder:
                 raise HTTPException(status_code=404, detail="Thư mục đích không tồn tại")

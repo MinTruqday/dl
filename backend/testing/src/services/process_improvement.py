@@ -1,57 +1,70 @@
-import math
-
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
+from src.repositories.process_improvement import process_improvement_repository
 from src.services.domain_policy import domain_policy
+from src.services.statistical_quality import (
+    annotate_special_cause,
+    compare_statistical_analyses,
+    create_statistical_baseline,
+    get_statistical_analysis,
+    list_statistical_analyses,
+    round_measurement,
+)
 
 
-def round_measurement(value):
-    return round(value, domain_policy("process_control")["measurement_precision"])
-
-
-async def require_member(db, project_id, user_id, code):
-    member = await db.project_members.find_one(
-        {"project_id": project_id, "user_id": user_id, "status": "ACTIVE"}
+async def require_member(project_id, user_id, code):
+    member = await process_improvement_repository.find_active_member(
+        project_id,
+        user_id,
+        domain_policy("process_improvement")["active_membership_status"],
     )
     if not member:
         raise HTTPException(status_code=422, detail={"code": code})
 
 
-async def get_proposal(db, proposal_id, user, permission="processimprovement.read"):
-    value = await db.process_improvement_proposals.find_one({"_id": proposal_id})
+async def get_proposal(proposal_id, user, permission=None):
+    policy = domain_policy("process_improvement")
+    value = await process_improvement_repository.find_proposal(proposal_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, permission)
+        raise HTTPException(
+            status_code=404, detail={"code": policy["entity_not_found_code"]}
+        )
+    await get_project(
+        value["project_id"], user, permission or policy["read_permission"]
+    )
     return value
 
 
-async def list_proposals(db, project_id, user):
-    await get_project(project_id, user, "processimprovement.read")
-    items = (
-        await db.process_improvement_proposals.find({"project_id": project_id})
-        .sort("updated_at", -1)
-        .to_list(1000)
+async def list_proposals(project_id, user):
+    policy = domain_policy("process_improvement")
+    await get_project(project_id, user, policy["read_permission"])
+    items = await process_improvement_repository.list_proposals(
+        project_id, policy["proposal_limit"]
     )
     return {"items": items, "total": len(items)}
 
 
-async def create_proposal(db, project_id, payload, user):
-    await get_project(project_id, user, "processimprovement.create")
-    await require_member(db, project_id, payload.owner_id, "IMPROVEMENT_OWNER_NOT_PROJECT_MEMBER")
+async def create_proposal(project_id, payload, user):
+    policy = domain_policy("process_improvement")
+    await get_project(project_id, user, policy["create_permission"])
+    await require_member(
+        project_id, payload.owner_id, policy["owner_not_member_code"]
+    )
     if payload.idempotency_key:
-        existing = await db.process_improvement_proposals.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await process_improvement_repository.find_by_idempotency(
+            project_id, payload.idempotency_key
         )
         if existing:
             if existing.get("observed_problem") != payload.observed_problem:
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(
+                    status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                )
             return existing
     timestamp = now()
     value = {
-        "_id": new_id("PIM"),
+        "_id": new_id(policy["proposal_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(),
         "lesson_refs": [],
@@ -59,25 +72,25 @@ async def create_proposal(db, project_id, payload, user):
         "baseline_metrics": [],
         "result_metrics": [],
         "decision": None,
-        "status": "PROPOSED",
+        "status": policy["proposed_status"],
         "history": [],
-        "revision": 1,
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     try:
-        await db.process_improvement_proposals.insert_one(value)
+        await process_improvement_repository.insert_proposal(value)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            return await db.process_improvement_proposals.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            return await process_improvement_repository.find_by_idempotency(
+                project_id, payload.idempotency_key
             )
         raise
     await audit(
         user.id,
-        "process_improvement_created",
-        "ProcessImprovementProposal",
+        policy["created_event"],
+        policy["entity_type"],
         value["_id"],
         project_id,
         {"source": value["source"], "owner_id": value["owner_id"]},
@@ -85,28 +98,34 @@ async def create_proposal(db, project_id, payload, user):
     return value
 
 
-async def update_proposal(db, proposal_id, payload, user):
-    value = await get_proposal(db, proposal_id, user, "processimprovement.update")
-    if value["status"] != "PROPOSED":
-        raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_PROPOSAL_IMMUTABLE"})
+async def update_proposal(proposal_id, payload, user):
+    policy = domain_policy("process_improvement")
+    value = await get_proposal(proposal_id, user, policy["update_permission"])
+    if value["status"] != policy["proposed_status"]:
+        raise HTTPException(
+            status_code=409, detail={"code": policy["immutable_code"]}
+        )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "owner_id" in changes:
         await require_member(
-            db, value["project_id"], changes["owner_id"], "IMPROVEMENT_OWNER_NOT_PROJECT_MEMBER"
+            value["project_id"], changes["owner_id"], policy["owner_not_member_code"]
         )
     changes["updated_at"] = now()
-    updated = await db.process_improvement_proposals.find_one_and_update(
-        {"_id": proposal_id, "revision": payload.expected_revision, "status": "PROPOSED"},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+    updated = await process_improvement_repository.update_proposal(
+        proposal_id,
+        payload.expected_revision,
+        policy["proposed_status"],
+        changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["revision_conflict_code"]}
+        )
     await audit(
         user.id,
-        "process_improvement_updated",
-        "ProcessImprovementProposal",
+        policy["updated_event"],
+        policy["entity_type"],
         proposal_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -114,22 +133,23 @@ async def update_proposal(db, proposal_id, payload, user):
     return updated
 
 
-async def link_sources(db, proposal_id, payload, user):
-    value = await get_proposal(db, proposal_id, user, "processimprovement.update")
-    if value["status"] != "PROPOSED":
-        raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_PROPOSAL_IMMUTABLE"})
-    causal = await db.causal_analyses.find(
-        {"_id": {"$in": payload.causal_analysis_refs}, "project_id": value["project_id"]}
-    ).to_list(1000)
+async def link_sources(proposal_id, payload, user):
+    policy = domain_policy("process_improvement")
+    value = await get_proposal(proposal_id, user, policy["update_permission"])
+    if value["status"] != policy["proposed_status"]:
+        raise HTTPException(
+            status_code=409, detail={"code": policy["immutable_code"]}
+        )
+    causal = await process_improvement_repository.list_causal_analyses(
+        value["project_id"], payload.causal_analysis_refs, policy["source_limit"]
+    )
     if len(causal) != len(set(payload.causal_analysis_refs)):
-        raise HTTPException(status_code=422, detail={"code": "RCA_NOT_IN_PROJECT"})
-    reports = await db.test_completion_reports.find(
-        {
-            "project_id": value["project_id"],
-            "lessons_learned.lesson_id": {"$in": payload.lesson_refs},
-        },
-        {"lessons_learned": 1},
-    ).to_list(1000)
+        raise HTTPException(
+            status_code=422, detail={"code": policy["rca_not_in_project_code"]}
+        )
+    reports = await process_improvement_repository.list_completion_lessons(
+        value["project_id"], payload.lesson_refs, policy["source_limit"]
+    )
     known_lessons = {
         item.get("lesson_id")
         for report in reports
@@ -137,25 +157,27 @@ async def link_sources(db, proposal_id, payload, user):
         if item.get("lesson_id")
     }
     if set(payload.lesson_refs) - known_lessons:
-        raise HTTPException(status_code=422, detail={"code": "LESSON_NOT_IN_PROJECT"})
-    updated = await db.process_improvement_proposals.find_one_and_update(
-        {"_id": proposal_id, "revision": payload.expected_revision, "status": "PROPOSED"},
+        raise HTTPException(
+            status_code=422, detail={"code": policy["lesson_not_in_project_code"]}
+        )
+    updated = await process_improvement_repository.update_proposal(
+        proposal_id,
+        payload.expected_revision,
+        policy["proposed_status"],
         {
-            "$set": {
-                "lesson_refs": sorted(set(payload.lesson_refs)),
-                "causal_analysis_refs": sorted(set(payload.causal_analysis_refs)),
-                "updated_at": now(),
-            },
-            "$inc": {"revision": 1},
+            "lesson_refs": sorted(set(payload.lesson_refs)),
+            "causal_analysis_refs": sorted(set(payload.causal_analysis_refs)),
+            "updated_at": now(),
         },
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["revision_conflict_code"]}
+        )
     await audit(
         user.id,
-        "process_improvement_sources_linked",
-        "ProcessImprovementProposal",
+        policy["sources_linked_event"],
+        policy["entity_type"],
         proposal_id,
         value["project_id"],
         {"lesson_refs": payload.lesson_refs, "causal_analysis_refs": payload.causal_analysis_refs},
@@ -163,12 +185,15 @@ async def link_sources(db, proposal_id, payload, user):
     return updated
 
 
-async def metric_snapshots(db, project_id, references):
-    items = await db.measurement_snapshots.find(
-        {"_id": {"$in": references}, "project_id": project_id}
-    ).to_list(1000)
+async def metric_snapshots(project_id, references):
+    policy = domain_policy("process_improvement")
+    items = await process_improvement_repository.list_measurement_snapshots(
+        project_id, references, policy["source_limit"]
+    )
     if len(items) != len(set(references)):
-        raise HTTPException(status_code=422, detail={"code": "MEASUREMENT_NOT_IN_PROJECT"})
+        raise HTTPException(
+            status_code=422, detail={"code": policy["measurement_not_in_project_code"]}
+        )
     return [
         {
             "snapshot_id": item["_id"],
@@ -181,18 +206,18 @@ async def metric_snapshots(db, project_id, references):
     ]
 
 
-async def transition_proposal(db, proposal_id, payload, user, target, permission, event):
-    value = await get_proposal(db, proposal_id, user, permission)
-    allowed = {
-        ("PROPOSED", "APPROVED_EXPERIMENT"),
-        ("APPROVED_EXPERIMENT", "RUNNING"),
-        ("EVALUATED", "ADOPTED"),
-        ("EVALUATED", "REJECTED"),
-    }
+async def transition_proposal(proposal_id, payload, user, target, permission, event):
+    policy = domain_policy("process_improvement")
+    value = await get_proposal(proposal_id, user, permission)
+    allowed = {tuple(item) for item in policy["allowed_transitions"]}
     if (value["status"], target) not in allowed:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_IMPROVEMENT_TRANSITION"})
-    if target == "RUNNING" and not value.get("baseline_metrics"):
-        raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_BASELINE_REQUIRED"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["invalid_transition_code"]}
+        )
+    if target == policy["running_status"] and not value.get("baseline_metrics"):
+        raise HTTPException(
+            status_code=409, detail={"code": policy["baseline_required_code"]}
+        )
     timestamp = now()
     entry = {
         "from": value["status"],
@@ -202,52 +227,59 @@ async def transition_proposal(db, proposal_id, payload, user, target, permission
         "at": timestamp,
     }
     changes = {"status": target, "updated_at": timestamp}
-    if target in {"ADOPTED", "REJECTED"}:
-        expected = "ADOPT" if target == "ADOPTED" else "REJECT"
+    if target in policy["decision_statuses"]:
+        expected = policy["decision_by_status"][target]
         if value.get("decision") != expected:
-            raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_DECISION_MISMATCH"})
+            raise HTTPException(
+                status_code=409, detail={"code": policy["decision_mismatch_code"]}
+            )
         changes["decided_by"] = user.id
         changes["decided_at"] = timestamp
-    updated = await db.process_improvement_proposals.find_one_and_update(
-        {"_id": proposal_id, "revision": payload.expected_revision, "status": value["status"]},
-        {"$set": changes, "$push": {"history": entry}, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+    updated = await process_improvement_repository.update_proposal(
+        proposal_id,
+        payload.expected_revision,
+        value["status"],
+        changes,
+        history_entry=entry,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["revision_conflict_code"]}
+        )
     await audit(
-        user.id, event, "ProcessImprovementProposal", proposal_id, value["project_id"], entry
+        user.id, event, policy["entity_type"], proposal_id, value["project_id"], entry
     )
     return updated
 
 
-async def record_baseline(db, proposal_id, payload, user):
-    value = await get_proposal(db, proposal_id, user, "processimprovement.measure")
-    if value["status"] != "APPROVED_EXPERIMENT":
-        raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_NOT_APPROVED"})
-    metrics = await metric_snapshots(db, value["project_id"], payload.measurement_snapshot_refs)
-    updated = await db.process_improvement_proposals.find_one_and_update(
+async def record_baseline(proposal_id, payload, user):
+    policy = domain_policy("process_improvement")
+    value = await get_proposal(proposal_id, user, policy["measure_permission"])
+    if value["status"] != policy["approved_experiment_status"]:
+        raise HTTPException(
+            status_code=409, detail={"code": policy["not_approved_code"]}
+        )
+    metrics = await metric_snapshots(
+        value["project_id"], payload.measurement_snapshot_refs
+    )
+    updated = await process_improvement_repository.update_proposal(
+        proposal_id,
+        payload.expected_revision,
+        policy["approved_experiment_status"],
         {
-            "_id": proposal_id,
-            "revision": payload.expected_revision,
-            "status": "APPROVED_EXPERIMENT",
+            "baseline_metrics": metrics,
+            "baseline_note": payload.note,
+            "updated_at": now(),
         },
-        {
-            "$set": {
-                "baseline_metrics": metrics,
-                "baseline_note": payload.note,
-                "updated_at": now(),
-            },
-            "$inc": {"revision": 1},
-        },
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["revision_conflict_code"]}
+        )
     await audit(
         user.id,
-        "process_improvement_baseline_recorded",
-        "ProcessImprovementProposal",
+        policy["baseline_recorded_event"],
+        policy["entity_type"],
         proposal_id,
         value["project_id"],
         {"snapshot_refs": payload.measurement_snapshot_refs},
@@ -304,44 +336,49 @@ def compare_metric_results(baseline_metrics, result_metrics):
     return comparisons
 
 
-async def evaluate_proposal(db, proposal_id, payload, user):
-    value = await get_proposal(db, proposal_id, user, "processimprovement.evaluate")
-    if value["status"] != "RUNNING":
-        raise HTTPException(status_code=409, detail={"code": "IMPROVEMENT_NOT_RUNNING"})
-    metrics = await metric_snapshots(db, value["project_id"], payload.measurement_snapshot_refs)
+async def evaluate_proposal(proposal_id, payload, user):
+    policy = domain_policy("process_improvement")
+    value = await get_proposal(proposal_id, user, policy["evaluate_permission"])
+    if value["status"] != policy["running_status"]:
+        raise HTTPException(
+            status_code=409, detail={"code": policy["not_running_code"]}
+        )
+    metrics = await metric_snapshots(
+        value["project_id"], payload.measurement_snapshot_refs
+    )
     comparison = compare_metric_results(value.get("baseline_metrics", []), metrics)
     timestamp = now()
     history = {
-        "from": "RUNNING",
-        "to": "EVALUATED",
+        "from": policy["running_status"],
+        "to": policy["evaluated_status"],
         "actor_id": user.id,
         "note": payload.note,
         "at": timestamp,
     }
-    updated = await db.process_improvement_proposals.find_one_and_update(
-        {"_id": proposal_id, "revision": payload.expected_revision, "status": "RUNNING"},
+    updated = await process_improvement_repository.update_proposal(
+        proposal_id,
+        payload.expected_revision,
+        policy["running_status"],
         {
-            "$set": {
-                "result_metrics": metrics,
-                "result_comparison": comparison,
-                "decision": payload.decision,
-                "conclusion": payload.conclusion,
-                "status": "EVALUATED",
-                "evaluated_by": user.id,
-                "evaluated_at": timestamp,
-                "updated_at": timestamp,
-            },
-            "$push": {"history": history},
-            "$inc": {"revision": 1},
+            "result_metrics": metrics,
+            "result_comparison": comparison,
+            "decision": payload.decision,
+            "conclusion": payload.conclusion,
+            "status": policy["evaluated_status"],
+            "evaluated_by": user.id,
+            "evaluated_at": timestamp,
+            "updated_at": timestamp,
         },
-        return_document=ReturnDocument.AFTER,
+        history_entry=history,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(
+            status_code=409, detail={"code": policy["revision_conflict_code"]}
+        )
     await audit(
         user.id,
-        "process_improvement_evaluated",
-        "ProcessImprovementProposal",
+        policy["evaluated_event"],
+        policy["entity_type"],
         proposal_id,
         value["project_id"],
         {
@@ -353,205 +390,63 @@ async def evaluate_proposal(db, proposal_id, payload, user):
     return updated
 
 
-def control_statistics(values):
-    policy = domain_policy("process_control")
-    if len(values) < policy["minimum_baseline_points"]:
-        raise ValueError("STATISTICAL_BASELINE_INSUFFICIENT")
-    center = sum(values) / len(values)
-    variance = sum((value - center) ** 2 for value in values) / len(values)
-    deviation = math.sqrt(variance)
-    return (
-        round_measurement(center),
-        round_measurement(
-            max(0, center - policy["standard_deviation_multiplier"] * deviation)
-        ),
-        round_measurement(center + policy["standard_deviation_multiplier"] * deviation),
-    )
+class ProcessImprovementService:
+    @staticmethod
+    async def list(project_id, user):
+        return await list_proposals(project_id, user)
 
+    @staticmethod
+    async def create(project_id, payload, user):
+        return await create_proposal(project_id, payload, user)
 
-async def get_statistical_analysis(db, analysis_id, user, permission="statisticalquality.read"):
-    value = await db.process_control_baselines.find_one({"_id": analysis_id})
-    if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, permission)
-    return value
+    @staticmethod
+    async def get(proposal_id, user):
+        return await get_proposal(proposal_id, user)
 
+    @staticmethod
+    async def update(proposal_id, payload, user):
+        return await update_proposal(proposal_id, payload, user)
 
-async def list_statistical_analyses(db, project_id, user):
-    await get_project(project_id, user, "statisticalquality.read")
-    items = (
-        await db.process_control_baselines.find({"project_id": project_id})
-        .sort("created_at", -1)
-        .to_list(1000)
-    )
-    return {"items": items, "total": len(items)}
+    @staticmethod
+    async def link_sources(proposal_id, payload, user):
+        return await link_sources(proposal_id, payload, user)
 
-
-async def create_statistical_baseline(db, project_id, payload, user):
-    await get_project(project_id, user, "statisticalquality.manage")
-    if payload.idempotency_key:
-        existing = await db.process_control_baselines.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+    @staticmethod
+    async def transition_action(proposal_id, payload, user, action):
+        transition = domain_policy("process_improvement")["transition_actions"][action]
+        return await transition_proposal(
+            proposal_id,
+            payload,
+            user,
+            transition["target"],
+            transition["permission"],
+            transition["event"],
         )
-        if existing:
-            if existing.get("measurement_definition_id") != payload.measurement_definition_id:
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
-            return existing
-    definition = await db.measurement_definitions.find_one(
-        {"_id": payload.measurement_definition_id, "project_id": project_id}
-    )
-    snapshots = (
-        await db.measurement_snapshots.find(
-            {
-                "_id": {"$in": payload.measurement_snapshot_refs},
-                "project_id": project_id,
-                "measurement_definition_id": payload.measurement_definition_id,
-            }
-        )
-        .sort("measured_at", 1)
-        .to_list(1000)
-    )
-    if not definition or len(snapshots) != len(payload.measurement_snapshot_refs):
-        raise HTTPException(status_code=422, detail={"code": "STATISTICAL_SOURCE_NOT_IN_PROJECT"})
-    if any(
-        not isinstance(item.get("value"), (int, float)) or isinstance(item.get("value"), bool)
-        for item in snapshots
-    ):
-        raise HTTPException(status_code=422, detail={"code": "STATISTICAL_VALUE_NOT_NUMERIC"})
-    values = [float(item["value"]) for item in snapshots]
-    center, lower, upper = control_statistics(values)
-    points = [
-        {
-            "snapshot_id": item["_id"],
-            "value": float(item["value"]),
-            "measured_at": item.get("measured_at"),
-            "outlier": float(item["value"]) < lower or float(item["value"]) > upper,
-        }
-        for item in snapshots
-    ]
-    outliers = [item["snapshot_id"] for item in points if item["outlier"]]
-    timestamp = now()
-    result = {
-        "_id": new_id("SQC"),
-        "project_id": project_id,
-        **payload.model_dump(),
-        "measurement_key": definition.get("key"),
-        "unit": definition.get("unit"),
-        "points": points,
-        "center_line": center,
-        "lower_control_limit": lower,
-        "upper_control_limit": upper,
-        "outlier_snapshot_refs": outliers,
-        "process_status": "UNSTABLE" if outliers else "STABLE",
-        "alerts": [
-            {"code": "PROCESS_INSTABILITY_DETECTED", "snapshot_id": reference}
-            for reference in outliers
-        ],
-        "calculation": "DETERMINISTIC",
-        "special_causes": [],
-        "revision": 1,
-        "created_by": user.id,
-        "created_at": timestamp,
-        "updated_at": timestamp,
-    }
-    try:
-        await db.process_control_baselines.insert_one(result)
-    except DuplicateKeyError:
-        if payload.idempotency_key:
-            return await db.process_control_baselines.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
-            )
-        raise
-    await audit(
-        user.id,
-        "statistical_baseline_calculated",
-        "StatisticalQualityAnalysis",
-        result["_id"],
-        project_id,
-        {
-            "center_line": center,
-            "lower_control_limit": lower,
-            "upper_control_limit": upper,
-            "outlier_count": len(outliers),
-        },
-    )
-    return result
 
+    @staticmethod
+    async def record_baseline(proposal_id, payload, user):
+        return await record_baseline(proposal_id, payload, user)
 
-async def annotate_special_cause(db, analysis_id, payload, user):
-    value = await get_statistical_analysis(db, analysis_id, user, "statisticalquality.annotate")
-    if payload.measurement_snapshot_id not in {item["snapshot_id"] for item in value["points"]}:
-        raise HTTPException(status_code=422, detail={"code": "STATISTICAL_POINT_NOT_IN_WINDOW"})
-    timestamp = now()
-    cause = {
-        "annotation_id": new_id("SQCANN"),
-        "measurement_snapshot_id": payload.measurement_snapshot_id,
-        "cause": payload.cause,
-        "evidence_refs": payload.evidence_refs,
-        "created_by": user.id,
-        "created_at": timestamp,
-    }
-    updated = await db.process_control_baselines.find_one_and_update(
-        {"_id": analysis_id, "revision": payload.expected_revision},
-        {
-            "$push": {"special_causes": cause},
-            "$set": {"updated_at": timestamp},
-            "$inc": {"revision": 1},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "statistical_special_cause_annotated",
-        "StatisticalQualityAnalysis",
-        analysis_id,
-        value["project_id"],
-        {"snapshot_id": payload.measurement_snapshot_id, "evidence_refs": payload.evidence_refs},
-    )
-    return updated
+    @staticmethod
+    async def evaluate(proposal_id, payload, user):
+        return await evaluate_proposal(proposal_id, payload, user)
 
+    @staticmethod
+    async def list_statistical(project_id, user):
+        return await list_statistical_analyses(project_id, user)
 
-async def compare_statistical_analyses(db, project_id, payload, user):
-    await get_project(project_id, user, "statisticalquality.read")
-    rows = await db.process_control_baselines.find(
-        {
-            "_id": {"$in": [payload.before_analysis_id, payload.after_analysis_id]},
-            "project_id": project_id,
-        }
-    ).to_list(2)
-    by_id = {item["_id"]: item for item in rows}
-    if len(by_id) != 2:
-        raise HTTPException(
-            status_code=422, detail={"code": "STATISTICAL_COMPARISON_SOURCE_NOT_IN_PROJECT"}
-        )
-    before = by_id[payload.before_analysis_id]
-    after = by_id[payload.after_analysis_id]
-    if before.get("measurement_definition_id") != after.get("measurement_definition_id"):
-        raise HTTPException(status_code=422, detail={"code": "STATISTICAL_DEFINITION_MISMATCH"})
-    proposal = None
-    if payload.process_improvement_id:
-        proposal = await db.process_improvement_proposals.find_one(
-            {"_id": payload.process_improvement_id, "project_id": project_id}
-        )
-        if not proposal:
-            raise HTTPException(status_code=422, detail={"code": "IMPROVEMENT_NOT_IN_PROJECT"})
-    return {
-        "project_id": project_id,
-        "before_analysis_id": before["_id"],
-        "after_analysis_id": after["_id"],
-        "process_improvement_id": proposal.get("_id") if proposal else None,
-        "center_line_delta": round_measurement(
-            after["center_line"] - before["center_line"]
-        ),
-        "control_width_before": round_measurement(
-            before["upper_control_limit"] - before["lower_control_limit"]
-        ),
-        "control_width_after": round_measurement(
-            after["upper_control_limit"] - after["lower_control_limit"]
-        ),
-        "outlier_count_before": len(before.get("outlier_snapshot_refs", [])),
-        "outlier_count_after": len(after.get("outlier_snapshot_refs", [])),
-        "calculation": "DETERMINISTIC",
-    }
+    @staticmethod
+    async def create_statistical(project_id, payload, user):
+        return await create_statistical_baseline(project_id, payload, user)
+
+    @staticmethod
+    async def get_statistical(analysis_id, user):
+        return await get_statistical_analysis(analysis_id, user)
+
+    @staticmethod
+    async def annotate_special_cause(analysis_id, payload, user):
+        return await annotate_special_cause(analysis_id, payload, user)
+
+    @staticmethod
+    async def compare_statistical(project_id, payload, user):
+        return await compare_statistical_analyses(project_id, payload, user)

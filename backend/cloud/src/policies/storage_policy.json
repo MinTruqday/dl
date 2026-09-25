@@ -1,0 +1,18 @@
+{
+  "file_categories": {
+    "documents": [".pdf", ".doc", ".docx", ".txt", ".odt", ".rtf", ".pages", ".md"],
+    "images": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico"],
+    "videos": [".mp4", ".mkv", ".mov", ".avi", ".webm"],
+    "audio": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"],
+    "archives": [".zip", ".rar", ".7z", ".tar", ".gz"],
+    "code": [".py", ".ts", ".js", ".json", ".html", ".css", ".cpp", ".java", ".sql", ".sh", ".yml", ".yaml"]
+  },
+  "share_roles": ["viewer", "editor"],
+  "object_prefixes": ["users/{owner_id}/", "client/{owner_id}/"],
+  "public_prefix": "public/",
+  "temporary_prefix": "temp/{owner_id}/",
+  "system_prefix": "system/",
+  "upload_reservation_ttl_seconds": 3600,
+  "temporary_file_retention_days": 14,
+  "maximum_versions": 10
+}

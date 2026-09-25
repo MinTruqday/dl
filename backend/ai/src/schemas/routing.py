@@ -9,47 +9,47 @@ class StructuredRouting(BaseModel):
 
 class ContextQuery(StructuredRouting):
     question: str = Field(
-        description="Câu hỏi độc lập đã làm rõ các tham chiếu từ ngữ cảnh"
+        description="Standalone question with contextual references resolved"
     )
 
 
 class GraphRoute(StructuredRouting):
     route: Literal["knowledge", "direct"] = Field(
-        description="knowledge khi cần dữ liệu và direct khi không cần truy xuất"
+        description="knowledge when evidence retrieval is required and direct otherwise"
     )
 
 
 class RetrievalStrategy(StructuredRouting):
     is_simple: bool = Field(
-        description="Đúng khi một truy vấn vector đủ để tìm câu trả lời"
+        description="True when one vector query is sufficient to retrieve the answer"
     )
     queries: List[str] = Field(
-        description="Một đến năm truy vấn ngắn cho tìm kiếm vector"
+        description="One to five concise vector search queries"
     )
 
 
 class QueryOptimization(StructuredRouting):
     question: str = Field(
-        description="Truy vấn tìm kiếm ngắn gọn giữ nguyên ý định"
+        description="Concise search query that preserves the original intent"
     )
 
 
 class RouteDecision(StructuredRouting):
     reasoning: str = Field(
-        description="Lý do ngắn gọn cho tuyến đã chọn"
+        description="Concise reason for the selected route"
     )
     route: Literal["action", "knowledge", "chat"] = Field(
-        description="action để dùng công cụ knowledge để truy xuất và chat để trả lời trực tiếp"
+        description="action for tool use knowledge for retrieval and chat for a direct answer"
     )
     answer: str = Field(
         default="",
-        description="Câu trả lời trực tiếp cho tuyến chat và để trống với tuyến khác",
+        description="Direct answer for the chat route and empty for other routes",
     )
 
 
 class MultiQueryOutput(StructuredRouting):
     queries: List[str] = Field(
-        description="Đúng ba cách diễn đạt khác nhau của truy vấn"
+        description="Exactly three meaningfully different query formulations"
     )
 
 
@@ -57,5 +57,5 @@ class CrossDocumentQueries(StructuredRouting):
     queries: List[str] = Field(
         min_length=2,
         max_length=100,
-        description="Một truy vấn tập trung cho mỗi tài liệu theo đúng thứ tự đầu vào",
+        description="One focused query for each document in input order",
     )

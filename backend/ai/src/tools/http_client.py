@@ -19,7 +19,7 @@ def get_client() -> httpx.AsyncClient:
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.AsyncClient(
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-            timeout=httpx.Timeout(30.0),
+            timeout=httpx.Timeout(settings.INTERNAL_REQUEST_TIMEOUT_SECONDS),
         )
     return _http_client
 
@@ -96,9 +96,6 @@ def check_system_access(token: str) -> bool:
     try:
         raw_token = token.removeprefix("Bearer ").strip()
         payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=["HS256"])
-        from src.schemas.auth import Role
-
-        role = str(payload.get("role", "")).lower()
-        return role == Role.ADMIN.value
+        return str(payload.get("system_role", "")).upper() == "ADMIN"
     except Exception:
         return False

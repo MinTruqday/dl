@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.services.folder import FolderService
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/thu-muc")
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_folder(
     req: dict,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     name = req.get("name")
@@ -28,7 +28,7 @@ async def create_folder(
 @router.get("/noi-dung", response_model=APIResponse[Any])
 async def get_folder_contents(
     folder_id: Optional[str] = Query(None),
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await FolderService.get_folder_contents(folder_id, current_user.id)
@@ -37,7 +37,7 @@ async def get_folder_contents(
 
 @router.get("/cay-thu-muc", response_model=APIResponse[Any])
 async def get_folder_tree(
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     folders = await FolderService.get_folder_tree(current_user.id)
@@ -48,7 +48,7 @@ async def get_folder_tree(
 async def rename_folder(
     folder_id: str,
     req: dict,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     new_name = req.get("name")
@@ -62,7 +62,7 @@ async def rename_folder(
 async def move_folder(
     folder_id: str,
     req: dict,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     new_parent_id = req.get("parent_id")

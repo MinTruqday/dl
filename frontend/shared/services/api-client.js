@@ -1,5 +1,6 @@
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-export const API_URL = configuredApiUrl || "http://localhost:8000";
+if (!configuredApiUrl) throw new Error("NEXT_PUBLIC_API_URL is required");
+export const API_URL = configuredApiUrl;
 export function getToken() {
   if (typeof window === "undefined") return null;
   const token = localStorage.getItem("veriq_token");

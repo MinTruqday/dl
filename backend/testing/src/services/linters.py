@@ -17,7 +17,9 @@ def requirement_findings(version, acceptance_criteria=None):
         criteria.append(
             {
                 "id": item.get("_id") if isinstance(item, dict) else None,
-                "key": item.get("key") if isinstance(item, dict) else f"AC-{index + 1:02d}",
+                "key": item.get("key")
+                if isinstance(item, dict)
+                else f"{quality_policy()['duplicate_scoring']['criterion_key_prefix']}{index + 1:02d}",
                 "text": content,
             }
         )

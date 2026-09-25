@@ -2,6 +2,9 @@ from src.services.design_assistance import request_design_assistance
 from src.services.domain_policy import domain_policy
 
 
+IMPACT_POLICY = domain_policy("impact_analysis")
+
+
 def document(value):
     return {
         "type": "doc",
@@ -56,7 +59,7 @@ async def request_impact_classification(project_id, change_set, candidates):
             "artifact_type": "requirement_change_set",
             "artifact_id": change_set["_id"],
             "artifact_version_id": change_set.get("to_version_id"),
-            "authority": "PROJECT_BASELINE",
+            "authority": IMPACT_POLICY["project_baseline_authority"],
             "text": str(change_set.get("changes", [])),
         }
     ]
@@ -65,7 +68,7 @@ async def request_impact_classification(project_id, change_set, candidates):
             "artifact_type": "test_case_version",
             "artifact_id": item.get("test_case_id"),
             "artifact_version_id": item.get("_id"),
-            "authority": "PROJECT_BASELINE",
+            "authority": IMPACT_POLICY["project_baseline_authority"],
             "text": str(item.get("plain_text_projection", "")),
         }
         for item in candidates[:99]
@@ -79,8 +82,13 @@ async def request_impact_classification(project_id, change_set, candidates):
 
 
 def apply_ai_impact_suggestions(items, ai_result):
-    policy = domain_policy("impact_analysis")
-    allowed = {"STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"}
+    policy = IMPACT_POLICY
+    allowed = {
+        policy["still_valid_classification"],
+        policy["potentially_affected_classification"],
+        policy["needs_update_classification"],
+        policy["obsolete_classification"],
+    }
     by_version = {item["test_case_version_id"]: item for item in items}
     applied = []
     for suggestion in ai_result.get("suggestions", []):
@@ -125,7 +133,7 @@ def ai_new_test_requirements(ai_result, requirement_version_id):
         patch["requirement_version_ids"] = [requirement_version_id]
         items.append(
             {
-                "classification": "NEW_TEST_REQUIRED",
+                "classification": IMPACT_POLICY["new_test_classification"],
                 "reason": str(candidate.get("reason") or "")[:5000],
                 "confidence": max(0, min(1, float(candidate.get("confidence", 0)))),
                 "patch": patch,

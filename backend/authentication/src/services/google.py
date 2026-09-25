@@ -3,12 +3,16 @@ import uuid
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
-import httpx
 from fastapi import HTTPException, status
 from loguru import logger
 
+from src.clients.google import (
+    GoogleAuthorizationRejected,
+    GoogleProviderUnavailable,
+    google_client,
+)
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.redis import redis
+from src.repositories.cache import CacheRepository
 from src.repositories.identity import IdentityRepository
 
 
@@ -21,7 +25,7 @@ class GoogleService:
                 detail="Hệ thống chưa được cấu hình dịch vụ xác thực liên kết",
             )
         state = secrets.token_urlsafe(32)
-        await redis.setex(f"google_oauth_state:{state}", 600, "valid")
+        await CacheRepository.store_google_oauth_state(state)
         query = urlencode(
             {
                 "response_type": "code",
@@ -40,8 +44,7 @@ class GoogleService:
 
         if not code or not state:
             raise HTTPException(status_code=400, detail="Yêu cầu xác thực liên kết không hợp lệ")
-        state_key = f"google_oauth_state:{state}"
-        stored_state = await redis.get_client().getdel(state_key)
+        stored_state = await CacheRepository.consume_google_oauth_state(state)
         if not stored_state:
             raise HTTPException(
                 status_code=400, detail="Phiên xác thực liên kết không hợp lệ hoặc đã hết hạn"
@@ -54,32 +57,12 @@ class GoogleService:
             )
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                token_resp = await client.post(
-                    settings.GOOGLE_TOKEN_URL,
-                    data={
-                        "code": code,
-                        "client_id": settings.GOOGLE_CLIENT_ID,
-                        "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
-                        "grant_type": "authorization_code",
-                    },
-                )
-                token_resp.raise_for_status()
-                access_token = token_resp.json().get("access_token")
-                if not access_token:
-                    raise HTTPException(
-                        status_code=400, detail="Nhà cung cấp đã từ chối yêu cầu xác thực"
-                    )
-                user_resp = await client.get(
-                    settings.GOOGLE_USERINFO_URL,
-                    headers={"Authorization": f"Bearer {access_token}"},
-                )
-                user_resp.raise_for_status()
-                google_user = user_resp.json()
-        except HTTPException:
-            raise
-        except httpx.HTTPError:
+            google_user = await google_client.load_user(code)
+        except GoogleAuthorizationRejected:
+            raise HTTPException(
+                status_code=400, detail="Nhà cung cấp đã từ chối yêu cầu xác thực"
+            )
+        except GoogleProviderUnavailable:
             logger.exception("Federated identity provider request failed")
             raise HTTPException(
                 status_code=502, detail="Không thể xác minh tài khoản với nhà cung cấp"
@@ -107,7 +90,6 @@ class GoogleService:
                 "email": email,
                 "full_name": google_user.get("name") or email.split("@")[0],
                 "slug": slug,
-                "role": "reader",
                 "system_role": "USER",
                 "permissions": [],
                 "is_active": True,

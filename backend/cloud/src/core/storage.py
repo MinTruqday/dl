@@ -16,7 +16,6 @@ OBJECT_STORAGE_LEGACY_BUCKET = settings.OBJECT_STORAGE_LEGACY_BUCKET
 OBJECT_STORAGE_PUBLIC_URL = settings.OBJECT_STORAGE_PUBLIC_URL
 OBJECT_STORAGE_REGION = settings.OBJECT_STORAGE_REGION
 TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "veriq", "veriqx"}
-MIN_BROTLI_BYTES = 1024
 
 
 def should_brotli_compress(
@@ -28,7 +27,7 @@ def should_brotli_compress(
         "application/ld+json",
         "application/xml",
     }
-    return content_length >= MIN_BROTLI_BYTES and (
+    return content_length >= settings.OBJECT_STORAGE_COMPRESSION_MIN_BYTES and (
         requested or text_type or extension in TEXT_EXTENSIONS
     )
 
@@ -92,7 +91,7 @@ async def initialize_bucket():
                     "ID": "expire-temporary-chat-files",
                     "Status": "Enabled",
                     "Filter": {"Prefix": "temp/"},
-                    "Expiration": {"Days": 14},
+                    "Expiration": {"Days": settings.OBJECT_STORAGE_TEMP_RETENTION_DAYS},
                 }
             ]
         },
@@ -109,8 +108,13 @@ async def upload_file(
     kwargs = {"Bucket": get_bucket(object_name), "Key": object_name, "ContentType": content_type}
 
     if should_brotli_compress(object_name, content_type, len(file_content), compress):
-        compressed = await asyncio.to_thread(brotli.compress, file_content, quality=5)
-        if len(compressed) < len(file_content) * 0.95:
+        compressed = await asyncio.to_thread(
+            brotli.compress,
+            file_content,
+            quality=settings.OBJECT_STORAGE_COMPRESSION_QUALITY,
+        )
+        threshold = settings.OBJECT_STORAGE_COMPRESSION_RATIO_THRESHOLD
+        if len(compressed) < len(file_content) * threshold:
             file_content = compressed
             kwargs["ContentEncoding"] = "br"
             kwargs["Metadata"] = {"original-size": str(original_size)}

@@ -26,6 +26,7 @@ from src.api.environment_incidents import router as environment_incidents_router
 from src.api.execution import router as execution_router
 from src.api.execution_context import router as execution_context_router
 from src.api.internal_jobs import router as internal_jobs_router
+from src.api.internal_admin import router as internal_admin_router
 from src.api.jobs import router as jobs_router
 from src.api.measurements import router as measurements_router
 from src.api.non_functional_testing import router as non_functional_testing_router
@@ -112,6 +113,7 @@ app.include_router(attachments_router)
 app.include_router(api_artifacts_router)
 app.include_router(bulk_router)
 app.include_router(internal_jobs_router)
+app.include_router(internal_admin_router)
 app.include_router(jobs_router)
 app.include_router(notifications_router)
 app.include_router(webhooks_router)

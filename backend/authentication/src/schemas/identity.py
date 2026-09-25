@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from src.core.infrastructure.configuration import settings
+
 
 class KYC(str, Enum):
     NONE = "NONE"
@@ -21,13 +23,6 @@ class Creator(str, Enum):
     SUSPENDED = "SUSPENDED"
 
 
-class Role(str, Enum):
-    GUEST = "guest"
-    READER = "reader"
-    AUTHOR = "author"
-    ADMIN = "admin"
-
-
 class SystemRole(str, Enum):
     USER = "USER"
     ADMIN = "ADMIN"
@@ -39,7 +34,6 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=100)
     slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
-    role: Role = Role.READER
     system_role: SystemRole = SystemRole.USER
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
@@ -52,7 +46,10 @@ class UserBase(BaseModel):
     kyc_status: KYC = KYC.NONE
     creator_status: Creator = Creator.NONE
     is_verified: bool = False
-    storage_limit: int = Field(default=20 * 1024 * 1024 * 1024, le=100 * 1024 * 1024 * 1024)
+    storage_limit: int = Field(
+        default=settings.DEFAULT_STORAGE_LIMIT_BYTES,
+        le=settings.MAX_STORAGE_LIMIT_BYTES,
+    )
 
     @field_validator("kyc_status", "creator_status", mode="before")
     @classmethod
@@ -159,10 +156,6 @@ class NotificationSettingsUpdate(BaseModel):
     enable_mention_notifications: bool = True
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
-
-
-class UpdateRoleRequest(BaseModel):
-    role: Role
 
 
 class UpdateStatusRequest(BaseModel):

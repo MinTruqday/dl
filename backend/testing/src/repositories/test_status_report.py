@@ -47,3 +47,49 @@ async def next_sequence(project_id, test_plan_id, release_id):
         return_document=ReturnDocument.AFTER,
     )
     return int(counter["value"])
+
+
+async def find_report_by_idempotency(project_id, idempotency_key):
+    return await database.value.test_status_reports.find_one(
+        {"project_id": project_id, "idempotency_key": idempotency_key}
+    )
+
+
+async def find_monitoring_snapshot(snapshot_id, project_id):
+    return await database.value.test_monitoring_snapshots.find_one(
+        {"_id": snapshot_id, "project_id": project_id}
+    )
+
+
+async def find_plan(plan_id, project_id):
+    return await database.value.test_plans.find_one(
+        {"_id": plan_id, "project_id": project_id}
+    )
+
+
+async def find_build(build_id, project_id):
+    return await database.value.builds.find_one(
+        {"_id": build_id, "project_id": project_id}
+    )
+
+
+async def list_control_actions(project_id, snapshot_id, limit):
+    return await database.value.test_control_actions.find(
+        {"project_id": project_id, "snapshot_id": snapshot_id}
+    ).sort("created_at", 1).to_list(limit)
+
+
+async def insert_report(value):
+    await database.value.test_status_reports.insert_one(value)
+    return value
+
+
+async def find_ai_result(project_id, idempotency_key):
+    return await database.value.ai_results.find_one(
+        {"project_id": project_id, "idempotency_key": idempotency_key}
+    )
+
+
+async def insert_ai_result(value):
+    await database.value.ai_results.insert_one(value)
+    return value

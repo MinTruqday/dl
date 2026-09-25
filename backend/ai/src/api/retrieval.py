@@ -1,13 +1,6 @@
-import hashlib
-import hmac
-from datetime import datetime, timezone
-from uuid import uuid4
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.mongo import mongo
 from src.core.metrics import metrics_collector
 from src.schemas.response import APIResponse
 from src.schemas.retrieval import (
@@ -19,39 +12,9 @@ from src.schemas.retrieval import (
     RetrieveResponse,
 )
 from src.services.retrieval import RetrievalUnavailableError, retriever
+from src.services.retrieval_audit import RetrievalAuditService
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
-
-
-async def record_retrieval_access(operation, query, requester_id, is_admin, docs):
-    document_ids = sorted(
-        {
-            str((doc.get("metadata") or {}).get("document_id"))
-            for doc in docs
-            if (doc.get("metadata") or {}).get("document_id")
-        }
-    )
-    await mongo.get_db().retrieval_audit.insert_one(
-        {
-            "_id": f"KNOWLEDGE-AUD-{uuid4().hex}",
-            "operation": operation,
-            "requester_id": requester_id or "unknown",
-            "is_admin": bool(is_admin),
-            "project_ids": sorted(
-                {
-                    str((doc.get("metadata") or {}).get("project_id"))
-                    for doc in docs
-                    if (doc.get("metadata") or {}).get("project_id")
-                }
-            ),
-            "document_ids": document_ids,
-            "chunk_count": len(docs),
-            "query_sha256": hmac.new(
-                settings.SECRET_KEY.encode("utf-8"), query.encode("utf-8"), hashlib.sha256
-            ).hexdigest(),
-            "created_at": datetime.now(timezone.utc),
-        }
-    )
 
 
 @router.get(
@@ -63,19 +26,8 @@ async def list_retrieval_access_audit(
     document_id: str | None = None,
     limit: int = Query(default=500, ge=1, le=5000),
 ):
-    query = {}
-    if requester_id:
-        query["requester_id"] = requester_id
-    if project_id:
-        query["project_ids"] = project_id
-    if document_id:
-        query["document_ids"] = document_id
-    return (
-        await mongo.get_db()
-        .retrieval_audit.find(query)
-        .sort("created_at", -1)
-        .limit(limit)
-        .to_list(limit)
+    return await RetrievalAuditService.list(
+        requester_id, project_id, document_id, limit
     )
 
 
@@ -101,7 +53,7 @@ async def retrieve_documents(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_retrieval_access("retrieve", req.query, requester_id, is_admin, docs)
+    await RetrievalAuditService.record("retrieve", req.query, requester_id, is_admin, docs)
     metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
@@ -151,7 +103,7 @@ async def multi_query_retrieve(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_retrieval_access(
+    await RetrievalAuditService.record(
         "multi_query_retrieve", req.question, requester_id, is_admin, docs
     )
     metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
@@ -203,7 +155,7 @@ async def cross_document_retrieve(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_retrieval_access(
+    await RetrievalAuditService.record(
         "cross_document_retrieve", req.question, requester_id, is_admin, docs
     )
     metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)

@@ -17,6 +17,10 @@ stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
 )
 
 
+def model_metadata():
+    return {"provider": "huggingface", "model": settings.LLM_MODEL}
+
+
 async def chat(
     messages: List[dict],
     max_tokens: int = 500,
@@ -66,7 +70,10 @@ async def structured(
     response_schema = schema.model_json_schema()
     constrained_prompt = f"{prompt}\n{schema_instruction(response_schema)}"
     raw = await chat(
-        [{"role": "user", "content": constrained_prompt}],
+        [
+            {"role": "system", "content": constrained_prompt},
+            {"role": "user", "content": "Produce the required output"},
+        ],
         max_tokens=max_tokens,
         temperature=0.1,
         attempts=1,
@@ -78,7 +85,8 @@ async def structured(
     except Exception as error:
         corrected = await chat(
             [
-                {"role": "user", "content": constrained_prompt},
+                {"role": "system", "content": constrained_prompt},
+                {"role": "user", "content": "Produce the required output"},
                 {"role": "assistant", "content": raw[:4000]},
                 {
                     "role": "user",

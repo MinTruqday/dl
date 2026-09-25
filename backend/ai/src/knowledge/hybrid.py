@@ -3,7 +3,7 @@ import json
 from langchain_core.runnables import RunnableConfig
 
 from src.knowledge.evidence import package
-from src.memory.project_memory import project_memory
+from src.memory.long_term import long_term_memory
 from src.runtime.limits import limits
 from src.runtime.models import EvidenceItem
 
@@ -96,12 +96,12 @@ async def hybrid_evidence(project_id, query, requester_id, token=None, limit=Non
     except Exception:
         degraded.append("GRAPH_UNAVAILABLE")
     try:
-        for memory in await project_memory.list(project_id, maximum):
+        for memory in await long_term_memory.list(project_id, maximum):
             text = str(memory.get("proposal") or memory.get("objective") or "")
             if query.lower() in text.lower():
                 items.append(
                     EvidenceItem(
-                        artifact_type="ProjectMemory",
+                        artifact_type="LongTermMemory",
                         artifact_id=str(memory["_id"]),
                         source="memory",
                         authority="verified_outcome",

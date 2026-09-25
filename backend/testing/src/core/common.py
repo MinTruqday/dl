@@ -1,49 +1,22 @@
-import os
 from datetime import datetime, timezone
 from math import ceil
 from uuid import uuid4
 
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 
+from src.clients.authentication import load_accounts, resolve_account
 from src.core.auth import (
     ARCHIVE_READ_PERMISSIONS,
     PROJECT_PERMISSIONS,
     CurrentUser,
     permissions_for_role,
 )
-from src.core.database import database
+from src.repositories import common_repository
+from src.services.domain_policy import domain_policy
 
-RETRYABLE_ERROR_CODES = {
-    "WORKER_UNAVAILABLE",
-    "KNOWLEDGE_UNAVAILABLE",
-    "KNOWLEDGE_INDEX_FAILED",
-    "AI_PROVIDER_UNAVAILABLE",
-    "PROPOSAL_APPLY_PARTIAL",
-    "WORKER_JOB_FAILED",
-}
-
-VIEWER_DEFECT_FIELDS = {
-    "_id",
-    "project_id",
-    "defect_key",
-    "title",
-    "severity",
-    "priority",
-    "status",
-    "assignee",
-    "release",
-    "release_id",
-    "build",
-    "build_id",
-    "environment",
-    "environment_id",
-    "root_cause_category",
-    "prevention_candidate",
-    "revision",
-    "created_at",
-    "updated_at",
-}
+CORE_POLICY = domain_policy("core")
+RETRYABLE_ERROR_CODES = frozenset(CORE_POLICY["retryable_error_codes"])
+VIEWER_DEFECT_FIELDS = frozenset(CORE_POLICY["viewer"]["defect_fields"])
 
 
 def new_id(prefix: str):
@@ -55,52 +28,32 @@ def now():
 
 
 async def get_project_role(project_id, user_id):
-    membership = await database.value.project_members.find_one(
-        {"project_id": project_id, "user_id": user_id, "status": "ACTIVE"}, {"project_role": 1}
+    access = CORE_POLICY["project_access"]
+    membership = await common_repository.find_membership(
+        project_id,
+        user_id,
+        status=access["active_membership_status"],
+        projection={"project_role": 1},
     )
     return (membership or {}).get("project_role")
 
 
 def visible_defect(defect, role):
-    if role != "VIEWER":
+    if role != CORE_POLICY["viewer"]["role"]:
         return defect
     return {key: value for key, value in defect.items() if key in VIEWER_DEFECT_FIELDS}
 
 
 async def load_user_identities(user_ids):
     identifiers = sorted({str(value) for value in user_ids if value})
-    if not identifiers or database.client is None:
-        return {}
-    authentication_db = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
-    accounts = (
-        await database.client[authentication_db]
-        .auth_credentials.find(
-            {"_id": {"$in": identifiers}}, {"email": 1, "full_name": 1, "slug": 1}
-        )
-        .to_list(len(identifiers))
-    )
-    return {
-        str(account["_id"]): {
-            "user_id": str(account["_id"]),
-            "email": account.get("email"),
-            "full_name": account.get("full_name"),
-            "slug": account.get("slug"),
-            "label": account.get("full_name") or account.get("email") or account.get("slug"),
-        }
-        for account in accounts
-    }
+    return await load_accounts(identifiers)
 
 
 async def resolve_user_reference(value):
     reference = str(value or "").strip()
-    if not reference or database.client is None:
+    if not reference:
         return reference
-    authentication_db = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
-    query = {"email": reference.lower()} if "@" in reference else {"_id": reference}
-    account = await database.client[authentication_db].auth_credentials.find_one(query, {"_id": 1})
-    if "@" in reference and not account:
-        raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND"})
-    return str(account["_id"]) if account else reference
+    return await resolve_account(reference)
 
 
 def envelope(
@@ -108,14 +61,14 @@ def envelope(
     revision=None,
     trace_id=None,
     operation_id=None,
-    status="SUCCESS",
+    status=CORE_POLICY["response"]["success_status"],
     error_code=None,
     retryable=False,
     state_after_failure=None,
     user_action_required=False,
     degraded_mode=None,
 ):
-    meta = {"trace_id": trace_id or new_id("TRC")}
+    meta = {"trace_id": trace_id or new_id(CORE_POLICY["response"]["trace_id_prefix"])}
     if revision is not None:
         meta["revision"] = revision
     if operation_id is not None:
@@ -149,7 +102,11 @@ def sort_spec(value, allowed, default="-updated_at"):
     field = selected[1:] if descending else selected
     if field not in allowed:
         raise HTTPException(
-            status_code=422, detail={"code": "INVALID_SORT_FIELD", "allowed": sorted(allowed)}
+            status_code=422,
+            detail={
+                "code": CORE_POLICY["project_access"]["error_codes"]["invalid_sort_field"],
+                "allowed": sorted(allowed),
+            },
         )
     return field, -1 if descending else 1
 
@@ -157,16 +114,20 @@ def sort_spec(value, allowed, default="-updated_at"):
 def failure_metadata(code, status_code=500, detail=None):
     detail = detail if isinstance(detail, dict) else {}
     retryable = detail.get(
-        "retryable", code in RETRYABLE_ERROR_CODES or status_code in {502, 503, 504}
+        "retryable",
+        code in RETRYABLE_ERROR_CODES
+        or status_code in CORE_POLICY["response"]["retryable_http_statuses"],
     )
     state_after_failure = detail.get("state_after_failure") or (
-        "UNCHANGED" if status_code < 500 else "RETRYABLE_FAILURE"
+        CORE_POLICY["response"]["unchanged_failure_state"]
+        if status_code < 500
+        else CORE_POLICY["response"]["retryable_failure_state"]
     )
     user_action_required = detail.get(
         "user_action_required", status_code in {409, 422, 403} or not retryable
     )
     return {
-        "status": "FAILED",
+        "status": CORE_POLICY["response"]["failed_status"],
         "error_code": code,
         "retryable": retryable,
         "state_after_failure": state_after_failure,
@@ -183,7 +144,7 @@ async def audit(
     details: dict | None = None,
 ):
     event = {
-        "_id": new_id("AUD"),
+        "_id": new_id(CORE_POLICY["response"]["audit_id_prefix"]),
         "project_id": project_id,
         "actor_id": user_id,
         "action": action,
@@ -192,49 +153,43 @@ async def audit(
         "details": details or {},
         "created_at": now(),
     }
-    await database.value.audit_events.insert_one(event)
-    return event
+    return await common_repository.insert_audit_event(event)
 
 
 async def get_project(
     project_id: str,
     user: CurrentUser,
-    permission: str = "project.read",
+    permission: str = CORE_POLICY["project_access"]["default_permission"],
     assigned_role: str | None = None,
     assigned_user_id: str | None = None,
 ):
-    project = await database.value.projects.find_one({"_id": project_id})
+    access = CORE_POLICY["project_access"]
+    codes = access["error_codes"]
+    project = await common_repository.find_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    membership = await database.value.project_members.find_one(
-        {"project_id": project_id, "user_id": user.id}
-    )
-    grant = await database.value.break_glass_grants.find_one(
-        {
-            "project_id": project_id,
-            "user_id": user.id,
-            "status": "ACTIVE",
-            "expires_at": {"$gt": now()},
-        }
+        raise HTTPException(status_code=404, detail={"code": codes["entity_not_found"]})
+    membership = await common_repository.find_membership(project_id, user.id)
+    grant = await common_repository.find_active_grant(
+        project_id, user.id, access["active_membership_status"], now()
     )
     grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
     if not membership and permission not in grant_permissions:
         await audit(
             user.id,
-            "project_membership_required",
-            "Project",
+            access["audit_actions"]["membership_required"],
+            access["project_entity_type"],
             project_id,
             project_id,
             {"permission": permission, "system_role": user.system_role.value},
         )
-        raise HTTPException(status_code=403, detail={"code": "PROJECT_MEMBERSHIP_REQUIRED"})
-    if membership and membership.get("status") != "ACTIVE" and permission not in grant_permissions:
-        raise HTTPException(status_code=403, detail={"code": "PROJECT_MEMBERSHIP_INACTIVE"})
-    if project.get("administrative_status", "ACTIVE") != "ACTIVE":
-        raise HTTPException(status_code=423, detail={"code": "PROJECT_ADMINISTRATIVELY_SUSPENDED"})
+        raise HTTPException(status_code=403, detail={"code": codes["membership_required"]})
+    if membership and membership.get("status") != access["active_membership_status"] and permission not in grant_permissions:
+        raise HTTPException(status_code=403, detail={"code": codes["membership_inactive"]})
+    if project.get("administrative_status", access["active_administrative_status"]) != access["active_administrative_status"]:
+        raise HTTPException(status_code=423, detail={"code": codes["administratively_suspended"]})
     permissions = (
         permissions_for_role(membership.get("project_role", ""), project.get("settings"))
-        if membership and membership.get("status") == "ACTIVE"
+        if membership and membership.get("status") == access["active_membership_status"]
         else set()
     )
     assigned_access = (
@@ -250,8 +205,8 @@ async def get_project(
     ):
         await audit(
             user.id,
-            "project_permission_denied",
-            "Project",
+            access["audit_actions"]["permission_denied"],
+            access["project_entity_type"],
             project_id,
             project_id,
             {
@@ -260,27 +215,27 @@ async def get_project(
             },
         )
         raise HTTPException(
-            status_code=403, detail={"code": "PROJECT_PERMISSION_DENIED", "permission": permission}
+            status_code=403, detail={"code": codes["permission_denied"], "permission": permission}
         )
     if (
-        project.get("status", "active").lower() == "archived"
+        project.get("status", access["default_project_status"]).lower() == access["archived_project_status"]
         and permission not in ARCHIVE_READ_PERMISSIONS
-        and permission != "project.restore"
+        and permission != access["restore_permission"]
     ):
-        raise HTTPException(status_code=409, detail={"code": "PROJECT_ARCHIVED"})
+        raise HTTPException(status_code=409, detail={"code": codes["archived"]})
     if (
-        project.get("status", "active").lower() == "archived"
+        project.get("status", access["default_project_status"]).lower() == access["archived_project_status"]
         and permission in ARCHIVE_READ_PERMISSIONS
-        and permission != "project.read"
-        and (project.get("settings") or {}).get("read_after_archive_policy", "ALLOW_READ")
-        == "DENY_READ"
+        and permission != access["default_permission"]
+        and (project.get("settings") or {}).get("read_after_archive_policy", access["default_archive_read_policy"])
+        == access["denied_archive_read_policy"]
     ):
-        raise HTTPException(status_code=403, detail={"code": "PROJECT_ARCHIVED_READ_DENIED"})
+        raise HTTPException(status_code=403, detail={"code": codes["archived_read_denied"]})
     if permission in grant_permissions and permission not in permissions:
         return {
             **project,
             "access_context": {
-                "mode": "BREAK_GLASS",
+                "mode": access["break_glass_mode"],
                 "grant_id": grant["_id"],
                 "permissions": sorted(grant_permissions),
                 "expires_at": grant["expires_at"],
@@ -293,17 +248,24 @@ async def get_project(
 async def require_action_policy(
     project_id: str, user: CurrentUser, action: str, default_roles: set[str]
 ):
-    project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
-    membership = await database.value.project_members.find_one(
-        {"project_id": project_id, "user_id": user.id, "status": "ACTIVE"}, {"project_role": 1}
+    access = CORE_POLICY["project_access"]
+    project = await common_repository.find_project(project_id, {"settings": 1})
+    membership = await common_repository.find_membership(
+        project_id,
+        user.id,
+        status=access["active_membership_status"],
+        projection={"project_role": 1},
     )
     if not project or not membership:
-        raise HTTPException(status_code=403, detail={"code": "PROJECT_MEMBERSHIP_REQUIRED"})
+        raise HTTPException(
+            status_code=403, detail={"code": access["error_codes"]["membership_required"]}
+        )
     configured = (project.get("settings") or {}).get("action_policies", {}).get(action)
     allowed_roles = set(configured) if isinstance(configured, list) else default_roles
     if membership.get("project_role") not in allowed_roles:
         raise HTTPException(
-            status_code=403, detail={"code": "PROJECT_ACTION_POLICY_DENIED", "action": action}
+            status_code=403,
+            detail={"code": access["error_codes"]["action_policy_denied"], "action": action},
         )
     return project
 
@@ -319,9 +281,14 @@ async def get_project_entity(
     projection = {"_id": 1, "project_id": 1}
     if assigned_user_field:
         projection[assigned_user_field] = 1
-    identity = await database.value[collection].find_one({"_id": entity_id}, projection)
+    identity = await common_repository.find_entity_identity(
+        collection, entity_id, projection
+    )
     if not identity:
-        raise HTTPException(status_code=404, detail={"code": "ARTIFACT_NOT_FOUND"})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": CORE_POLICY["project_access"]["error_codes"]["artifact_not_found"]},
+        )
     await get_project(
         identity["project_id"],
         user,
@@ -329,11 +296,14 @@ async def get_project_entity(
         assigned_role=assigned_role,
         assigned_user_id=identity.get(assigned_user_field) if assigned_user_field else None,
     )
-    entity = await database.value[collection].find_one(
-        {"_id": entity_id, "project_id": identity["project_id"]}
+    entity = await common_repository.find_project_entity(
+        collection, entity_id, identity["project_id"]
     )
     if not entity:
-        raise HTTPException(status_code=404, detail={"code": "ARTIFACT_NOT_FOUND"})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": CORE_POLICY["project_access"]["error_codes"]["artifact_not_found"]},
+        )
     return entity
 
 
@@ -346,30 +316,30 @@ async def optimistic_patch(
         if value is not None and key != "expected_revision"
     }
     cleaned["updated_at"] = now()
-    scope = {"_id": entity_id, "revision": expected_revision}
-    if collection != "projects":
-        scope["project_id"] = project_id
-    entity = await database.value[collection].find_one_and_update(
-        scope, {"$set": cleaned, "$inc": {"revision": 1}}, return_document=ReturnDocument.AFTER
+    entity = await common_repository.optimistic_patch(
+        collection,
+        entity_id,
+        project_id,
+        expected_revision,
+        cleaned,
+        include_project_scope=collection != "projects",
     )
     if entity:
         return entity
-    existing = await database.value[collection].find_one({"_id": entity_id})
+    existing = await common_repository.find_entity(collection, entity_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu")
     raise HTTPException(
         status_code=409,
-        detail={"code": "REVISION_CONFLICT", "current_revision": existing.get("revision")},
+        detail={
+            "code": CORE_POLICY["project_access"]["error_codes"]["revision_conflict"],
+            "current_revision": existing.get("revision"),
+        },
     )
 
 
 async def next_key(project_id: str, sequence: str, prefix: str):
-    value = await database.value.counters.find_one_and_update(
-        {"_id": f"{project_id}:{sequence}"},
-        {"$inc": {"value": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
-    )
+    value = await common_repository.next_counter(f"{project_id}:{sequence}")
     return f"{prefix}-{int(value['value']):04d}"
 
 

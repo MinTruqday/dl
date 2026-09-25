@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.schemas.storage import StorageItemCreate, StorageItemUpdate
 from src.services.file import FileService
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/tep-tin")
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_file_record(
     item: StorageItemCreate,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     result = await FileService.create_file_record(item, current_user.id)
@@ -24,7 +24,7 @@ async def create_file_record(
 
 @router.get("/dung-luong", response_model=APIResponse[Any])
 async def get_storage_quota(
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     quota = await FileService.get_storage_quota(current_user.id)
@@ -34,7 +34,7 @@ async def get_storage_quota(
 @router.get("/{file_id}", response_model=APIResponse[Any])
 async def get_file_metadata(
     file_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     result = await FileService.get_file_by_id(file_id, current_user.id)
@@ -47,7 +47,7 @@ async def get_file_metadata(
 async def update_file_metadata(
     file_id: str,
     update_data: StorageItemUpdate,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     result = await FileService.update_file_metadata(file_id, update_data, current_user.id)
@@ -58,7 +58,7 @@ async def update_file_metadata(
 async def rename_file(
     file_id: str,
     req: dict,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     new_name = req.get("name")
@@ -72,7 +72,7 @@ async def rename_file(
 async def move_file(
     file_id: str,
     req: dict,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     new_parent_id = req.get("parent_id")

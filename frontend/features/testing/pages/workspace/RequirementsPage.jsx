@@ -1,89 +1,31 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import DataTable from "../../components/DataTable";
 import ReviewCommentsPanel from "../../components/ReviewCommentsPanel";
 import FormalReviewPanel from "../../components/FormalReviewPanel";
 import CollaborationPanel from "../../components/CollaborationPanel";
 import {
   ErrorState,
-  LoadingState,
-  Pagination,
-  Panel,
   ProjectCrumb,
   WorkspacePage,
-  StatusPill,
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
-import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
-import DocumentEditor from "../../editor/DocumentEditor";
-import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
-
-const initialForm = {
-  title: "",
-  type: "functional",
-  priority: "medium",
-  risk: "medium",
-  content_doc: emptyDoc(),
-  acceptance: "",
-  businessRules: "",
-  actors: "",
-  dependencies: "",
-  tags: "",
-  ownerId: "",
-};
-
-function splitBlocks(value) {
-  return value
-    .split(/\n\s*---\s*\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function acceptanceCriteria(value) {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item, index) => ({
-      key: `AC-${index + 1}`,
-      content_doc: textDoc(item),
-      status: "draft",
-    }));
-}
-
-function requirementSuggestionPreview(item) {
-  const values = [];
-  if (item.revised_title) values.push(["Tên", item.revised_title]);
-  if (item.revised_content) values.push(["Nội dung", item.revised_content]);
-  if (item.patch?.actors) values.push(["Tác nhân", item.patch.actors.join(" · ")]);
-  if (item.patch?.business_rules) {
-    values.push(["Quy tắc nghiệp vụ", item.patch.business_rules.join(" · ")]);
-  }
-  if (item.patch?.acceptance_criteria) {
-    values.push([
-      "Tiêu chí chấp nhận",
-      item.patch.acceptance_criteria
-        .map((criterion) => `${criterion.key} ${docText(criterion.content_doc)}`)
-        .join(" · "),
-    ]);
-  }
-  if (item.patch?.dependencies) {
-    values.push(["Phụ thuộc", item.patch.dependencies.join(" · ")]);
-  }
-  return values;
-}
-
-function requirementFieldLabel(value) {
-  return {
-    title: "Tên",
-    content: "Nội dung",
-    actors: "Tác nhân",
-    business_rules: "Quy tắc nghiệp vụ",
-    acceptance_criteria: "Tiêu chí chấp nhận",
-    dependencies: "Phụ thuộc",
-  }[value];
-}
+import { docText, messageOf, textDoc } from "../../lib/testing";
+import RequirementCurrentVersionPanel from "./requirements/RequirementCurrentVersionPanel";
+import RequirementCreateModal from "./requirements/RequirementCreateModal";
+import RequirementDuplicatePanel from "./requirements/RequirementDuplicatePanel";
+import RequirementHistoryPanel from "./requirements/RequirementHistoryPanel";
+import RequirementImportModal from "./requirements/RequirementImportModal";
+import RequirementQualityPanel from "./requirements/RequirementQualityPanel";
+import RequirementSourceDocumentsPanel from "./requirements/RequirementSourceDocumentsPanel";
+import RequirementTracePanel from "./requirements/RequirementTracePanel";
+import RequirementsListPanel from "./requirements/RequirementsListPanel";
+import {
+  createInitialRequirementForm,
+  parseAcceptanceCriteria,
+  parseCommaValues,
+  splitRequirementBlocks,
+} from "./requirements/requirements.model";
 
 export default function RequirementsPage({ project, section }) {
   const { ask, dialog } = useActionDialog();
@@ -93,7 +35,7 @@ export default function RequirementsPage({ project, section }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selected, setSelected] = useState(null);
   const [versions, setVersions] = useState([]);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(createInitialRequirementForm);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -126,6 +68,7 @@ export default function RequirementsPage({ project, section }) {
   const [saveState, setSaveState] = useState("saved");
   const draftSequence = useRef(0);
   const saveInFlight = useRef(null);
+  const savedSequence = useRef(0);
   const loadedVersion = useRef("");
   const [comparison, setComparison] = useState(null);
   const [duplicateScan, setDuplicateScan] = useState(null);
@@ -203,7 +146,14 @@ export default function RequirementsPage({ project, section }) {
   const persistDraft = useCallback(
     async (snapshot, sequence) => {
       if (!snapshot || !current || !selected) return;
-      if (saveInFlight.current) return saveInFlight.current;
+      let baseVersion = current;
+      if (saveInFlight.current) {
+        const running = saveInFlight.current;
+        const saved = await running;
+        if (saveInFlight.current === running) saveInFlight.current = null;
+        if (sequence <= savedSequence.current) return saved;
+        baseVersion = saved?.current_version || current;
+      }
       const request = (async () => {
         setSaveState("saving");
         try {
@@ -211,7 +161,7 @@ export default function RequirementsPage({ project, section }) {
             project._id,
             selected._id,
             {
-              base_revision: current.revision,
+              base_revision: baseVersion.revision,
               operation_id: crypto.randomUUID(),
               changes: {
                 title: snapshot.title,
@@ -248,6 +198,7 @@ export default function RequirementsPage({ project, section }) {
               },
             },
           );
+          savedSequence.current = Math.max(savedSequence.current, sequence);
           setSelected(result);
           if (draftSequence.current === sequence) {
             setDraftDirty(false);
@@ -255,14 +206,19 @@ export default function RequirementsPage({ project, section }) {
           } else {
             setSaveState("pending");
           }
+          return result;
         } catch (reason) {
           setSaveState("error");
           setError(messageOf(reason));
+          throw reason;
         }
       })();
       saveInFlight.current = request;
-      await request;
-      if (saveInFlight.current === request) saveInFlight.current = null;
+      try {
+        return await request;
+      } finally {
+        if (saveInFlight.current === request) saveInFlight.current = null;
+      }
     },
     [current, project._id, selected],
   );
@@ -320,7 +276,7 @@ export default function RequirementsPage({ project, section }) {
           .filter(Boolean),
         owner_id: form.ownerId.trim() || null,
       });
-      setForm(initialForm);
+      setForm(createInitialRequirementForm());
       setCreating(false);
       await load();
     } catch (reason) {
@@ -350,7 +306,9 @@ export default function RequirementsPage({ project, section }) {
     });
     if (!answer) return;
     try {
-      const payload = { expected_revision: current.revision, review_note: answer.note };
+      const saved = await saveDraft();
+      const savedVersion = saved?.current_version || current;
+      const payload = { expected_revision: savedVersion.revision, review_note: answer.note };
       if (action === "submit") {
         await testingApi.submitRequirementReview(project._id, selected._id, payload);
       } else if (action === "changes") {
@@ -360,11 +318,22 @@ export default function RequirementsPage({ project, section }) {
       }
       await load();
     } catch (reason) {
-      setError(messageOf(reason));
+      if (reason?.code === "REQUIREMENT_LINT_BLOCKED") {
+        setLint({
+          valid: false,
+          degraded_mode: null,
+          findings: reason.details?.findings || [],
+          suggestions: [],
+        });
+        setError("Yêu cầu còn nội dung bắt buộc cần hoàn thiện trước khi gửi rà soát");
+      } else {
+        setError(messageOf(reason));
+      }
     }
   };
   const saveDraft = async () => {
-    await persistDraft(draft, draftSequence.current);
+    if (!draftDirty && saveState === "saved") return selected;
+    return (await persistDraft(draft, draftSequence.current)) || selected;
   };
   const createVersion = async () => {
     const answer = await ask({
@@ -462,6 +431,27 @@ export default function RequirementsPage({ project, section }) {
       setPreview(result);
       setSelectedIndexes(result.preview.map((_, index) => index));
       setSourceDocument(await testingApi.getRequirementDocument(document._id));
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const retrySourceDocument = async () => {
+    try {
+      const document = await testingApi.retryRequirementDocumentParse(
+        sourceDocument._id,
+        sourceDocument.revision,
+      );
+      setSourceDocument(document);
+      if (document.status !== "READY") {
+        setError("Bộ phân tích vẫn chưa đọc được tệp gốc");
+        return;
+      }
+      const result = await testingApi.extractRequirementDocument(
+        document._id,
+        `source-${document.content_hash}`,
+      );
+      setPreview(result);
+      setSelectedIndexes(result.preview.map((_, index) => index));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -669,8 +659,8 @@ export default function RequirementsPage({ project, section }) {
       .split("\n")
       .map((item) => item.trim())
       .filter(Boolean);
-    const contents = splitBlocks(answer.contents);
-    const criteriaBlocks = splitBlocks(answer.acceptance);
+    const contents = splitRequirementBlocks(answer.contents);
+    const criteriaBlocks = splitRequirementBlocks(answer.acceptance);
     if (
       contents.length < 2 ||
       titles.length !== contents.length ||
@@ -690,7 +680,7 @@ export default function RequirementsPage({ project, section }) {
           priority: current.priority,
           risk: current.risk,
           content_doc: textDoc(content),
-          acceptance_criteria: acceptanceCriteria(criteriaBlocks[index]),
+          acceptance_criteria: parseAcceptanceCriteria(criteriaBlocks[index]),
           business_rules: current.business_rules || [],
           actors: current.actors || [],
           dependencies: current.dependencies || [],
@@ -804,7 +794,7 @@ export default function RequirementsPage({ project, section }) {
           priority: sources[0].current_version.priority,
           risk: sources[0].current_version.risk,
           content_doc: textDoc(answer.content),
-          acceptance_criteria: acceptanceCriteria(answer.acceptance),
+          acceptance_criteria: parseAcceptanceCriteria(answer.acceptance),
           business_rules: [
             ...new Set(sources.flatMap((item) => item.current_version.business_rules || [])),
           ],
@@ -845,6 +835,65 @@ export default function RequirementsPage({ project, section }) {
       setError(messageOf(reason));
     }
   };
+  const bulkUpdateTags = async () => {
+    const answer = await ask({
+      title: "Cập nhật nhãn hàng loạt",
+      description: `${selectedIds.length} yêu cầu đã chọn`,
+      confirmLabel: "Cập nhật nhãn",
+      fields: [
+        {
+          name: "add",
+          label: "Nhãn cần thêm phân cách bằng dấu phẩy",
+          autoFocus: true,
+        },
+        { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.bulkTags(project._id, {
+        artifact_type: "requirement",
+        ids: selectedIds,
+        add_tags: parseCommaValues(answer.add),
+        remove_tags: parseCommaValues(answer.remove),
+        idempotency_key: crypto.randomUUID(),
+      });
+      setSelectedIds([]);
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const bulkArchiveRequirements = async () => {
+    const answer = await ask({
+      title: "Lưu trữ yêu cầu hàng loạt",
+      description: `${selectedIds.length} yêu cầu vẫn được giữ toàn bộ lịch sử`,
+      confirmLabel: "Lưu trữ",
+      danger: true,
+      fields: [
+        {
+          name: "reason",
+          label: "Lý do",
+          required: true,
+          multiline: true,
+          autoFocus: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.bulkArchive(project._id, {
+        artifact_type: "requirement",
+        ids: selectedIds,
+        reason: answer.reason,
+        idempotency_key: crypto.randomUUID(),
+      });
+      setSelectedIds([]);
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
   return (
     <WorkspacePage
       title={selected ? `${selected.requirement_key} ${current?.title || ""}` : "Yêu cầu"}
@@ -881,524 +930,47 @@ export default function RequirementsPage({ project, section }) {
       {error && <ErrorState message={error} />}
       {selected ? (
         <>
-          <Panel
-            title="Phiên bản hiện tại"
-            actions={
-              <div className="flex flex-wrap gap-2">
-                {can("ai.run_lint") && (
-                  <button
-                    className="secondary-button"
-                    aria-busy={checkingWithAi}
-                    disabled={checkingWithAi}
-                    type="button"
-                    onClick={async () => {
-                      setCheckingWithAi(true);
-                      try {
-                        setLint(
-                          await testingApi.lintRequirement(current._id, {
-                            idempotency_key: crypto.randomUUID(),
-                            instruction: "Phân tích chất lượng và đề xuất bản sửa có căn cứ",
-                          }),
-                        );
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      } finally {
-                        setCheckingWithAi(false);
-                      }
-                    }}
-                  >
-                    {checkingWithAi ? "AI đang kiểm tra chất lượng" : "Kiểm tra chất lượng"}
-                  </button>
-                )}
-                {current.status === "BASELINED" && can("requirement.version.create") && (
-                  <button className="secondary-button" type="button" onClick={createVersion}>
-                    Tạo phiên bản mới
-                  </button>
-                )}
-                {current.status === "BASELINED" && can("requirement.split") && (
-                  <button className="secondary-button" type="button" onClick={splitBaseline}>
-                    Tách yêu cầu
-                  </button>
-                )}
-                {current.status !== "OBSOLETE" && can("requirement.archive") && (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Đánh dấu yêu cầu không còn hiệu lực",
-                        description: `${selected.requirement_key} vẫn được giữ trong lịch sử truy vết`,
-                        confirmLabel: "Đánh dấu",
-                        danger: true,
-                        fields: [
-                          {
-                            name: "reason",
-                            label: "Lý do",
-                            initialValue: "Yêu cầu không còn thuộc phạm vi sản phẩm",
-                            required: true,
-                            multiline: true,
-                            autoFocus: true,
-                          },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        await testingApi.obsoleteRequirement(selected._id, {
-                          expected_current_version_id: selected.current_version_id,
-                          reason: answer.reason,
-                        });
-                        await load();
-                      } catch (value) {
-                        setError(messageOf(value));
-                      }
-                    }}
-                  >
-                    Đánh dấu không còn hiệu lực
-                  </button>
-                )}
-                {current.status === "OBSOLETE" && can("requirement.restore") && (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Khôi phục yêu cầu",
-                        description: `${selected.requirement_key} sẽ trở lại trạng thái trước khi bị đánh dấu không còn hiệu lực`,
-                        confirmLabel: "Khôi phục",
-                        fields: [
-                          {
-                            name: "reason",
-                            label: "Lý do",
-                            initialValue: "Yêu cầu tiếp tục thuộc phạm vi sản phẩm",
-                            required: true,
-                            multiline: true,
-                            autoFocus: true,
-                          },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        await testingApi.restoreRequirement(selected._id, {
-                          expected_current_version_id: selected.current_version_id,
-                          reason: answer.reason,
-                        });
-                        await load();
-                      } catch (value) {
-                        setError(messageOf(value));
-                      }
-                    }}
-                  >
-                    Khôi phục yêu cầu
-                  </button>
-                )}
-                {current.status === "DRAFT" && can("requirement.submit_review") && (
-                  <button className="apple-button" type="button" onClick={() => review("submit")}>
-                    Gửi rà soát
-                  </button>
-                )}
-                {current.status === "IN_REVIEW" && can("requirement.review") && (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => review("changes")}
-                  >
-                    Yêu cầu chỉnh sửa
-                  </button>
-                )}
-                {current.status === "IN_REVIEW" && can("requirement.approve") && (
-                  <button className="apple-button" type="button" onClick={() => review("approve")}>
-                    Phê duyệt phiên bản
-                  </button>
-                )}
-              </div>
-            }
-          >
-            <div className="grid gap-5 p-5 md:grid-cols-3">
-              <div>
-                <p className="field-label">Trạng thái</p>
-                <div className="mt-2">
-                  <StatusPill value={current.status} />
-                </div>
-              </div>
-              <div>
-                <p className="field-label">Phiên bản</p>
-                <p className="mt-2 font-semibold">v{current.version}</p>
-              </div>
-              <div>
-                <p className="field-label">Rủi ro</p>
-                <p className="mt-2 font-semibold">{current.risk}</p>
-              </div>
-              {current.status === "DRAFT" && draft && can("requirement.update") ? (
-                <div className="space-y-4 md:col-span-3">
-                  <input
-                    aria-label="Tên yêu cầu"
-                    className="apple-input"
-                    value={draft.title}
-                    onChange={(event) => changeDraft({ title: event.target.value })}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <select
-                      aria-label="Loại yêu cầu"
-                      className="apple-input"
-                      value={draft.type}
-                      onChange={(event) => changeDraft({ type: event.target.value })}
-                    >
-                      {[
-                        "functional",
-                        "non_functional",
-                        "business_rule",
-                        "api",
-                        "ui",
-                        "data",
-                        "permission",
-                        "integration",
-                        "constraint",
-                      ].map((value) => (
-                        <option key={value} value={value}>
-                          {valueLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      aria-label="Ưu tiên yêu cầu"
-                      className="apple-input"
-                      value={draft.priority}
-                      onChange={(event) => changeDraft({ priority: event.target.value })}
-                    >
-                      {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value} value={value}>
-                          {valueLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      aria-label="Rủi ro yêu cầu"
-                      className="apple-input"
-                      value={draft.risk}
-                      onChange={(event) => changeDraft({ risk: event.target.value })}
-                    >
-                      {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value} value={value}>
-                          {valueLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <DocumentEditor
-                    value={draft.content_doc}
-                    onChange={(content_doc) => changeDraft({ content_doc })}
-                    label="Nội dung yêu cầu"
-                  />
-                  <textarea
-                    aria-label="Tiêu chí chấp nhận"
-                    className="apple-input min-h-28"
-                    value={draft.acceptance}
-                    onChange={(event) => changeDraft({ acceptance: event.target.value })}
-                  />
-                  <div className="grid gap-3 lg:grid-cols-3">
-                    <textarea
-                      aria-label="Quy tắc nghiệp vụ"
-                      className="apple-input min-h-24"
-                      value={draft.businessRules}
-                      onChange={(event) => changeDraft({ businessRules: event.target.value })}
-                      placeholder="Mỗi dòng một quy tắc nghiệp vụ"
-                    />
-                    <textarea
-                      aria-label="Tác nhân"
-                      className="apple-input min-h-24"
-                      value={draft.actors}
-                      onChange={(event) => changeDraft({ actors: event.target.value })}
-                      placeholder="Các tác nhân phân tách bằng dấu phẩy"
-                    />
-                    <textarea
-                      aria-label="Phụ thuộc yêu cầu"
-                      className="apple-input min-h-24"
-                      value={draft.dependencies}
-                      onChange={(event) => changeDraft({ dependencies: event.target.value })}
-                      placeholder="Mỗi dòng một phụ thuộc"
-                    />
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      aria-label="Nhãn yêu cầu"
-                      className="apple-input"
-                      value={draft.tags}
-                      onChange={(event) => changeDraft({ tags: event.target.value })}
-                      placeholder="Nhãn phân cách bằng dấu phẩy"
-                    />
-                    <select
-                      aria-label="Người phụ trách yêu cầu"
-                      className="apple-input"
-                      value={draft.ownerId}
-                      onChange={(event) => changeDraft({ ownerId: event.target.value })}
-                    >
-                      <option value="">Chưa phân công</option>
-                      {members.map((item) => (
-                        <option key={item.user_id} value={item.user_id}>
-                          {item.user_label || item.user?.email || item.user_id}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button className="secondary-button" type="button" onClick={saveDraft}>
-                    Lưu bản nháp
-                  </button>
-                  <span className="ml-3 text-[12px] text-ink-muted" aria-live="polite">
-                    {saveState === "saving"
-                      ? "Đang tự động lưu"
-                      : saveState === "pending"
-                        ? "Có thay đổi chưa lưu"
-                        : saveState === "error"
-                          ? "Tự động lưu thất bại"
-                          : "Đã tự động lưu"}
-                  </span>
-                </div>
-              ) : (
-                <div className="md:col-span-3">
-                  <DocumentEditor
-                    value={current.content_doc}
-                    onChange={() => {}}
-                    label="Nội dung yêu cầu"
-                    readOnly
-                  />
-                </div>
-              )}
-            </div>
-          </Panel>
-          <Panel title="Dấu vết nguồn">
-            <DataTable
-              items={(current.source_refs || []).map((item, index) => ({
-                ...item,
-                _id: `${item.requirement_document_id || "source"}-${index}`,
-              }))}
-              empty="Yêu cầu được tạo thủ công và chưa có nguồn tài liệu đính kèm"
-              columns={[
-                {
-                  key: "requirement_document_id",
-                  label: "Tài liệu nguồn",
-                  render: (item) =>
-                    sourceDocuments.find(
-                      (document) => document._id === item.requirement_document_id,
-                    )?.title ||
-                    sourceDocuments.find(
-                      (document) => document._id === item.requirement_document_id,
-                    )?.filename ||
-                    item.requirement_document_id,
-                },
-                { key: "format", label: "Định dạng" },
-                {
-                  key: "location",
-                  label: "Vị trí",
-                  render: (item) =>
-                    item.source_start !== undefined
-                      ? `${item.source_start} đến ${item.source_end}`
-                      : item.candidate_index !== undefined
-                        ? `Mục ${item.candidate_index + 1}`
-                        : "Toàn bộ tài liệu",
-                },
-                { key: "content_hash", label: "SHA256" },
-              ]}
-            />
-          </Panel>
-          {lint && (
-            <Panel
-              title={
-                lint.degraded_mode
-                  ? "Chưa thể xác minh chất lượng"
-                  : lint.valid
-                    ? "Kiểm tra chất lượng không có lỗi chặn"
-                    : "Kiểm tra chất lượng phát hiện vấn đề"
-              }
-            >
-              <DataTable
-                items={lint.findings}
-                empty="Không có vấn đề"
-                columns={[
-                  {
-                    key: "origin",
-                    label: "Nguồn",
-                    render: (item) => (item.origin === "AI" ? "AI" : "Quy tắc"),
-                  },
-                  { key: "severity", label: "Mức độ" },
-                  { key: "rule_id", label: "Mã" },
-                  { key: "message", label: "Nội dung" },
-                  { key: "suggestion", label: "Đề xuất" },
-                ]}
-              />
-              {lint.degraded_mode && (
-                <p className="mt-3 text-sm text-warning">
-                  Mô hình AI chưa sẵn sàng nên kết quả hiện chỉ gồm kiểm tra bằng quy tắc
-                </p>
-              )}
-              <div className="mt-4">
-                <DataTable
-                  items={lint.suggestions || []}
-                  empty="Chưa có đề xuất chỉnh sửa có đủ căn cứ"
-                  columns={[
-                    {
-                      key: "suggestion",
-                      label: "Bản vá đề xuất",
-                      render: (item) => (
-                        <dl className="space-y-2">
-                          {requirementSuggestionPreview(item).map(([label, value]) => (
-                            <div key={label}>
-                              <dt className="field-label">{label}</dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-sm">{value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      ),
-                    },
-                    {
-                      key: "target_fields",
-                      label: "Trường được cập nhật",
-                      render: (item) =>
-                        item.target_fields
-                          ?.map(requirementFieldLabel)
-                          .filter(Boolean)
-                          .join(" · ") || "Nội dung",
-                    },
-                    { key: "rationale", label: "Cơ sở" },
-                    {
-                      key: "actions",
-                      label: "Thao tác",
-                      render: (item) =>
-                        current.status === "DRAFT" && can("requirement.update") ? (
-                          <button
-                            className="apple-button"
-                            type="button"
-                            disabled={(lint.applied_suggestion_ids || []).includes(
-                              item.suggestion_id,
-                            )}
-                            onClick={async () => {
-                              try {
-                                await testingApi.applyRequirementAiSuggestion(current._id, {
-                                  expected_revision: current.revision,
-                                  ai_result_id: lint._id,
-                                  suggestion_id: item.suggestion_id,
-                                });
-                                setSelected(await testingApi.getRequirement(selected._id));
-                                setLint((value) => ({
-                                  ...value,
-                                  applied_suggestion_ids: [
-                                    ...(value.applied_suggestion_ids || []),
-                                    item.suggestion_id,
-                                  ],
-                                }));
-                              } catch (reason) {
-                                setError(messageOf(reason));
-                              }
-                            }}
-                          >
-                            {(lint.applied_suggestion_ids || []).includes(item.suggestion_id)
-                              ? "Đã áp dụng"
-                              : "Áp dụng vào bản nháp"}
-                          </button>
-                        ) : null,
-                    },
-                  ]}
-                />
-              </div>
-            </Panel>
-          )}
-          <Panel title="Lịch sử phiên bản">
-            <DataTable
-              items={versions}
-              columns={[
-                { key: "version", label: "Phiên bản", render: (item) => `v${item.version}` },
-                { key: "title", label: "Tên" },
-                {
-                  key: "status",
-                  label: "Trạng thái",
-                  render: (item) => <StatusPill value={item.status} />,
-                },
-                { key: "change_reason", label: "Lý do" },
-              ]}
-            />
-            {versions.length > 1 && (
-              <div className="flex flex-wrap gap-3 border-t border-border p-5">
-                <select
-                  aria-label="Phiên bản gốc"
-                  className="apple-input min-w-48"
-                  value={compareFrom}
-                  onChange={(event) => setCompareFrom(event.target.value)}
-                >
-                  {versions.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      v{item.version} {item.title}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Phiên bản so sánh"
-                  className="apple-input min-w-48"
-                  value={compareTo}
-                  onChange={(event) => setCompareTo(event.target.value)}
-                >
-                  {versions.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      v{item.version} {item.title}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  disabled={!compareFrom || !compareTo || compareFrom === compareTo}
-                  onClick={async () => {
-                    try {
-                      setComparison(
-                        await testingApi.compareRequirement(selected._id, compareFrom, compareTo),
-                      );
-                    } catch (reason) {
-                      setError(messageOf(reason));
-                    }
-                  }}
-                >
-                  So sánh phiên bản
-                </button>
-              </div>
-            )}
-          </Panel>
-          {comparison && (
-            <Panel
-              title="Khác biệt phiên bản"
-              actions={
-                <button
-                  className="apple-button"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await testingApi.createChangeSet(selected._id, {
-                        from_version_id: compareFrom,
-                        to_version_id: compareTo,
-                      });
-                      window.location.assign(`/du-an/${project._id}/thay-doi`);
-                    } catch (reason) {
-                      setError(messageOf(reason));
-                    }
-                  }}
-                >
-                  Tạo bộ thay đổi
-                </button>
-              }
-            >
-              <DataTable
-                items={comparison.changes.map((item, index) => ({ ...item, _id: index }))}
-                empty="Hai phiên bản không có khác biệt ngữ nghĩa"
-                columns={[
-                  {
-                    key: "type",
-                    label: "Loại thay đổi",
-                    render: (item) => valueLabel(item.type),
-                  },
-                  { key: "field", label: "Trường" },
-                  { key: "before", label: "Trước", render: (item) => JSON.stringify(item.before) },
-                  { key: "after", label: "Sau", render: (item) => JSON.stringify(item.after) },
-                ]}
-              />
-            </Panel>
-          )}
+          <RequirementCurrentVersionPanel
+            current={current}
+            selected={selected}
+            draft={draft}
+            members={members}
+            saveState={saveState}
+            can={can}
+            checkingWithAi={checkingWithAi}
+            onCheckingChange={setCheckingWithAi}
+            onLint={setLint}
+            onError={setError}
+            saveDraft={saveDraft}
+            onCreateVersion={createVersion}
+            onSplit={splitBaseline}
+            ask={ask}
+            reload={load}
+            onReview={review}
+            onDraftChange={changeDraft}
+          />
+          <RequirementTracePanel current={current} sourceDocuments={sourceDocuments} />
+          <RequirementQualityPanel
+            lint={lint}
+            current={current}
+            selected={selected}
+            can={can}
+            onSelectedChange={setSelected}
+            onLintChange={setLint}
+            onError={setError}
+          />
+          <RequirementHistoryPanel
+            projectId={project._id}
+            selected={selected}
+            versions={versions}
+            compareFrom={compareFrom}
+            setCompareFrom={setCompareFrom}
+            compareTo={compareTo}
+            setCompareTo={setCompareTo}
+            comparison={comparison}
+            setComparison={setComparison}
+            onError={setError}
+          />
           <ReviewCommentsPanel
             projectId={project._id}
             artifactType="requirement_version"
@@ -1422,1002 +994,73 @@ export default function RequirementsPage({ project, section }) {
         </>
       ) : (
         <>
-          {loading ? (
-            <LoadingState />
-          ) : (
-            <Panel
-              title="Danh sách yêu cầu"
-              actions={
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    aria-label="Tìm yêu cầu"
-                    className="apple-input w-64"
-                    value={query}
-                    onChange={(event) => {
-                      setQuery(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder="Tìm yêu cầu"
-                  />
-                  {selectedIds.length > 0 && can("requirement.update") && (
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={async () => {
-                        const answer = await ask({
-                          title: "Cập nhật nhãn hàng loạt",
-                          description: `${selectedIds.length} yêu cầu đã chọn`,
-                          confirmLabel: "Cập nhật nhãn",
-                          fields: [
-                            {
-                              name: "add",
-                              label: "Nhãn cần thêm phân cách bằng dấu phẩy",
-                              autoFocus: true,
-                            },
-                            { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
-                          ],
-                        });
-                        if (!answer) return;
-                        try {
-                          const splitTags = (value) =>
-                            value
-                              .split(",")
-                              .map((item) => item.trim())
-                              .filter(Boolean);
-                          await testingApi.bulkTags(project._id, {
-                            artifact_type: "requirement",
-                            ids: selectedIds,
-                            add_tags: splitTags(answer.add),
-                            remove_tags: splitTags(answer.remove),
-                            idempotency_key: crypto.randomUUID(),
-                          });
-                          setSelectedIds([]);
-                          await load();
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
-                    >
-                      Cập nhật nhãn
-                    </button>
-                  )}
-                  {can("requirement.duplicate_check") && (
-                    <button className="secondary-button" type="button" onClick={scanDuplicates}>
-                      {selectedIds.length ? "Kiểm tra các mục đã chọn" : "Kiểm tra trùng lặp"}
-                    </button>
-                  )}
-                  {selectedIds.length > 0 && can("requirement.merge") && (
-                    <button
-                      className="secondary-button"
-                      disabled={selectedIds.length < 2}
-                      type="button"
-                      onClick={mergeBaselines}
-                    >
-                      Gộp yêu cầu
-                    </button>
-                  )}
-                  {selectedIds.length > 0 && can("requirement.archive") && (
-                    <button
-                      className="danger-button"
-                      type="button"
-                      onClick={async () => {
-                        const answer = await ask({
-                          title: "Lưu trữ yêu cầu hàng loạt",
-                          description: `${selectedIds.length} yêu cầu vẫn được giữ toàn bộ lịch sử`,
-                          confirmLabel: "Lưu trữ",
-                          danger: true,
-                          fields: [
-                            {
-                              name: "reason",
-                              label: "Lý do",
-                              required: true,
-                              multiline: true,
-                              autoFocus: true,
-                            },
-                          ],
-                        });
-                        if (!answer) return;
-                        try {
-                          await testingApi.bulkArchive(project._id, {
-                            artifact_type: "requirement",
-                            ids: selectedIds,
-                            reason: answer.reason,
-                            idempotency_key: crypto.randomUUID(),
-                          });
-                          setSelectedIds([]);
-                          await load();
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
-                    >
-                      Lưu trữ
-                    </button>
-                  )}
-                </div>
-              }
-            >
-              <details className="border-b border-border p-4">
-                <summary className="cursor-pointer text-sm font-medium">
-                  Bộ lọc và sắp xếp
-                  {[filters.status, filters.coverage, filters.tag, filters.owner].filter(Boolean)
-                    .length > 0 && (
-                    <span className="ml-2 text-ink-muted">
-                      {
-                        [filters.status, filters.coverage, filters.tag, filters.owner].filter(
-                          Boolean,
-                        ).length
-                      }{" "}
-                      bộ lọc đang dùng
-                    </span>
-                  )}
-                </summary>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                  <select
-                    aria-label="Lọc trạng thái yêu cầu"
-                    className="apple-input"
-                    value={filters.status}
-                    onChange={(event) => {
-                      setFilters({ ...filters, status: event.target.value });
-                      setPage(1);
-                    }}
-                  >
-                    <option value="">Mọi trạng thái</option>
-                    <option value="DRAFT">Bản nháp</option>
-                    <option value="IN_REVIEW">Đang rà soát</option>
-                    <option value="BASELINED">Đã phê duyệt</option>
-                    <option value="SUPERSEDED">Đã được thay thế</option>
-                    <option value="OBSOLETE">Không còn hiệu lực</option>
-                  </select>
-                  <select
-                    aria-label="Lọc độ phủ yêu cầu"
-                    className="apple-input"
-                    value={filters.coverage}
-                    onChange={(event) => {
-                      setFilters({ ...filters, coverage: event.target.value });
-                      setPage(1);
-                    }}
-                  >
-                    <option value="">Mọi độ phủ</option>
-                    <option value="covered">Đã phủ</option>
-                    <option value="uncovered">Chưa phủ</option>
-                  </select>
-                  <input
-                    aria-label="Lọc nhãn yêu cầu"
-                    className="apple-input"
-                    placeholder="Nhãn"
-                    value={filters.tag}
-                    onChange={(event) => {
-                      setFilters({ ...filters, tag: event.target.value });
-                      setPage(1);
-                    }}
-                  />
-                  <select
-                    aria-label="Lọc người phụ trách yêu cầu"
-                    className="apple-input"
-                    value={filters.owner}
-                    onChange={(event) => {
-                      setFilters({ ...filters, owner: event.target.value });
-                      setPage(1);
-                    }}
-                  >
-                    <option value="">Mọi người phụ trách</option>
-                    {members.map((item) => (
-                      <option key={item.user_id} value={item.user_id}>
-                        {item.user_label || item.user?.email || item.user_id}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Sắp xếp yêu cầu"
-                    className="apple-input"
-                    value={filters.sort}
-                    onChange={(event) => {
-                      setFilters({ ...filters, sort: event.target.value });
-                      setPage(1);
-                    }}
-                  >
-                    <option value="-updated_at">Mới cập nhật</option>
-                    <option value="updated_at">Cũ cập nhật</option>
-                    <option value="requirement_key">Mã tăng dần</option>
-                    <option value="title">Tên tăng dần</option>
-                  </select>
-                </div>
-              </details>
-              <DataTable
-                onSelect={(item) =>
-                  window.location.assign(`/du-an/${project._id}/yeu-cau/${item._id}`)
-                }
-                items={items}
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                selectionLabel="Chọn yêu cầu"
-                empty="Chưa có yêu cầu"
-                columns={[
-                  { key: "requirement_key", label: "Mã" },
-                  { key: "title", label: "Tên", render: (item) => item.current_version?.title },
-                  {
-                    key: "type",
-                    label: "Loại",
-                    render: (item) => valueLabel(item.current_version?.type),
-                  },
-                  {
-                    key: "risk",
-                    label: "Rủi ro",
-                    render: (item) => valueLabel(item.current_version?.risk),
-                  },
-                  {
-                    key: "status",
-                    label: "Trạng thái",
-                    render: (item) => <StatusPill value={item.status} />,
-                  },
-                ]}
-              />
-              <Pagination value={pageInfo} onChange={setPage} />
-            </Panel>
-          )}
-          {duplicateScan && (
-            <Panel
-              title="Ứng viên yêu cầu trùng lặp"
-              actions={
-                <span className="text-[12px] text-ink-muted">
-                  {duplicateScan.candidate_count} cặp từ thuật toán {duplicateScan.algorithm?.name}
-                </span>
-              }
-            >
-              <DataTable
-                items={(duplicateScan.candidates || []).map((item, index) => ({
-                  ...item,
-                  _id: `${item.left_requirement_id}-${item.right_requirement_id}-${index}`,
-                }))}
-                empty="Không phát hiện cặp yêu cầu vượt ngưỡng trùng lặp"
-                columns={[
-                  { key: "left_requirement_label", label: "Yêu cầu thứ nhất" },
-                  { key: "right_requirement_label", label: "Yêu cầu thứ hai" },
-                  {
-                    key: "match_type",
-                    label: "Loại khớp",
-                    render: (item) => valueLabel(item.match_type),
-                  },
-                  {
-                    key: "score",
-                    label: "Điểm",
-                    render: (item) => `${Math.round(item.score * 100)}%`,
-                  },
-                  { key: "reasons", label: "Cơ sở", render: (item) => item.reasons.join(" · ") },
-                ]}
-              />
-            </Panel>
-          )}
+          <RequirementsListPanel
+            projectId={project._id}
+            loading={loading}
+            items={items}
+            query={query}
+            setQuery={setQuery}
+            filters={filters}
+            setFilters={setFilters}
+            setPage={setPage}
+            members={members}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            pageInfo={pageInfo}
+            can={can}
+            onBulkTags={bulkUpdateTags}
+            onScanDuplicates={scanDuplicates}
+            onMerge={mergeBaselines}
+            onBulkArchive={bulkArchiveRequirements}
+          />
+          <RequirementDuplicatePanel result={duplicateScan} />
           {can("requirement_document.read") && (
-            <Panel title="Kho tài liệu nguồn">
-              <DataTable
-                items={sourceDocuments}
-                empty="Chưa có tài liệu nguồn"
-                columns={[
-                  { key: "filename", label: "Tên tệp" },
-                  { key: "format", label: "Định dạng" },
-                  {
-                    key: "source_type",
-                    label: "Loại nguồn",
-                    render: (item) => valueLabel(item.source_type || "REFERENCE"),
-                  },
-                  {
-                    key: "authority",
-                    label: "Thẩm quyền",
-                    render: (item) => valueLabel(item.authority || "PROJECT_REFERENCE"),
-                  },
-                  {
-                    key: "module",
-                    label: "Phạm vi",
-                    render: (item) =>
-                      [item.product_area, item.module, item.component]
-                        .filter(Boolean)
-                        .join(" · ") || "Chưa khai báo",
-                  },
-                  {
-                    key: "status",
-                    label: "Trạng thái",
-                    render: (item) => <StatusPill value={item.status} />,
-                  },
-                  { key: "revision", label: "Phiên bản" },
-                  {
-                    key: "actions",
-                    label: "Thao tác",
-                    render: (item) => (
-                      <span className="flex flex-wrap gap-2">
-                        {can("knowledge.manage") && item.status !== "ARCHIVED" && (
-                          <>
-                            <button
-                              className="secondary-button"
-                              type="button"
-                              onClick={async () => {
-                                const answer = await ask({
-                                  title: "Phân loại tài liệu nguồn",
-                                  description: item.filename,
-                                  confirmLabel: "Lưu metadata",
-                                  fields: [
-                                    {
-                                      name: "title",
-                                      label: "Tiêu đề",
-                                      initialValue: item.title || item.filename,
-                                      required: true,
-                                    },
-                                    {
-                                      name: "source_type",
-                                      label: "Loại nguồn",
-                                      initialValue: item.source_type || "REFERENCE",
-                                      options: [
-                                        { value: "SRS", label: "Đặc tả yêu cầu phần mềm" },
-                                        { value: "BRD", label: "Tài liệu yêu cầu nghiệp vụ" },
-                                        {
-                                          value: "USER_STORY",
-                                          label: "Câu chuyện người dùng",
-                                        },
-                                        {
-                                          value: "ACCEPTANCE_CRITERIA",
-                                          label: "Tiêu chí chấp nhận",
-                                        },
-                                        { value: "BUSINESS_RULE", label: "Quy tắc nghiệp vụ" },
-                                        {
-                                          value: "API_SPEC",
-                                          label: "Đặc tả giao diện lập trình ứng dụng",
-                                        },
-                                        {
-                                          value: "UI_SPEC",
-                                          label: "Đặc tả giao diện người dùng",
-                                        },
-                                        { value: "ARCHITECTURE", label: "Kiến trúc" },
-                                        { value: "MEETING_NOTE", label: "Biên bản họp" },
-                                        { value: "RELEASE_NOTE", label: "Ghi chú phát hành" },
-                                        { value: "BUG_HISTORY", label: "Lịch sử lỗi" },
-                                        { value: "TEST_ARTIFACT", label: "Tài sản kiểm thử" },
-                                        { value: "REGULATION", label: "Quy định" },
-                                        { value: "REFERENCE", label: "Tài liệu tham chiếu" },
-                                        { value: "OTHER", label: "Nguồn khác" },
-                                      ],
-                                    },
-                                    {
-                                      name: "authority",
-                                      label: "Độ tin cậy của nguồn",
-                                      initialValue: item.authority || "PROJECT_REFERENCE",
-                                      options: [
-                                        {
-                                          value: "APPROVED_SOURCE",
-                                          label: "Đã được phê duyệt",
-                                        },
-                                        {
-                                          value: "CONTROLLED_SOURCE",
-                                          label: "Được quản lý chính thức",
-                                        },
-                                        {
-                                          value: "PROJECT_REFERENCE",
-                                          label: "Tài liệu tham chiếu của dự án",
-                                        },
-                                        { value: "SUPPLEMENTAL", label: "Tài liệu bổ sung" },
-                                        { value: "DRAFT", label: "Bản nháp" },
-                                        { value: "UNVERIFIED", label: "Chưa xác minh" },
-                                      ],
-                                    },
-                                    {
-                                      name: "owner_id",
-                                      label: "Người phụ trách",
-                                      initialValue: item.owner_id || "",
-                                    },
-                                    {
-                                      name: "module",
-                                      label: "Phân hệ",
-                                      initialValue: item.module || "",
-                                    },
-                                    {
-                                      name: "component",
-                                      label: "Thành phần",
-                                      initialValue: item.component || "",
-                                    },
-                                    {
-                                      name: "product_area",
-                                      label: "Khu vực sản phẩm",
-                                      initialValue: item.product_area || "",
-                                    },
-                                    {
-                                      name: "release_id",
-                                      label: "Bản phát hành",
-                                      initialValue: item.release_id || "",
-                                    },
-                                    {
-                                      name: "external_source_id",
-                                      label: "Mã nguồn bên ngoài",
-                                      initialValue: item.external_source_id || "",
-                                    },
-                                    {
-                                      name: "approval_status",
-                                      label: "Trạng thái phê duyệt",
-                                      initialValue: item.approval_status || "DRAFT",
-                                      options: [
-                                        { value: "DRAFT", label: "Bản nháp" },
-                                        { value: "IN_REVIEW", label: "Đang rà soát" },
-                                        { value: "APPROVED", label: "Đã phê duyệt" },
-                                        { value: "REJECTED", label: "Từ chối" },
-                                      ],
-                                    },
-                                    {
-                                      name: "approved_by",
-                                      label: "Người phê duyệt",
-                                      initialValue: item.approved_by || "",
-                                    },
-                                    {
-                                      name: "approved_at",
-                                      label: "Thời điểm phê duyệt ISO 8601",
-                                      initialValue: item.approved_at || "",
-                                    },
-                                    {
-                                      name: "source_version",
-                                      label: "Phiên bản nguồn",
-                                      initialValue: item.source_version || "1",
-                                      required: true,
-                                    },
-                                    {
-                                      name: "effective_from",
-                                      label: "Hiệu lực từ ISO 8601",
-                                      initialValue: item.effective_from || "",
-                                    },
-                                    {
-                                      name: "tags",
-                                      label: "Nhãn phân cách bằng dấu phẩy",
-                                      initialValue: (item.tags || []).join(", "),
-                                    },
-                                  ],
-                                });
-                                if (!answer) return;
-                                try {
-                                  await testingApi.updateRequirementDocument(item._id, {
-                                    expected_revision: item.revision,
-                                    title: answer.title,
-                                    source_type: answer.source_type,
-                                    authority: answer.authority,
-                                    owner_id: answer.owner_id || null,
-                                    module: answer.module || null,
-                                    component: answer.component || null,
-                                    product_area: answer.product_area || null,
-                                    release_id: answer.release_id || null,
-                                    external_source_id: answer.external_source_id || null,
-                                    approval_status: answer.approval_status,
-                                    approved_by: answer.approved_by || null,
-                                    approved_at: answer.approved_at || null,
-                                    source_version: answer.source_version,
-                                    effective_from: answer.effective_from || null,
-                                    tags: answer.tags
-                                      .split(",")
-                                      .map((value) => value.trim())
-                                      .filter(Boolean),
-                                  });
-                                  await load();
-                                } catch (reason) {
-                                  setError(messageOf(reason));
-                                }
-                              }}
-                            >
-                              Phân loại
-                            </button>
-                            <button
-                              className="secondary-button"
-                              type="button"
-                              onClick={async () => {
-                                try {
-                                  await testingApi.reindexRequirementDocument(item._id);
-                                  await load();
-                                } catch (reason) {
-                                  setError(messageOf(reason));
-                                }
-                              }}
-                            >
-                              Lập chỉ mục lại
-                            </button>
-                          </>
-                        )}
-                        {can("requirement_document.download") && (
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                await testingApi.downloadRequirementDocument(
-                                  item._id,
-                                  item.filename,
-                                );
-                              } catch (reason) {
-                                setError(messageOf(reason));
-                              }
-                            }}
-                          >
-                            Tải xuống
-                          </button>
-                        )}
-                        {item.status === "ARCHIVED"
-                          ? can("requirement_document.restore") && (
-                              <button
-                                className="secondary-button"
-                                type="button"
-                                onClick={async () => {
-                                  const answer = await ask({
-                                    title: "Khôi phục tài liệu nguồn",
-                                    description: item.filename,
-                                    confirmLabel: "Khôi phục",
-                                    fields: [
-                                      {
-                                        name: "reason",
-                                        label: "Lý do",
-                                        required: true,
-                                        multiline: true,
-                                      },
-                                    ],
-                                  });
-                                  if (!answer) return;
-                                  try {
-                                    await testingApi.restoreRequirementDocument(item._id, {
-                                      expected_revision: item.revision,
-                                      reason: answer.reason,
-                                    });
-                                    await load();
-                                  } catch (reason) {
-                                    setError(messageOf(reason));
-                                  }
-                                }}
-                              >
-                                Khôi phục
-                              </button>
-                            )
-                          : can("requirement_document.archive") && (
-                              <button
-                                className="secondary-button"
-                                type="button"
-                                onClick={async () => {
-                                  const answer = await ask({
-                                    title: "Lưu trữ tài liệu nguồn",
-                                    description: item.filename,
-                                    confirmLabel: "Lưu trữ",
-                                    danger: true,
-                                    fields: [
-                                      {
-                                        name: "reason",
-                                        label: "Lý do",
-                                        required: true,
-                                        multiline: true,
-                                      },
-                                    ],
-                                  });
-                                  if (!answer) return;
-                                  try {
-                                    await testingApi.archiveRequirementDocument(item._id, {
-                                      expected_revision: item.revision,
-                                      reason: answer.reason,
-                                    });
-                                    await load();
-                                  } catch (reason) {
-                                    setError(messageOf(reason));
-                                  }
-                                }}
-                              >
-                                Lưu trữ
-                              </button>
-                            )}
-                      </span>
-                    ),
-                  },
-                ]}
-              />
-            </Panel>
+            <RequirementSourceDocumentsPanel
+              items={sourceDocuments}
+              can={can}
+              ask={ask}
+              reload={load}
+              onError={setError}
+            />
           )}
           <div className="grid gap-5 xl:grid-cols-2">
             {can("requirement.create") && (
-              <Modal
+              <RequirementCreateModal
                 isOpen={creating}
-                onClose={() => {
-                  if (!saving) setCreating(false);
-                }}
-                ariaLabel="Tạo yêu cầu"
-                className="max-w-3xl max-h-[90dvh] overflow-y-auto"
-              >
-                <ModalHeader>
-                  <ModalTitle>Tạo yêu cầu</ModalTitle>
-                </ModalHeader>
-                {error && (
-                  <div className="px-5 pt-4">
-                    <ErrorState message={error} />
-                  </div>
-                )}
-                <form className="space-y-4 p-5" onSubmit={create}>
-                  <label className="field-label">
-                    Tên
-                    <input
-                      className="apple-input mt-2"
-                      required
-                      minLength={2}
-                      value={form.title}
-                      onChange={(event) => setForm({ ...form, title: event.target.value })}
-                    />
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <label className="field-label">
-                      Loại
-                      <select
-                        className="apple-input mt-2"
-                        value={form.type}
-                        onChange={(event) => setForm({ ...form, type: event.target.value })}
-                      >
-                        <option value="functional">Chức năng</option>
-                        <option value="non_functional">Phi chức năng</option>
-                        <option value="business_rule">Quy tắc nghiệp vụ</option>
-                        <option value="api">API</option>
-                        <option value="ui">UI</option>
-                      </select>
-                    </label>
-                    <label className="field-label">
-                      Ưu tiên
-                      <select
-                        className="apple-input mt-2"
-                        value={form.priority}
-                        onChange={(event) => setForm({ ...form, priority: event.target.value })}
-                      >
-                        {["critical", "high", "medium", "low"].map((value) => (
-                          <option key={value} value={value}>
-                            {valueLabel(value)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="field-label">
-                      Rủi ro
-                      <select
-                        className="apple-input mt-2"
-                        value={form.risk}
-                        onChange={(event) => setForm({ ...form, risk: event.target.value })}
-                      >
-                        {["critical", "high", "medium", "low"].map((value) => (
-                          <option key={value} value={value}>
-                            {valueLabel(value)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                  <DocumentEditor
-                    value={form.content_doc}
-                    onChange={(content_doc) => setForm({ ...form, content_doc })}
-                    label="Nội dung yêu cầu"
-                  />
-                  <label className="field-label">
-                    Tiêu chí chấp nhận mỗi dòng một điều kiện
-                    <textarea
-                      className="apple-input mt-2 min-h-28"
-                      value={form.acceptance}
-                      onChange={(event) => setForm({ ...form, acceptance: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-label">
-                    Quy tắc nghiệp vụ mỗi dòng một quy tắc
-                    <textarea
-                      className="apple-input mt-2 min-h-24"
-                      value={form.businessRules}
-                      onChange={(event) => setForm({ ...form, businessRules: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-label">
-                    Tác nhân phân tách bằng dấu phẩy
-                    <input
-                      className="apple-input mt-2"
-                      value={form.actors}
-                      onChange={(event) => setForm({ ...form, actors: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-label">
-                    Phụ thuộc mỗi dòng một mục
-                    <textarea
-                      className="apple-input mt-2 min-h-20"
-                      value={form.dependencies}
-                      onChange={(event) => setForm({ ...form, dependencies: event.target.value })}
-                    />
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="field-label">
-                      Nhãn phân cách bằng dấu phẩy
-                      <input
-                        className="apple-input mt-2"
-                        value={form.tags}
-                        onChange={(event) => setForm({ ...form, tags: event.target.value })}
-                      />
-                    </label>
-                    <label className="field-label">
-                      Người phụ trách
-                      <select
-                        className="apple-input mt-2"
-                        value={form.ownerId}
-                        onChange={(event) => setForm({ ...form, ownerId: event.target.value })}
-                      >
-                        <option value="">Chưa phân công</option>
-                        {members.map((item) => (
-                          <option key={item.user_id} value={item.user_id}>
-                            {item.user_label || item.user?.email || item.user_id}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="flex justify-end gap-3">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={saving}
-                      onClick={() => setCreating(false)}
-                    >
-                      Hủy
-                    </button>
-                    <button className="apple-button" type="submit" disabled={saving}>
-                      {saving ? "Đang lưu" : "Lưu yêu cầu"}
-                    </button>
-                  </div>
-                </form>
-              </Modal>
+                onClose={() => setCreating(false)}
+                error={error}
+                form={form}
+                setForm={setForm}
+                members={members}
+                saving={saving}
+                onSubmit={create}
+              />
             )}
             {can("requirement_document.upload") && (
-              <Modal
+              <RequirementImportModal
                 isOpen={importing}
                 onClose={() => setImporting(false)}
-                ariaLabel="Nhập tài liệu"
-                className="max-w-5xl max-h-[90dvh] overflow-y-auto"
-              >
-                <ModalHeader>
-                  <ModalTitle>Nhập tài liệu</ModalTitle>
-                </ModalHeader>
-                {error && <ErrorState message={error} />}
-                <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
-                  <label className="field-label">
-                    Tệp SRS BRD hoặc bảng yêu cầu
-                    <input
-                      className="apple-input mt-2"
-                      type="file"
-                      accept=".pdf,.docx,.txt,.md,.csv,.xlsx"
-                      onChange={(event) => setUpload(event.target.files?.[0] || null)}
-                    />
-                  </label>
-                  <button className="secondary-button" type="submit" disabled={!upload}>
-                    Tải lên và xem trước
-                  </button>
-                </form>
-                <form onSubmit={importPreview} className="space-y-4 p-5">
-                  <label className="field-label">
-                    Tên tệp
-                    <input
-                      className="apple-input mt-2"
-                      value={importValue.filename}
-                      onChange={(event) =>
-                        setImportValue({ ...importValue, filename: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="field-label">
-                    Định dạng
-                    <select
-                      className="apple-input mt-2"
-                      value={importValue.format}
-                      onChange={(event) =>
-                        setImportValue({ ...importValue, format: event.target.value })
-                      }
-                    >
-                      {["md", "txt", "csv", "openapi", "postman", "pdf", "docx", "xlsx"].map(
-                        (value) => (
-                          <option key={value}>{value}</option>
-                        ),
-                      )}
-                    </select>
-                  </label>
-                  <label className="field-label">
-                    Nội dung nguồn
-                    <textarea
-                      className="apple-input mt-2 min-h-48 font-mono"
-                      required
-                      value={importValue.content}
-                      onChange={(event) =>
-                        setImportValue({ ...importValue, content: event.target.value })
-                      }
-                    />
-                  </label>
-                  <button className="secondary-button" type="submit">
-                    Tạo bản xem trước
-                  </button>
-                </form>
-                {preview && (
-                  <div className="border-t border-border p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">
-                          {preview.status === "CONFIRMED"
-                            ? "Nguồn này đã được nhập trước đó"
-                            : "Rà soát ứng viên trước khi nhập"}
-                        </p>
-                        <p className="mt-1 text-[12px] text-ink-muted">
-                          Đã chọn {selectedIndexes.length} trên {preview.preview.length} ứng viên
-                        </p>
-                      </div>
-                      {preview.status === "PREVIEW_READY" && (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={() =>
-                              saveImportReview(
-                                preview.preview,
-                                "Chỉnh sửa nội dung ứng viên yêu cầu",
-                              )
-                            }
-                          >
-                            Lưu chỉnh sửa
-                          </button>
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={splitCandidate}
-                          >
-                            Tách mục đã chọn
-                          </button>
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={mergeCandidates}
-                          >
-                            Gộp các mục đã chọn
-                          </button>
-                          <button className="danger-button" type="button" onClick={rejectCandidate}>
-                            Từ chối mục đã chọn
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <DataTable
-                      items={preview.preview.map((item, index) => ({
-                        ...item,
-                        _id: `candidate-${index}`,
-                        candidateIndex: index,
-                      }))}
-                      columns={[
-                        {
-                          key: "selected",
-                          label: "Nhập",
-                          render: (item) => (
-                            <input
-                              aria-label={`Chọn ứng viên ${item.candidateIndex + 1}`}
-                              type="checkbox"
-                              checked={selectedIndexes.includes(item.candidateIndex)}
-                              disabled={preview.status !== "PREVIEW_READY"}
-                              onChange={(event) =>
-                                setSelectedIndexes((values) =>
-                                  event.target.checked
-                                    ? [...values, item.candidateIndex].sort(
-                                        (left, right) => left - right,
-                                      )
-                                    : values.filter((value) => value !== item.candidateIndex),
-                                )
-                              }
-                            />
-                          ),
-                        },
-                        {
-                          key: "title",
-                          label: "Yêu cầu phát hiện",
-                          render: (item) => (
-                            <input
-                              aria-label={`Tên ứng viên ${item.candidateIndex + 1}`}
-                              className="apple-input min-w-64"
-                              value={item.title}
-                              disabled={preview.status !== "PREVIEW_READY"}
-                              onChange={(event) =>
-                                editCandidate(item.candidateIndex, { title: event.target.value })
-                              }
-                            />
-                          ),
-                        },
-                        {
-                          key: "content_doc",
-                          label: "Nội dung",
-                          render: (item) => (
-                            <textarea
-                              aria-label={`Nội dung ứng viên ${item.candidateIndex + 1}`}
-                              className="apple-input min-h-20 min-w-72"
-                              value={docText(item.content_doc)}
-                              disabled={preview.status !== "PREVIEW_READY"}
-                              onChange={(event) =>
-                                editCandidate(item.candidateIndex, {
-                                  content_doc: textDoc(event.target.value),
-                                })
-                              }
-                            />
-                          ),
-                        },
-                        {
-                          key: "type",
-                          label: "Loại",
-                          render: (item) => valueLabel(item.type),
-                        },
-                        {
-                          key: "candidate_relation",
-                          label: "Quan hệ ứng viên",
-                          render: (item) => item.candidate_relation || "Nguyên bản",
-                        },
-                        {
-                          key: "extraction_confidence",
-                          label: "Độ tin cậy trích xuất",
-                          render: (item) =>
-                            `${Math.round((item.extraction_confidence ?? 1) * 100)}%`,
-                        },
-                        {
-                          key: "source_refs",
-                          label: "Vị trí nguồn",
-                          render: (item) => {
-                            const source = item.source_refs?.[0];
-                            if (!source) return "Không có";
-                            if (source.source_start !== undefined) {
-                              return `${source.source_start} đến ${source.source_end}`;
-                            }
-                            return `Mục ${source.candidate_index + 1}`;
-                          },
-                        },
-                      ]}
-                    />
-                    {preview.status === "PREVIEW_READY" && (
-                      <div className="mt-4 flex flex-wrap items-center gap-3">
-                        <button
-                          className="apple-button"
-                          type="button"
-                          disabled={selectedIndexes.length === 0}
-                          onClick={confirmImport}
-                        >
-                          Xác nhận nhập {selectedIndexes.length} yêu cầu
-                        </button>
-                        <p className="text-[12px] text-ink-muted">
-                          {preview.preview.length - selectedIndexes.length} ứng viên bị loại sẽ
-                          không được ghi
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {sourceDocument && (
-                  <div className="border-t border-border p-5 text-[12px] text-ink-muted">
-                    <p>Nguồn {sourceDocument.filename}</p>
-                    <p>Trạng thái {sourceDocument.status}</p>
-                    <p className="break-all">SHA256 {sourceDocument.content_hash}</p>
-                    {sourceDocument.status === "PARSE_FAILED" && (
-                      <button
-                        className="secondary-button mt-3"
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const document = await testingApi.retryRequirementDocumentParse(
-                              sourceDocument._id,
-                              sourceDocument.revision,
-                            );
-                            setSourceDocument(document);
-                            if (document.status !== "READY") {
-                              setError("Bộ phân tích vẫn chưa đọc được tệp gốc");
-                              return;
-                            }
-                            const result = await testingApi.extractRequirementDocument(
-                              document._id,
-                              `source-${document.content_hash}`,
-                            );
-                            setPreview(result);
-                            setSelectedIndexes(result.preview.map((_, index) => index));
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        Thử phân tích lại từ tệp gốc
-                      </button>
-                    )}
-                  </div>
-                )}
-              </Modal>
+                error={error}
+                upload={upload}
+                setUpload={setUpload}
+                onUploadPreview={uploadPreview}
+                importValue={importValue}
+                setImportValue={setImportValue}
+                onImportPreview={importPreview}
+                preview={preview}
+                selectedIndexes={selectedIndexes}
+                setSelectedIndexes={setSelectedIndexes}
+                onSaveReview={() =>
+                  saveImportReview(preview.preview, "Chỉnh sửa nội dung ứng viên yêu cầu")
+                }
+                onSplit={splitCandidate}
+                onMerge={mergeCandidates}
+                onReject={rejectCandidate}
+                onEditCandidate={editCandidate}
+                onConfirm={confirmImport}
+                sourceDocument={sourceDocument}
+                onRetrySource={retrySourceDocument}
+              />
             )}
           </div>
         </>

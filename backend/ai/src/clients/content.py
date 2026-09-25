@@ -6,7 +6,9 @@ from src.core.infrastructure.configuration import settings
 class ContentClient:
     @staticmethod
     async def exchange(action: str, **values):
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+        ) as client:
             response = await client.post(
                 f"{settings.CONTENT_URL}/tai-lieu/noi-bo/trao-doi",
                 json={"action": action, **values},

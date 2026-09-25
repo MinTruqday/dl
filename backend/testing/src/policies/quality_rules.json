@@ -103,6 +103,7 @@
     }
   ],
   "duplicate_scoring": {
+    "criterion_key_prefix": "AC-",
     "precision": 4,
     "term_pattern": "[\\wÀ-ỹ]+",
     "requirement": {

@@ -4,8 +4,7 @@ from typing import List, Optional
 
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.repositories import activity_repository
 from src.schemas.storage import ItemActivityResponse
 
 
@@ -28,7 +27,7 @@ class ActivityService:
                 "user_agent": user_agent,
                 "timestamp": datetime.now(timezone.utc),
             }
-            await database.mongodb[settings.CLOUD_DB_NAME].storage_activities.insert_one(doc)
+            await activity_repository.insert(doc)
             return True
         except Exception as e:
             logger.error(f"Failed to log activity for item {item_id}: {e}")
@@ -36,13 +35,7 @@ class ActivityService:
 
     @staticmethod
     async def get_item_activities(item_id: str, limit: int = 50) -> List[ItemActivityResponse]:
-        cursor = (
-            database.mongodb[settings.CLOUD_DB_NAME]
-            .storage_activities.find({"item_id": item_id})
-            .sort([("timestamp", -1)])
-            .limit(limit)
-        )
-        activities = await cursor.to_list(length=limit)
+        activities = await activity_repository.list_for_item(item_id, limit)
 
         results = []
         for a in activities:

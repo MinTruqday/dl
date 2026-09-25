@@ -2,6 +2,11 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.core.policies import document_policy
+
+
+RETRIEVAL_POLICY = document_policy()["retrieval"]
+
 
 class ArtifactFilters(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -19,9 +24,15 @@ class ArtifactFilters(BaseModel):
 
 
 class RetrieveRequest(BaseModel):
-    query: str = Field(min_length=1, max_length=10000)
+    query: str = Field(
+        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+    )
     document_ids: Optional[List[str]] = None
-    k: int = Field(default=5, ge=1, le=100)
+    k: int = Field(
+        default=RETRIEVAL_POLICY["default_result_count"],
+        ge=1,
+        le=RETRIEVAL_POLICY["maximum_candidate_count"],
+    )
     query_vector_override: Optional[List[float]] = None
     requester_id: Optional[str] = None
     is_admin: bool = False
@@ -29,18 +40,30 @@ class RetrieveRequest(BaseModel):
 
 
 class MultiQueryRetrieveRequest(BaseModel):
-    question: str = Field(min_length=1, max_length=10000)
+    question: str = Field(
+        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+    )
     document_ids: Optional[List[str]] = None
-    k: int = Field(default=5, ge=1, le=100)
+    k: int = Field(
+        default=RETRIEVAL_POLICY["default_result_count"],
+        ge=1,
+        le=RETRIEVAL_POLICY["maximum_candidate_count"],
+    )
     requester_id: Optional[str] = None
     is_admin: bool = False
     metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
 
 
 class CrossDocRetrieveRequest(BaseModel):
-    question: str = Field(min_length=1, max_length=10000)
+    question: str = Field(
+        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+    )
     document_ids: List[str]
-    k: int = Field(default=5, ge=1, le=100)
+    k: int = Field(
+        default=RETRIEVAL_POLICY["default_result_count"],
+        ge=1,
+        le=RETRIEVAL_POLICY["maximum_candidate_count"],
+    )
     requester_id: Optional[str] = None
     is_admin: bool = False
     metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)

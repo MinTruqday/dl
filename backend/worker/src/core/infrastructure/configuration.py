@@ -3,15 +3,6 @@ import os
 from pydantic import BaseModel
 
 
-def get_service_url(service_name: str) -> str:
-    configured = os.getenv(f"{service_name}_URL")
-    if configured:
-        return configured
-    host = os.getenv(f"{service_name}_SERVICE_HOST")
-    port = os.getenv(f"{service_name}_SERVICE_PORT", "80")
-    return f"http://{host}:{port}" if host else f"http://{service_name.lower()}:8000"
-
-
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -20,7 +11,13 @@ class Settings(BaseModel):
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     WORKER_DB_NAME: str = os.environ["WORKER_DB_NAME"]
     WORKER_MAX_RETRIES: int = int(os.environ["WORKER_MAX_RETRIES"])
-    TESTING_URL: str = get_service_url("TESTING")
+    WORKER_REQUEST_TIMEOUT_SECONDS: float = float(
+        os.environ["WORKER_REQUEST_TIMEOUT_SECONDS"]
+    )
+    WORKER_EXECUTION_TIMEOUT_SECONDS: float = float(
+        os.environ["WORKER_EXECUTION_TIMEOUT_SECONDS"]
+    )
+    TESTING_URL: str = os.environ["TESTING_URL"].rstrip("/")
 
 
 settings = Settings()

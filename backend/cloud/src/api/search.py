@@ -2,7 +2,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Body, Depends
 
-from src.core.dependency import CurrentUser, Role, require_role
+from src.core.dependency import CurrentUser, get_current_user
 from src.core.response import APIResponse
 from src.services.search import SearchService
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/luu-tru")
 @router.post("/nhan-ban/{item_id}", response_model=APIResponse[Any], status_code=201)
 async def duplicate_item(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await SearchService.duplicate_item(item_id, current_user.id)
     return APIResponse(data=result, message="Nhân bản tệp thành công", status=201)
@@ -22,7 +22,7 @@ async def duplicate_item(
 async def set_folder_color(
     folder_id: str,
     color_hex: str = Body(..., embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await SearchService.set_folder_color(folder_id, current_user.id, color_hex)
     return APIResponse(data=result, message="Cập nhật màu sắc thư mục hoàn tất")
@@ -32,7 +32,7 @@ async def set_folder_color(
 async def update_item_tags(
     item_id: str,
     tags: List[str] = Body(..., embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await SearchService.update_item_tags(item_id, current_user.id, tags)
     return APIResponse(data=result, message="Cập nhật thẻ nhãn tài liệu hoàn tất")

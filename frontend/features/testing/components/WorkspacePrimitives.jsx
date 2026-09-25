@@ -15,7 +15,15 @@ export function useActionDialog() {
         const fields = options.fields || [];
         setValues(
           Object.fromEntries(
-            fields.map((field) => [field.name, field.initialValue ?? (field.multiple ? [] : "")]),
+            fields.map((field) => [
+              field.name,
+              field.initialValue ??
+                (field.multiple
+                  ? []
+                  : field.options?.[0]?.value !== undefined
+                    ? field.options[0].value
+                    : ""),
+            ]),
           ),
         );
         setState({ ...options, resolve });

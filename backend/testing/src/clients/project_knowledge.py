@@ -16,7 +16,7 @@ async def index_artifact(
     version=None,
     module="",
     **metadata,
-):
+) -> bool:
     if not str(text or "").strip():
         return False
     payload = jsonable_encoder(
@@ -34,7 +34,9 @@ async def index_artifact(
         }
     )
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS
+        ) as client:
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/doi-tuong",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
@@ -46,9 +48,11 @@ async def index_artifact(
         return False
 
 
-async def search_project_with_status(project_id, query, artifact_types, limit):
+async def search_project_with_status(project_id, query, artifact_types, limit) -> dict:
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+        ) as client:
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/tim-kiem",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
@@ -64,6 +68,6 @@ async def search_project_with_status(project_id, query, artifact_types, limit):
         }
 
 
-async def search_project(project_id, query, artifact_types, limit):
+async def search_project(project_id, query, artifact_types, limit) -> list:
     result = await search_project_with_status(project_id, query, artifact_types, limit)
     return result.get("items", [])

@@ -16,10 +16,12 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ARG NEXT_PUBLIC_NOTIFICATION_ENABLED=true
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_NOTIFICATION_ENABLED
+ARG NEXT_BUILD_DIST_DIR
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_NOTIFICATION_ENABLED=$NEXT_PUBLIC_NOTIFICATION_ENABLED
+ENV NEXT_BUILD_DIST_DIR=$NEXT_BUILD_DIST_DIR
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/ .
 RUN mkdir -p public && pnpm run format:check && pnpm run lint && pnpm run build

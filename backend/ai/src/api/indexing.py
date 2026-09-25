@@ -3,7 +3,7 @@ from loguru import logger
 
 from src.core.dependency import (
     CurrentUser,
-    Role,
+    SystemRole,
     get_current_user,
     get_current_user_optional,
     verify_internal_token,
@@ -26,7 +26,9 @@ async def ingest_endpoint(
     logger.info(f"Started document ingestion process document_id={req.document_id}")
     try:
         result = await knowledge_service.ingest_document(
-            req.document_id, str(current_user.id), current_user.role == Role.ADMIN
+            req.document_id,
+            str(current_user.id),
+            current_user.system_role == SystemRole.ADMIN,
         )
         logger.info(f"Document ingestion completed document_id={req.document_id}")
         return result
@@ -42,7 +44,9 @@ async def delete_document_endpoint(
     logger.info(f"Started document deletion from vector store document_id={document_id}")
     try:
         await knowledge_service.delete_document(
-            document_id, str(current_user.id), current_user.role == Role.ADMIN
+            document_id,
+            str(current_user.id),
+            current_user.system_role == SystemRole.ADMIN,
         )
         logger.info(f"Document deletion completed document_id={document_id}")
         return {"status": "success", "message_code": "document_vectors_deleted"}
@@ -57,7 +61,7 @@ def resolve_requester(req: IngestRequest, user: CurrentUser):
         requester_id = "platform-system"
     if not requester_id:
         raise HTTPException(status_code=403, detail="Missing document requester")
-    return requester_id, user.is_admin() if user else req.is_admin
+    return requester_id, user.system_role == SystemRole.ADMIN if user else req.is_admin
 
 
 def document_error(error: Exception):

@@ -1,57 +1,57 @@
 {
-  "default_guidance": "Chỉ tạo số lượng candidate cần thiết để đáp ứng yêu cầu",
+  "default_guidance": "Generate only the candidates needed to satisfy the request",
   "capabilities": {
     "project_question": {
       "max_output_tokens": 192,
-      "guidance": "Trả lời tối đa năm câu và trích đúng evidence_refs đã dùng"
+      "guidance": "Answer in at most five sentences and cite only evidence references actually used"
     },
     "requirement_quality_analysis": {
       "max_output_tokens": 1536,
-      "guidance": "Đánh giá riêng content actors business_rules acceptance_criteria dependencies Nội dung trống hoặc chỉ nêu tên đối tượng mà không mô tả hành vi kiểm thử được là lỗi chặn Actors trống và business_rules trống là lỗi chặn Mỗi acceptance criterion phải có trạng thái hoặc sự kiện kích hoạt và kết quả quan sát được Nếu acceptance criterion đang viết như quy tắc thì vừa suy ra business rule từ chính tiêu chí đó vừa chuẩn hóa tiêu chí thành điều kiện kích hoạt và hành vi mong đợi Không coi dependencies trống là lỗi nếu evidence không thể hiện phụ thuộc Với mỗi trường bị finding chỉ được trả finding khi có revised value tương ứng trong suggestion Tác nhân phải là vai trò nghiệp vụ thực hiện hoặc nhận hành vi được suy ra theo ngữ nghĩa của evidence Không suy luận bằng danh sách từ khóa cố định Không bịa chi tiết ngoài evidence Gộp toàn bộ revised fields liên quan vào đúng một suggestion và khai báo target_fields khớp chính xác các revised fields khác null Không tự áp dụng thay đổi"
+      "guidance": "Evaluate content actors business_rules acceptance_criteria and dependencies separately Empty content or content that only names an object without testable behavior is blocking Empty actors and empty business_rules are blocking Every acceptance criterion needs a triggering state or event and an observable result When an acceptance criterion is written as a rule derive a business rule from that same criterion and normalize the criterion into a trigger and expected behavior Do not flag empty dependencies when evidence shows none For every field finding return a corresponding revised value in the suggestion Actors must be business roles performing or receiving behavior inferred semantically from evidence Never infer through a fixed keyword list or invent detail Merge related revised fields into one suggestion and make target_fields exactly match non null revised fields Never apply changes automatically"
     },
     "scenario_generation": {
       "max_output_tokens": 2048,
-      "guidance": "Sinh đúng số candidate theo categories và count_per_category trong USER_INSTRUCTION Mỗi candidate phải cụ thể có dữ liệu đầu vào kết quả kiểm chứng được và chỉ dùng acceptance_criterion_ids trong evidence Không dùng câu mẫu chung chung"
+      "guidance": "Generate exactly the requested count for each category Every candidate needs concrete input and a verifiable result and may use only acceptance_criterion_ids present in evidence Avoid generic templates"
     },
     "test_generation": {
       "max_output_tokens": 2048,
-      "guidance": "Sinh đúng số candidate theo categories và count_per_category trong USER_INSTRUCTION Mỗi candidate phải cụ thể có preconditions steps dữ liệu đầu vào kết quả kiểm chứng được và chỉ dùng acceptance_criterion_ids trong evidence Không dùng câu mẫu chung chung"
+      "guidance": "Generate exactly the requested count for each category Every candidate needs concrete preconditions steps input data and verifiable results and may use only acceptance_criterion_ids present in evidence Avoid generic templates"
     },
     "test_condition_generation": {
       "max_output_tokens": 1200,
-      "guidance": "Chỉ sinh condition_candidates không sinh findings errors hay đề xuất sửa yêu cầu Phải có ít nhất một candidate POSITIVE kiểm tra luồng hợp lệ một candidate NEGATIVE kiểm tra dữ liệu hoặc hành vi vi phạm quy tắc và một candidate BOUNDARY kiểm tra đúng ranh giới thể hiện trong evidence Mỗi candidate phải có title và description cụ thể đủ để tạo bản nháp coverage_item test_level test_type risk priority technique_candidates và testability_status Nếu evidence không nêu giá trị số thì boundary phải kiểm tra ranh giới ngữ nghĩa trực tiếp của quy tắc như đúng bằng và lệch khỏi giá trị yêu cầu Không bịa giới hạn hoặc hành vi ngoài evidence"
+      "guidance": "Generate only condition_candidates without findings errors or requirement revisions Include at least one POSITIVE candidate for valid flow one NEGATIVE candidate for rule violating data or behavior and one BOUNDARY candidate for an evidence backed boundary Every candidate needs a concrete title and description plus coverage_item test_level test_type risk priority technique_candidates and testability_status When evidence has no numeric value test the direct semantic boundary such as exact match and deviation Never invent limits or behavior"
     },
     "impact_analysis": {
       "max_output_tokens": 768,
-      "guidance": "Phân loại từng Test Case Version trong evidence Nếu classification là NEEDS_UPDATE phải trả maintenance_patch chứa đúng nội dung cần sửa suy ra từ evidence Nếu thay đổi cần Test Case chưa tồn tại trả new_test_candidates Không dùng câu mẫu chung chung và không tự áp dụng thay đổi"
+      "guidance": "Classify every Test Case Version in evidence For NEEDS_UPDATE return a maintenance_patch containing only evidence grounded revisions When a change needs a nonexistent Test Case return new_test_candidates Avoid generic templates and never apply changes automatically"
     },
     "security_test_generation": {
       "max_output_tokens": 2048,
-      "guidance": "Sinh kiểm thử bảo mật cụ thể theo bằng chứng bằng tiếng Việt Không tuyên bố đã quét lỗ hổng Phải có ít nhất một candidate cho từng category trong USER_INSTRUCTION và chỉ dùng requirement_version_ids trong evidence"
+      "guidance": "Generate concrete evidence grounded security tests in the language of the user instruction Never claim a vulnerability scan was executed Include at least one candidate for each requested category and use only requirement_version_ids present in evidence"
     },
     "performance_plan_generation": {
       "max_output_tokens": 2048,
-      "guidance": "Sinh kế hoạch hiệu năng bằng tiếng Việt gắn với hành vi trong evidence Phải có ít nhất một scenario cho từng workload_type trong USER_INSTRUCTION Không chạy phát tải và không bịa mục tiêu ngoài USER_INSTRUCTION"
+      "guidance": "Generate an evidence grounded performance plan in the language of the user instruction Include at least one scenario for each requested workload_type Do not claim load execution and do not invent targets outside the user instruction"
     },
     "automation_script_generation": {
       "max_output_tokens": 3072,
-      "guidance": "Tạo đúng một bản nháp automation script theo framework và language trong USER_INSTRUCTION Source phải là toàn bộ mã nguồn không markdown chỉ dùng secret placeholder và không ghi repository Nếu thiếu locator hoặc URL phải dùng biến môi trường và nêu rõ trong warnings Không tạo bài kiểm thử chỉ mở trang và kiểm tra URL"
+      "guidance": "Create exactly one automation script draft in the requested framework and language Source must contain complete code without markdown use only secret placeholders and never write to a repository When a locator or URL is missing use an environment variable and report it in warnings Do not create a test that only opens a page and checks its URL"
     },
     "causal_analysis": {
       "max_output_tokens": 1536,
-      "guidance": "Đề xuất giả thuyết nguyên nhân gốc cụm lỗi yếu tố đóng góp và TestCondition hoặc TestCase còn thiếu Không xác nhận nguyên nhân và không phê duyệt CAPA Mọi giả thuyết phải gắn evidence_refs"
+      "guidance": "Propose root cause hypotheses defect clusters contributing factors and missing TestCondition or TestCase coverage Never confirm a cause or approve CAPA Every hypothesis must cite evidence_refs"
     },
     "status_report_narrative": {
       "max_output_tokens": 1200,
-      "guidance": "Soạn bản nháp diễn giải báo cáo trạng thái chỉ từ số liệu và evidence Không tự thay đổi số liệu không tự phê duyệt và không thêm kết luận thiếu căn cứ"
+      "guidance": "Draft the status report narrative only from supplied metrics and evidence Never alter metrics approve the report or add unsupported conclusions"
     },
     "completion_report_narrative": {
       "max_output_tokens": 1200,
-      "guidance": "Soạn bản nháp diễn giải hoàn tất kiểm thử chỉ từ số liệu và evidence Không tự đổi quality gate recommendation hay phê duyệt báo cáo"
+      "guidance": "Draft the test completion narrative only from supplied metrics and evidence Never change the quality gate recommendation or approve the report"
     },
     "lessons_learned_clustering": {
       "max_output_tokens": 1536,
-      "guidance": "Gom nhóm bài học kinh nghiệm theo chủ đề giữ nguyên căn cứ bằng source_indices và chỉ đề xuất ứng viên cải tiến không tự áp dụng"
+      "guidance": "Cluster lessons learned by theme preserve grounding through source_indices and propose improvement candidates without applying them"
     }
   }
 }

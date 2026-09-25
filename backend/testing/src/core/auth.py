@@ -1,4 +1,3 @@
-import os
 from enum import Enum
 
 import jwt
@@ -6,6 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 
+from src.clients.authentication import session_is_valid
 from src.core.configuration import settings
 
 
@@ -395,32 +395,10 @@ async def get_current_user(token: str | None = Depends(oauth2_scheme)):
         email = payload.get("email") or payload.get("sub", "")
         if not user_id:
             raise ValueError
-        role_value = payload.get("system_role")
-        if not role_value:
-            role_value = "ADMIN" if str(payload.get("role", "")).lower() == "admin" else "USER"
+        role_value = payload.get("system_role", "USER")
         session_id = payload.get("sid")
         if session_id:
-            from src.core.database import database
-
-            if database.client is None:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail={"code": "AUTHENTICATION_UNAVAILABLE"},
-                )
-            auth_db_name = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
-            auth_db = database.client[auth_db_name]
-            account = await auth_db.auth_credentials.find_one(
-                {"_id": str(user_id)}, {"is_active": 1, "account_status": 1}
-            )
-            session = await auth_db.sessions.find_one(
-                {"_id": str(session_id), "user_id": str(user_id), "revoked_at": None}, {"_id": 1}
-            )
-            if (
-                not account
-                or account.get("is_active", True) is False
-                or account.get("account_status", "ACTIVE") != "ACTIVE"
-                or not session
-            ):
+            if not await session_is_valid(str(session_id), str(user_id)):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "SESSION_REVOKED"}
                 )

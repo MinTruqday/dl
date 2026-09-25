@@ -17,7 +17,7 @@ class SpecialistAgent:
             return AgentResult(
                 task_id=task.task_id,
                 status="FAILED",
-                summary="Specialist không khớp task",
+                summary="The specialist does not match the task",
                 reason_codes=["SPECIALIST_MISMATCH"],
             )
         observations = []
@@ -114,7 +114,7 @@ class SpecialistAgent:
             result = AgentResult(
                 task_id=task.task_id,
                 status="COMPLETED" if completed or pending_actions else "INSUFFICIENT_EVIDENCE",
-                summary="Đã thu thập kết quả công cụ" if completed else "Chưa đủ bằng chứng",
+                summary="Tool observations collected" if completed else "Insufficient evidence",
                 evidence_refs=[item.artifact_version_id or item.artifact_id for item in evidence],
                 reason_codes=[
                     item.get("reason_code", "TOOL_RESULT") for item in observations

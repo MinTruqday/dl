@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from src.api.cookies import set_refresh_cookie
+from src.services.auth_cookie import set_refresh_cookie
 from src.core.dependency import CurrentUser, RateLimiting, get_current_user
 from src.core.response import APIResponse
 from src.schemas.identity import PasskeyFinishRequest, PasskeyRequest

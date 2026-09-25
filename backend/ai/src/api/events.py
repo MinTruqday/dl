@@ -5,7 +5,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.core.dependency import Role, require_role, verify_internal_token
+from src.core.dependency import require_system_admin, verify_internal_token
 from src.runtime.events import (
     AgentEvent,
     CronSchedule,
@@ -74,12 +74,12 @@ async def document_uploaded_webhook(
     return {"status": "accepted", "event_id": event.event_id}
 
 
-@router.get("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.get("/lich-trinh", dependencies=[Depends(require_system_admin)])
 async def list_schedules():
     return {"schedules": cron_scheduler.list_schedules(), "total": len(cron_scheduler._schedules)}
 
 
-@router.post("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.post("/lich-trinh", dependencies=[Depends(require_system_admin)])
 async def create_schedule(req: CreateScheduleRequest):
     event_type_map = {
         "system_heartbeat": EventType.SYSTEM_HEARTBEAT,
@@ -113,7 +113,7 @@ async def create_schedule(req: CreateScheduleRequest):
     }
 
 
-@router.delete("/lich-trinh/{schedule_id}", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.delete("/lich-trinh/{schedule_id}", dependencies=[Depends(require_system_admin)])
 async def delete_schedule(schedule_id: str):
     if schedule_id not in cron_scheduler._schedules:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
@@ -122,7 +122,7 @@ async def delete_schedule(schedule_id: str):
 
 
 @router.patch(
-    "/lich-trinh/{schedule_id}/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))]
+    "/lich-trinh/{schedule_id}/trang-thai", dependencies=[Depends(require_system_admin)]
 )
 async def toggle_schedule(schedule_id: str):
     schedule = cron_scheduler._schedules.get(schedule_id)
@@ -132,17 +132,17 @@ async def toggle_schedule(schedule_id: str):
     return {"schedule_id": schedule_id, "name": schedule.name, "enabled": schedule.enabled}
 
 
-@router.get("/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.get("/trang-thai", dependencies=[Depends(require_system_admin)])
 async def event_loop_status():
     return event_processor.get_stats()
 
 
-@router.get("/lich-su", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.get("/lich-su", dependencies=[Depends(require_system_admin)])
 async def event_history(limit: int = Query(default=20, ge=1, le=200)):
     return {"events": event_processor.get_recent_events(limit=limit)}
 
 
-@router.get("/cap-nhat", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.get("/cap-nhat", dependencies=[Depends(require_system_admin)])
 async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
     updates = event_processor.update_registry.get_recent(limit=limit)
     return {
@@ -161,7 +161,7 @@ async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
     }
 
 
-@router.post("/kich-hoat/{event_type}", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.post("/kich-hoat/{event_type}", dependencies=[Depends(require_system_admin)])
 async def manual_trigger(
     event_type: Literal["heartbeat", "document_uploaded", "user_query"],
     req: ManualTriggerRequest = Body(default_factory=ManualTriggerRequest),

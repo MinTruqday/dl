@@ -90,10 +90,7 @@ async def submit_test_status_report_review(
         report_id,
         payload,
         user,
-        "DRAFT",
-        "IN_REVIEW",
-        "teststatusreport.submit_review",
-        "test_status_report_submitted",
+        "submit",
     )
     return envelope(value, revision=value["revision"])
 
@@ -108,10 +105,7 @@ async def request_test_status_report_changes(
         report_id,
         payload,
         user,
-        "IN_REVIEW",
-        "DRAFT",
-        "teststatusreport.review",
-        "test_status_report_changes_requested",
+        "request_changes",
     )
     return envelope(value, revision=value["revision"])
 
@@ -126,10 +120,7 @@ async def approve_test_status_report(
         report_id,
         payload,
         user,
-        "IN_REVIEW",
-        "APPROVED",
-        "teststatusreport.approve",
-        "status_report_approved",
+        "approve",
     )
     return envelope(value, revision=value["revision"])
 
@@ -144,10 +135,7 @@ async def publish_test_status_report(
         report_id,
         payload,
         user,
-        "APPROVED",
-        "PUBLISHED",
-        "teststatusreport.publish",
-        "status_report_published",
+        "publish",
     )
     return envelope(value, revision=value["revision"])
 
@@ -162,10 +150,7 @@ async def archive_test_status_report(
         report_id,
         payload,
         user,
-        "PUBLISHED",
-        "ARCHIVED",
-        "teststatusreport.archive",
-        "test_status_report_archived",
+        "archive",
     )
     return envelope(value, revision=value["revision"])
 

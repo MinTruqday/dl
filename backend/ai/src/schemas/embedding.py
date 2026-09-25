@@ -4,17 +4,17 @@ from pydantic import BaseModel, Field
 
 
 class EmbedQueryRequest(BaseModel):
-    text: str = Field(description="Văn bản cần tạo vector embedding")
+    text: str = Field(description="Text to embed")
 
 
 class EmbedBatchRequest(BaseModel):
-    texts: List[str] = Field(description="Danh sách các văn bản cần tạo vector embedding")
+    texts: List[str] = Field(description="Texts to embed")
 
 
 class EmbeddingResponse(BaseModel):
-    embedding: List[float] = Field(description="Vector biểu diễn ngữ nghĩa")
+    embedding: List[float] = Field(description="Semantic vector")
 
 
 class BatchEmbeddingResponse(BaseModel):
-    embeddings: List[List[float]] = Field(description="Danh sách vector biểu diễn ngữ nghĩa")
-    count: int = Field(description="Số lượng vector đã trích xuất")
+    embeddings: List[List[float]] = Field(description="Semantic vectors")
+    count: int = Field(description="Number of generated vectors")

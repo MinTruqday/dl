@@ -251,8 +251,12 @@ async def index_document(document_id: str, requester_id: str, is_admin: bool) ->
         if authorized:
             try:
                 await ContentClient.mark_index_failed(document_id, type(error).__name__)
-            except Exception:
-                pass
+            except Exception as status_error:
+                logger.warning(
+                    "Unable to mark document indexing failure document_id={} error_type={}",
+                    document_id,
+                    type(status_error).__name__,
+                )
         raise
 
 

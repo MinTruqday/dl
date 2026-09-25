@@ -7,10 +7,10 @@ from src.memory.policy import trusted_outcome
 from src.runtime.models import VeriqRunState
 
 
-class ProjectMemory:
+class LongTermMemory:
     @property
     def collection(self):
-        return database.mongodb[settings.AI_DB_NAME].project_memory
+        return database.mongodb[settings.AI_DB_NAME].long_term_memory
 
     async def list(self, project_id: str, limit: int = 20):
         cursor = self.collection.find({"project_id": project_id, "trusted": True}).sort(
@@ -41,4 +41,4 @@ class ProjectMemory:
         return value
 
 
-project_memory = ProjectMemory()
+long_term_memory = LongTermMemory()

@@ -3,13 +3,28 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 
-from src.core.dependency import Role, require_role
+from src.api.agents import router as agents_router
+from src.api.approvals import router as approvals_router
+from src.api.cache import router as cache_router
+from src.api.embedding import router as embedding_router
+from src.api.events import router as events
+from src.api.indexing import indexing_router
+from src.api.indexing import router as ingest
+from src.api.inference import router as inference
+from src.api.projects import router as projects_router
+from src.api.retrieval import router as retrieval_router
+from src.core.dependency import require_system_admin
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
+from src.services.agent_metrics import agentops
+from src.services.evaluation import evaluation
+from src.services.retrieval import initialize_retrieval
 
 logger.remove()
 
@@ -29,29 +44,12 @@ logger.add(
     backtrace=False,
     diagnose=False,
 )
-from fastapi.middleware.cors import CORSMiddleware
-
-from src.api.cache import router as cache_router
-from src.api.agents import router as agents_router
-from src.api.approvals import router as approvals_router
-from src.api.embedding import router as embedding_router
-from src.api.events import router as events
-from src.api.indexing import indexing_router
-from src.api.indexing import router as ingest
-from src.api.inference import router as inference
-from src.api.projects import router as projects_router
-from src.api.retrieval import router as retrieval_router
-from src.services.agent_metrics import agentops
-from src.services.evaluation import evaluation
-from src.services.retrieval import initialize_retrieval
 
 retrieval_ready = False
 
 app = FastAPI(title="Veriq AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="ai")
 app.add_route("/so-lieu", metrics_endpoint("ai"))
-
-from fastapi.responses import JSONResponse
 
 
 @app.middleware("http")
@@ -94,13 +92,11 @@ app.include_router(projects_router, prefix="/tri-thuc")
 
 @app.get("/suc-khoe")
 async def health_check():
-    """Report process liveness for container health monitoring"""
     return {"status": "healthy"}
 
 
 @app.get("/san-sang")
 async def readiness_check():
-    """Report readiness of every infrastructure dependency required for requests"""
     checks = {}
     try:
         await database.mongodb.admin.command("ping")
@@ -160,7 +156,6 @@ async def readiness_check():
 
 @app.get("/danh-gia/so-lieu")
 async def agent_metrics():
-    """Expose agent telemetry in Prometheus text format"""
     from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(
@@ -168,7 +163,7 @@ async def agent_metrics():
     )
 
 
-@app.get("/danh-gia/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
+@app.get("/danh-gia/trang-thai", dependencies=[Depends(require_system_admin)])
 async def agent_status():
     db = database.mongodb[settings.AI_DB_NAME]
     return {

@@ -7,25 +7,25 @@ class SecurityOutput(BaseModel):
 
 class SecurityEvaluation(SecurityOutput):
     is_malicious: bool = Field(
-        description="Đúng khi đầu vào chứa tấn công chèn lệnh vượt rào hoặc yêu cầu độc hại"
+        description="True when the input contains prompt injection jailbreak or a malicious request"
     )
     has_pii: bool = Field(
-        description="Đúng khi đầu vào lộ dữ liệu định danh cá nhân nhạy cảm"
+        description="True when the input exposes sensitive personally identifiable information"
     )
     has_credentials: bool = Field(
-        description="Đúng khi đầu vào chứa thông tin xác thực hoặc bí mật truy cập"
+        description="True when the input contains credentials or access secrets"
     )
     sanitized_text: str = Field(
         max_length=200000,
-        description="Nội dung đầu vào với dữ liệu nhạy cảm được thay bằng REDACTED",
+        description="Input with sensitive spans replaced by REDACTED",
     )
     reason: str = Field(
         max_length=2000,
-        description="Lý do ngắn gọn cho phân loại bảo mật",
+        description="Concise reason for the security classification",
     )
 
 
 class JailbreakCheck(SecurityOutput):
     is_jailbreak: bool = Field(
-        description="Đúng khi văn bản chứa tấn công chèn lệnh vượt rào hoặc yêu cầu độc hại"
+        description="True when the text contains prompt injection jailbreak or a malicious request"
     )

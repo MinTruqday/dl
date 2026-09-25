@@ -5,9 +5,31 @@ from src.core.infrastructure.configuration import settings
 
 
 class KnowledgeClient:
+    async def index_document(
+        self,
+        document_id: str,
+        user_id: str,
+        superseded_document_id: str = "",
+    ):
+        params = {"document_id": document_id, "user_id": user_id}
+        if superseded_document_id:
+            params["superseded_document_id"] = superseded_document_id
+        async with httpx.AsyncClient(
+            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+        ) as client:
+            response = await client.post(
+                f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                params=params,
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        response.raise_for_status()
+        return response.json()
+
     async def delete_document(self, document_id: str, requester_id: str, is_admin: bool = False):
         try:
-            async with httpx.AsyncClient(timeout=20) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            ) as client:
                 response = await client.delete(
                     f"{settings.AI_URL}/tri-thuc/tai-lieu/{document_id}",
                     headers={"X-Internal-Token": settings.SECRET_KEY},

@@ -18,9 +18,22 @@ import {
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
-import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
+import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import DocumentEditor from "../../editor/DocumentEditor";
-import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
+import ApiArtifactsPanel from "./test-design/ApiArtifactsPanel";
+import DataSetsPanel from "./test-design/DataSetsPanel";
+import ScenariosPanel from "./test-design/ScenariosPanel";
+import TestCaseCreateModal from "./test-design/TestCaseCreateModal";
+import TestCaseTransferPanel from "./test-design/TestCaseTransferPanel";
+import {
+  createDataSetForm,
+  createScenarioForm,
+  createTestCaseForm,
+  AI_TEST_GENERATION_CATEGORIES,
+  TEST_CASE_TYPES,
+  TEST_LEVELS,
+  TEST_SCENARIO_CATEGORIES,
+} from "./test-design/testDesign.model";
 
 export default function TestDesignPage({ project }) {
   const { ask, dialog } = useActionDialog();
@@ -71,27 +84,9 @@ export default function TestDesignPage({ project }) {
   const draftSequence = useRef(0);
   const loadedDraft = useRef("");
   const [testLint, setTestLint] = useState(null);
-  const [scenarioForm, setScenarioForm] = useState({
-    title: "",
-    objective: "",
-    category: "happy_path",
-    testConditionIds: [],
-  });
-  const [dataSetForm, setDataSetForm] = useState({
-    name: "",
-    variables: "{}",
-    secretRefs: "{}",
-  });
-  const [form, setForm] = useState({
-    title: "",
-    type: "happy_path",
-    priority: "medium",
-    risk: "medium",
-    action: emptyDoc(),
-    expected: emptyDoc(),
-    dataSetVersionIds: [],
-    testConditionIds: [],
-  });
+  const [scenarioForm, setScenarioForm] = useState(createScenarioForm);
+  const [dataSetForm, setDataSetForm] = useState(createDataSetForm);
+  const [form, setForm] = useState(createTestCaseForm);
   const [error, setError] = useState("");
   const [creatingTest, setCreatingTest] = useState(false);
   const [creatingScenario, setCreatingScenario] = useState(false);
@@ -234,16 +229,7 @@ export default function TestDesignPage({ project }) {
         origin: "manual",
         source_evidence: [],
       });
-      setForm({
-        title: "",
-        type: "happy_path",
-        priority: "medium",
-        risk: "medium",
-        action: emptyDoc(),
-        expected: emptyDoc(),
-        dataSetVersionIds: [],
-        testConditionIds: [],
-      });
+      setForm(createTestCaseForm());
       setCreatingTest(false);
       await load();
     } catch (reason) {
@@ -265,12 +251,7 @@ export default function TestDesignPage({ project }) {
         status: "draft",
         origin: "manual",
       });
-      setScenarioForm({
-        title: "",
-        objective: "",
-        category: "happy_path",
-        testConditionIds: [],
-      });
+      setScenarioForm(createScenarioForm());
       setCreatingScenario(false);
       await load();
     } catch (reason) {
@@ -285,7 +266,7 @@ export default function TestDesignPage({ project }) {
         variables: JSON.parse(dataSetForm.variables || "{}"),
         secret_refs: JSON.parse(dataSetForm.secretRefs || "{}"),
       });
-      setDataSetForm({ name: "", variables: "{}", secretRefs: "{}" });
+      setDataSetForm(createDataSetForm());
       setCreatingDataSet(false);
       await load();
     } catch (reason) {
@@ -299,7 +280,7 @@ export default function TestDesignPage({ project }) {
     setAiAction("testcase");
     try {
       await testingApi.generateTestCases(selectedRequirement, {
-        categories: ["happy_path", "negative", "boundary", "validation"],
+        categories: AI_TEST_GENERATION_CATEGORIES,
         count_per_category: 1,
         instruction: "Tạo theo phiên bản chuẩn và tiêu chí chấp nhận",
       });
@@ -493,7 +474,7 @@ export default function TestDesignPage({ project }) {
                   setAiAction("scenario");
                   try {
                     await testingApi.generateScenarios(selectedRequirement, {
-                      categories: ["happy_path", "negative", "boundary", "validation"],
+                      categories: AI_TEST_GENERATION_CATEGORIES,
                       count_per_category: 1,
                     });
                     await load();
@@ -1048,21 +1029,7 @@ export default function TestDesignPage({ project }) {
                   value={draftEdit.type}
                   onChange={(event) => changeDraftEdit({ type: event.target.value })}
                 >
-                  {[
-                    "happy_path",
-                    "negative",
-                    "boundary",
-                    "validation",
-                    "permission",
-                    "state_transition",
-                    "integration",
-                    "error_handling",
-                    "data_persistence",
-                    "concurrency",
-                    "api",
-                    "ui",
-                    "custom",
-                  ].map((value) => (
+                  {TEST_CASE_TYPES.map((value) => (
                     <option key={value} value={value}>
                       {valueLabel(value)}
                     </option>
@@ -1075,7 +1042,7 @@ export default function TestDesignPage({ project }) {
                   value={draftEdit.priority}
                   onChange={(event) => changeDraftEdit({ priority: event.target.value })}
                 >
-                  {["critical", "high", "medium", "low"].map((value) => (
+                  {TEST_LEVELS.map((value) => (
                     <option key={value} value={value}>
                       {valueLabel(value)}
                     </option>
@@ -1088,7 +1055,7 @@ export default function TestDesignPage({ project }) {
                   value={draftEdit.risk}
                   onChange={(event) => changeDraftEdit({ risk: event.target.value })}
                 >
-                  {["critical", "high", "medium", "low"].map((value) => (
+                  {TEST_LEVELS.map((value) => (
                     <option key={value} value={value}>
                       {valueLabel(value)}
                     </option>
@@ -1389,604 +1356,45 @@ export default function TestDesignPage({ project }) {
       )}
       <div className="grid gap-5 xl:grid-cols-2">
         {can("testcase.create") && (
-          <Modal
+          <TestCaseCreateModal
             isOpen={creatingTest}
             onClose={() => setCreatingTest(false)}
-            ariaLabel="Tạo ca kiểm thử"
-            className="max-w-3xl max-h-[90dvh] overflow-y-auto"
-          >
-            <ModalHeader>
-              <ModalTitle>Tạo ca kiểm thử</ModalTitle>
-            </ModalHeader>
-            <form onSubmit={create} className="space-y-4 p-5">
-              <label className="field-label">
-                Tên
-                <input
-                  className="apple-input mt-2"
-                  required
-                  value={form.title}
-                  onChange={(event) => setForm({ ...form, title: event.target.value })}
-                />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <select
-                  aria-label="Loại ca kiểm thử"
-                  className="apple-input"
-                  value={form.type}
-                  onChange={(event) => setForm({ ...form, type: event.target.value })}
-                >
-                  {[
-                    "happy_path",
-                    "negative",
-                    "boundary",
-                    "validation",
-                    "permission",
-                    "state_transition",
-                    "integration",
-                    "error_handling",
-                    "data_persistence",
-                    "concurrency",
-                    "api",
-                    "ui",
-                    "custom",
-                  ].map((value) => (
-                    <option key={value} value={value}>
-                      {valueLabel(value)}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Ưu tiên ca kiểm thử"
-                  className="apple-input"
-                  value={form.priority}
-                  onChange={(event) => setForm({ ...form, priority: event.target.value })}
-                >
-                  {["critical", "high", "medium", "low"].map((value) => (
-                    <option key={value} value={value}>
-                      {valueLabel(value)}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Rủi ro ca kiểm thử"
-                  className="apple-input"
-                  value={form.risk}
-                  onChange={(event) => setForm({ ...form, risk: event.target.value })}
-                >
-                  {["critical", "high", "medium", "low"].map((value) => (
-                    <option key={value} value={value}>
-                      {valueLabel(value)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <p className="field-label mb-2">Thao tác</p>
-                <DocumentEditor
-                  value={form.action}
-                  onChange={(action) => setForm({ ...form, action })}
-                  label="Thao tác của ca kiểm thử"
-                  minHeight="min-h-24"
-                />
-              </div>
-              <div>
-                <p className="field-label mb-2">Kết quả mong đợi</p>
-                <DocumentEditor
-                  value={form.expected}
-                  onChange={(expected) => setForm({ ...form, expected })}
-                  label="Kết quả mong đợi của ca kiểm thử"
-                  minHeight="min-h-24"
-                />
-              </div>
-              <label className="field-label">
-                Bộ dữ liệu tham số
-                <select
-                  aria-label="Bộ dữ liệu cho ca kiểm thử mới"
-                  className="apple-input mt-2 min-h-28"
-                  multiple
-                  value={form.dataSetVersionIds}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      dataSetVersionIds: Array.from(
-                        event.target.selectedOptions,
-                        (option) => option.value,
-                      ),
-                    })
-                  }
-                >
-                  {dataSets.map((item) => (
-                    <option key={item.current_version_id} value={item.current_version_id}>
-                      {item.name} v{item.current_version?.version}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field-label">
-                Điều kiện kiểm thử đã phê duyệt
-                <select
-                  aria-label="Điều kiện kiểm thử cho ca kiểm thử mới"
-                  className="apple-input mt-2 min-h-28"
-                  multiple
-                  value={form.testConditionIds}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      testConditionIds: Array.from(
-                        event.target.selectedOptions,
-                        (option) => option.value,
-                      ),
-                    })
-                  }
-                >
-                  {testConditions.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.condition_key} {item.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="flex justify-end gap-3">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => setCreatingTest(false)}
-                >
-                  Hủy
-                </button>
-                <button className="apple-button" type="submit">
-                  Lưu bản nháp
-                </button>
-              </div>
-            </form>
-          </Modal>
+            form={form}
+            setForm={setForm}
+            dataSets={dataSets}
+            testConditions={testConditions}
+            onSubmit={create}
+          />
         )}
-        <Panel
-          title="Kịch bản"
-          actions={
-            can("testscenario.create") ? (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => setCreatingScenario(true)}
-              >
-                Tạo kịch bản
-              </button>
-            ) : null
-          }
-        >
-          {can("testscenario.create") && (
-            <Modal
-              isOpen={creatingScenario}
-              onClose={() => setCreatingScenario(false)}
-              ariaLabel="Tạo kịch bản"
-              className="max-w-xl"
-            >
-              <ModalHeader>
-                <ModalTitle>Tạo kịch bản</ModalTitle>
-              </ModalHeader>
-              <form className="space-y-3 p-5" onSubmit={createScenario}>
-                <input
-                  aria-label="Tên kịch bản"
-                  className="apple-input"
-                  required
-                  value={scenarioForm.title}
-                  onChange={(event) =>
-                    setScenarioForm({ ...scenarioForm, title: event.target.value })
-                  }
-                  placeholder="Tên kịch bản"
-                />
-                <textarea
-                  aria-label="Mục tiêu kịch bản"
-                  className="apple-input min-h-20"
-                  value={scenarioForm.objective}
-                  onChange={(event) =>
-                    setScenarioForm({ ...scenarioForm, objective: event.target.value })
-                  }
-                  placeholder="Mục tiêu và phạm vi"
-                />
-                <select
-                  aria-label="Nhóm kịch bản"
-                  className="apple-input"
-                  value={scenarioForm.category}
-                  onChange={(event) =>
-                    setScenarioForm({ ...scenarioForm, category: event.target.value })
-                  }
-                >
-                  {[
-                    "happy_path",
-                    "negative",
-                    "boundary",
-                    "validation",
-                    "permission",
-                    "state_transition",
-                    "integration",
-                    "error_handling",
-                    "data_persistence",
-                    "concurrency",
-                  ].map((value) => (
-                    <option key={value} value={value}>
-                      {valueLabel(value)}
-                    </option>
-                  ))}
-                </select>
-                <label className="field-label">
-                  Điều kiện kiểm thử đã phê duyệt
-                  <select
-                    aria-label="Điều kiện kiểm thử cho kịch bản"
-                    className="apple-input mt-2 min-h-28"
-                    multiple
-                    value={scenarioForm.testConditionIds}
-                    onChange={(event) =>
-                      setScenarioForm({
-                        ...scenarioForm,
-                        testConditionIds: Array.from(
-                          event.target.selectedOptions,
-                          (option) => option.value,
-                        ),
-                      })
-                    }
-                  >
-                    {testConditions.map((item) => (
-                      <option key={item._id} value={item._id}>
-                        {item.condition_key} {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="flex justify-end gap-3">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => setCreatingScenario(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button className="apple-button" type="submit">
-                    Lưu kịch bản
-                  </button>
-                </div>
-              </form>
-            </Modal>
-          )}
-          <details className="border-b border-border p-4">
-            <summary className="cursor-pointer text-sm font-medium">
-              Tìm kiếm bộ lọc và sắp xếp
-            </summary>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <input
-                aria-label="Tìm kịch bản"
-                className="apple-input"
-                placeholder="Tìm mã hoặc tên"
-                value={scenarioFilters.q}
-                onChange={(event) =>
-                  setScenarioFilters({ ...scenarioFilters, q: event.target.value })
-                }
-              />
-              <select
-                aria-label="Lọc nhóm kịch bản"
-                className="apple-input"
-                value={scenarioFilters.category}
-                onChange={(event) =>
-                  setScenarioFilters({ ...scenarioFilters, category: event.target.value })
-                }
-              >
-                <option value="">Mọi nhóm</option>
-                {[
-                  "happy_path",
-                  "negative",
-                  "boundary",
-                  "validation",
-                  "permission",
-                  "state_transition",
-                  "integration",
-                  "error_handling",
-                  "data_persistence",
-                  "concurrency",
-                ].map((value) => (
-                  <option value={value} key={value}>
-                    {valueLabel(value)}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Lọc rủi ro kịch bản"
-                className="apple-input"
-                value={scenarioFilters.risk}
-                onChange={(event) =>
-                  setScenarioFilters({ ...scenarioFilters, risk: event.target.value })
-                }
-              >
-                <option value="">Mọi rủi ro</option>
-                {["critical", "high", "medium", "low"].map((value) => (
-                  <option value={value} key={value}>
-                    {valueLabel(value)}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Lọc trạng thái kịch bản"
-                className="apple-input"
-                value={scenarioFilters.status}
-                onChange={(event) =>
-                  setScenarioFilters({ ...scenarioFilters, status: event.target.value })
-                }
-              >
-                <option value="">Mọi trạng thái</option>
-                {["draft", "in_review", "approved", "archived"].map((value) => (
-                  <option value={value} key={value}>
-                    {valueLabel(value)}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Sắp xếp kịch bản"
-                className="apple-input"
-                value={scenarioFilters.sort}
-                onChange={(event) =>
-                  setScenarioFilters({ ...scenarioFilters, sort: event.target.value })
-                }
-              >
-                <option value="-updated_at">Mới cập nhật</option>
-                <option value="updated_at">Cũ cập nhật</option>
-                <option value="scenario_key">Mã tăng dần</option>
-                <option value="title">Tên tăng dần</option>
-              </select>
-            </div>
-          </details>
-          <DataTable
-            onSelect={async (item) => {
-              if (item.status !== "draft" || !can("testscenario.update")) return;
-              const answer = await ask({
-                title: "Đổi tên kịch bản kiểm thử",
-                description: item.scenario_key,
-                confirmLabel: "Lưu tên",
-                fields: [
-                  {
-                    name: "title",
-                    label: "Tên kịch bản",
-                    initialValue: item.title,
-                    required: true,
-                    autoFocus: true,
-                  },
-                ],
-              });
-              if (!answer || answer.title === item.title) return;
-              try {
-                await testingApi.updateScenario(item._id, {
-                  expected_revision: item.revision,
-                  title: answer.title,
-                });
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-            items={scenarios}
-            empty="Chưa có kịch bản"
-            columns={[
-              { key: "scenario_key", label: "Mã" },
-              { key: "title", label: "Tên" },
-              { key: "category", label: "Nhóm" },
-              { key: "origin", label: "Nguồn" },
-              {
-                key: "actions",
-                label: "Thao tác",
-                render: (item) => (
-                  <span className="flex flex-wrap gap-2">
-                    {can("testscenario.clone") && (
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        onClick={async (event) => {
-                          event.stopPropagation();
-                          try {
-                            await testingApi.cloneScenario(item._id);
-                            await load();
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        Nhân bản
-                      </button>
-                    )}
-                    {item.status !== "archived" && can("testscenario.archive") && (
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        onClick={async (event) => {
-                          event.stopPropagation();
-                          const answer = await ask({
-                            title: "Lưu trữ kịch bản",
-                            description: item.title,
-                            confirmLabel: "Lưu trữ",
-                            danger: true,
-                            fields: [
-                              {
-                                name: "reason",
-                                label: "Lý do",
-                                required: true,
-                                multiline: true,
-                                autoFocus: true,
-                              },
-                            ],
-                          });
-                          if (!answer) return;
-                          try {
-                            await testingApi.archiveScenario(item._id, {
-                              expected_revision: item.revision,
-                              reason: answer.reason,
-                            });
-                            await load();
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        Lưu trữ
-                      </button>
-                    )}
-                  </span>
-                ),
-              },
-            ]}
-          />
-        </Panel>
+        <ScenariosPanel
+          can={can}
+          scenarios={scenarios}
+          filters={scenarioFilters}
+          setFilters={setScenarioFilters}
+          isCreating={creatingScenario}
+          setCreating={setCreatingScenario}
+          form={scenarioForm}
+          setForm={setScenarioForm}
+          testConditions={testConditions}
+          onSubmit={createScenario}
+          ask={ask}
+          reload={load}
+          onError={setError}
+        />
       </div>
-      {canReadTestData && (
-        <Panel
-          title="Bộ dữ liệu kiểm thử có phiên bản"
-          actions={
-            can("testcase.create") ? (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => setCreatingDataSet(true)}
-              >
-                Tạo bộ dữ liệu
-              </button>
-            ) : null
-          }
-        >
-          {can("testcase.create") && (
-            <Modal
-              isOpen={creatingDataSet}
-              onClose={() => setCreatingDataSet(false)}
-              ariaLabel="Tạo bộ dữ liệu"
-              className="max-w-2xl max-h-[90dvh] overflow-y-auto"
-            >
-              <ModalHeader>
-                <ModalTitle>Tạo bộ dữ liệu</ModalTitle>
-              </ModalHeader>
-              <form className="grid gap-3 p-5" onSubmit={createDataSet}>
-                <label className="field-label">
-                  Tên bộ dữ liệu
-                  <input
-                    className="apple-input mt-2"
-                    required
-                    value={dataSetForm.name}
-                    onChange={(event) =>
-                      setDataSetForm({ ...dataSetForm, name: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="field-label">
-                  Biến JSON
-                  <textarea
-                    className="apple-input mt-2 min-h-28 font-mono"
-                    required
-                    value={dataSetForm.variables}
-                    onChange={(event) =>
-                      setDataSetForm({ ...dataSetForm, variables: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="field-label">
-                  Secret refs JSON
-                  <textarea
-                    className="apple-input mt-2 min-h-28 font-mono"
-                    required
-                    value={dataSetForm.secretRefs}
-                    onChange={(event) =>
-                      setDataSetForm({ ...dataSetForm, secretRefs: event.target.value })
-                    }
-                  />
-                </label>
-                <div className="flex justify-end gap-3">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => setCreatingDataSet(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button className="apple-button" type="submit">
-                    Tạo bộ dữ liệu
-                  </button>
-                </div>
-              </form>
-            </Modal>
-          )}
-          <DataTable
-            items={dataSets}
-            empty="Chưa có bộ dữ liệu tham số"
-            onSelect={async (item) => {
-              if (!can("testcase.update")) return;
-              const answer = await ask({
-                title: "Tạo phiên bản bộ dữ liệu mới",
-                description: `${item.name} v${item.current_version?.version}`,
-                confirmLabel: "Tạo phiên bản",
-                fields: [
-                  {
-                    name: "name",
-                    label: "Tên bộ dữ liệu",
-                    initialValue: item.name,
-                    required: true,
-                    autoFocus: true,
-                  },
-                  {
-                    name: "variables",
-                    label: "Biến JSON",
-                    initialValue: JSON.stringify(item.current_version?.variables || {}, null, 2),
-                    required: true,
-                    multiline: true,
-                  },
-                  {
-                    name: "secretRefs",
-                    label: "Danh sách tham chiếu bí mật dạng JSON",
-                    initialValue: JSON.stringify(item.current_version?.secret_refs || {}, null, 2),
-                    required: true,
-                    multiline: true,
-                  },
-                  {
-                    name: "reason",
-                    label: "Lý do thay đổi",
-                    initialValue: "Cập nhật dữ liệu kiểm thử",
-                    required: true,
-                    multiline: true,
-                  },
-                ],
-              });
-              if (!answer) return;
-              try {
-                await testingApi.createDataSetVersion(item._id, {
-                  expected_current_version_id: item.current_version_id,
-                  name: answer.name,
-                  variables: JSON.parse(answer.variables),
-                  secret_refs: JSON.parse(answer.secretRefs),
-                  change_reason: answer.reason,
-                });
-                await load();
-              } catch (reason) {
-                setError(
-                  reason instanceof SyntaxError
-                    ? "Bộ dữ liệu phải là JSON hợp lệ"
-                    : messageOf(reason),
-                );
-              }
-            }}
-            columns={[
-              { key: "name", label: "Tên" },
-              {
-                key: "version",
-                label: "Phiên bản",
-                render: (item) => `v${item.current_version?.version || 1}`,
-              },
-              {
-                key: "variables",
-                label: "Biến",
-                render: (item) => Object.keys(item.current_version?.variables || {}).join(", "),
-              },
-              {
-                key: "secret_refs",
-                label: "Tham chiếu bí mật",
-                render: (item) => Object.keys(item.current_version?.secret_refs || {}).join(", "),
-              },
-            ]}
-          />
-        </Panel>
-      )}
+      <DataSetsPanel
+        can={can}
+        canRead={canReadTestData}
+        items={dataSets}
+        isCreating={creatingDataSet}
+        setCreating={setCreatingDataSet}
+        form={dataSetForm}
+        setForm={setDataSetForm}
+        onSubmit={createDataSet}
+        ask={ask}
+        reload={load}
+        onError={setError}
+      />
       {duplicates.length > 0 && (
         <Panel title="Các ca kiểm thử có khả năng trùng">
           <DataTable
@@ -2008,347 +1416,31 @@ export default function TestDesignPage({ project }) {
           />
         </Panel>
       )}
-      <Panel
-        title="Nhập và xuất ca kiểm thử"
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {can("testcase.export") && (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  testingApi
-                    .exportTestCases(project._id, "csv")
-                    .catch((reason) => setError(messageOf(reason)))
-                }
-              >
-                Xuất CSV
-              </button>
-            )}
-            {can("testcase.export") && (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  testingApi
-                    .exportTestCases(project._id, "xlsx")
-                    .catch((reason) => setError(messageOf(reason)))
-                }
-              >
-                Xuất XLSX
-              </button>
-            )}
-          </div>
-        }
-      >
-        {can("testcase.import") && (
-          <div className="space-y-4 p-5">
-            <input
-              className="apple-input"
-              aria-label="Tệp ca kiểm thử CSV hoặc XLSX"
-              type="file"
-              accept=".csv,.xlsx"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                try {
-                  setTestImport(await testingApi.uploadTestImport(project._id, file));
-                } catch (reason) {
-                  setError(messageOf(reason));
-                }
-              }}
-            />
-            {testImport && (
-              <>
-                <DataTable
-                  items={testImport.preview.map((item, index) => ({ ...item, _id: index }))}
-                  empty="Tệp không có ca kiểm thử hợp lệ"
-                  columns={[
-                    { key: "title", label: "Tên" },
-                    { key: "type", label: "Loại", render: (item) => valueLabel(item.type) },
-                    {
-                      key: "priority",
-                      label: "Ưu tiên",
-                      render: (item) => valueLabel(item.priority),
-                    },
-                    { key: "expected", label: "Kết quả mong đợi" },
-                  ]}
-                />
-                <button
-                  className="apple-button"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await testingApi.confirmTestImport(
-                        testImport._id,
-                        testImport.preview.map((_, index) => index),
-                      );
-                      setTestImport(null);
-                      await load();
-                    } catch (reason) {
-                      setError(messageOf(reason));
-                    }
-                  }}
-                >
-                  Xác nhận nhập toàn bộ
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </Panel>
-      <Panel title="OpenAPI và Postman">
-        <div className="grid gap-5 p-5 xl:grid-cols-2">
-          {can("apiartifact.import") && (
-            <form
-              className="space-y-4"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                try {
-                  await testingApi.importApiArtifact(project._id, apiImport);
-                  setApiImport({ ...apiImport, content: "" });
-                  await load();
-                } catch (reason) {
-                  setError(messageOf(reason));
-                }
-              }}
-            >
-              <label className="field-label">
-                Loại nguồn
-                <select
-                  className="apple-input mt-2"
-                  value={apiImport.format}
-                  onChange={(event) =>
-                    setApiImport({
-                      ...apiImport,
-                      format: event.target.value,
-                      filename: `${event.target.value}.json`,
-                    })
-                  }
-                >
-                  <option value="openapi">OpenAPI</option>
-                  <option value="postman">Postman</option>
-                </select>
-              </label>
-              <label className="field-label">
-                JSON đặc tả
-                <textarea
-                  className="apple-input mt-2 min-h-48 font-mono"
-                  required
-                  value={apiImport.content}
-                  onChange={(event) => setApiImport({ ...apiImport, content: event.target.value })}
-                />
-              </label>
-              <button className="secondary-button" type="submit">
-                Tạo bản xem trước
-              </button>
-            </form>
-          )}
-          <div className="space-y-5">
-            <DataTable
-              items={apiArtifacts}
-              empty="Chưa có nguồn đặc tả API"
-              columns={[
-                { key: "filename", label: "Nguồn" },
-                { key: "format", label: "Định dạng" },
-                {
-                  key: "status",
-                  label: "Trạng thái",
-                  render: (item) => <StatusPill value={item.status} />,
-                },
-                { key: "preview_count", label: "Thao tác" },
-                {
-                  key: "actions",
-                  label: "Xử lý",
-                  render: (item) => (
-                    <div className="flex flex-wrap gap-2">
-                      {item.status === "PREVIEW_READY" && can("apiartifact.review") && (
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              await testingApi.reviewApiArtifact(item._id, {
-                                expected_revision: item.revision,
-                                selected_indexes: [],
-                                review_note: "Đã rà soát toàn bộ thao tác",
-                              });
-                              await load();
-                            } catch (reason) {
-                              setError(messageOf(reason));
-                            }
-                          }}
-                        >
-                          Rà soát
-                        </button>
-                      )}
-                      {item.status === "REVIEWED" && can("apiartifact.confirm") && (
-                        <button
-                          className="apple-button"
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              await testingApi.confirmApiArtifact(item._id, {
-                                expected_revision: item.revision,
-                                idempotency_key: crypto.randomUUID(),
-                              });
-                              await load();
-                            } catch (reason) {
-                              setError(messageOf(reason));
-                            }
-                          }}
-                        >
-                          Xác nhận
-                        </button>
-                      )}
-                      {item.status !== "ARCHIVED" && can("apiartifact.archive") && (
-                        <button
-                          className="danger-button"
-                          type="button"
-                          onClick={async () => {
-                            const answer = await ask({
-                              title: "Lưu trữ nguồn đặc tả API",
-                              description: item.filename,
-                              confirmLabel: "Lưu trữ",
-                            });
-                            if (!answer) return;
-                            try {
-                              await testingApi.archiveApiArtifact(item._id, {
-                                expected_revision: item.revision,
-                                reason: "Nguồn đặc tả không còn được sử dụng",
-                              });
-                              await load();
-                            } catch (reason) {
-                              setError(messageOf(reason));
-                            }
-                          }}
-                        >
-                          Lưu trữ
-                        </button>
-                      )}
-                    </div>
-                  ),
-                },
-              ]}
-            />
-            {apiArtifacts.filter((item) => item.status === "CONFIRMED").length >= 2 && (
-              <div className="rounded-2xl border border-[var(--border)] p-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="field-label">
-                    Phiên bản trước
-                    <select
-                      className="apple-input mt-2"
-                      value={apiCompareFrom}
-                      onChange={(event) => setApiCompareFrom(event.target.value)}
-                    >
-                      {apiArtifacts
-                        .filter((item) => item.status === "CONFIRMED")
-                        .map((item) => (
-                          <option key={item._id} value={item._id}>
-                            {item.filename}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <label className="field-label">
-                    Phiên bản sau
-                    <select
-                      className="apple-input mt-2"
-                      value={apiCompareTo}
-                      onChange={(event) => setApiCompareTo(event.target.value)}
-                    >
-                      {apiArtifacts
-                        .filter((item) => item.status === "CONFIRMED")
-                        .map((item) => (
-                          <option key={item._id} value={item._id}>
-                            {item.filename}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="secondary-button"
-                    disabled={!apiCompareFrom || !apiCompareTo || apiCompareFrom === apiCompareTo}
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        setApiDifference(
-                          await testingApi.diffApiArtifacts(
-                            project._id,
-                            apiCompareFrom,
-                            apiCompareTo,
-                          ),
-                        );
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    So sánh đặc tả
-                  </button>
-                  {can("impact.execute") && (
-                    <button
-                      className="secondary-button"
-                      disabled={!apiCompareFrom || !apiCompareTo || apiCompareFrom === apiCompareTo}
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          await testingApi.analyzeApiArtifactImpact(project._id, {
-                            from_artifact_id: apiCompareFrom,
-                            to_artifact_id: apiCompareTo,
-                          });
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
-                    >
-                      Phân tích ảnh hưởng
-                    </button>
-                  )}
-                </div>
-                {apiDifference && (
-                  <p className="mt-3 text-sm text-[var(--muted)]">
-                    Thêm {apiDifference.added.length} thay đổi {apiDifference.changed.length} loại
-                    bỏ {apiDifference.removed.length}
-                  </p>
-                )}
-              </div>
-            )}
-            <DataTable
-              items={operations}
-              empty="Chưa có thao tác API đã xác nhận"
-              columns={[
-                { key: "method", label: "Phương thức" },
-                { key: "path", label: "Đường dẫn" },
-                { key: "title", label: "Tên" },
-                {
-                  key: "generate",
-                  label: "Tạo ca kiểm thử",
-                  render: (item) =>
-                    can("ai.generate_api_testcase") && can("testcase.create") ? (
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await testingApi.generateApiTests(item._id);
-                            await load();
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        Tạo ca kiểm thử
-                      </button>
-                    ) : null,
-                },
-              ]}
-            />
-          </div>
-        </div>
-      </Panel>
+      <TestCaseTransferPanel
+        projectId={project._id}
+        can={can}
+        preview={testImport}
+        setPreview={setTestImport}
+        reload={load}
+        onError={setError}
+      />
+      <ApiArtifactsPanel
+        projectId={project._id}
+        can={can}
+        ask={ask}
+        apiImport={apiImport}
+        setApiImport={setApiImport}
+        artifacts={apiArtifacts}
+        operations={operations}
+        compareFrom={apiCompareFrom}
+        setCompareFrom={setApiCompareFrom}
+        compareTo={apiCompareTo}
+        setCompareTo={setApiCompareTo}
+        difference={apiDifference}
+        setDifference={setApiDifference}
+        reload={load}
+        onError={setError}
+      />
       {dialog}
     </WorkspacePage>
   );

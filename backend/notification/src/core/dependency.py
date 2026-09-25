@@ -11,13 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
-
-
-class Role(str, Enum):
-    GUEST = "guest"
-    READER = "reader"
-    AUTHOR = "author"
-    ADMIN = "admin"
+from src.clients.authentication import AuthenticationClient
 
 
 class SystemRole(str, Enum):
@@ -30,20 +24,12 @@ class CurrentUser(BaseModel):
 
     id: str = Field(alias="_id")
     email: str
-    role: Role = Role.READER
     system_role: SystemRole = SystemRole.USER
     permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
     session_id: str = ""
-
-    @field_validator("role", mode="before")
-    @classmethod
-    def validate_role_case(cls, v: Any):
-        if isinstance(v, str):
-            return v.lower()
-        return v
 
     @field_validator("system_role", mode="before")
     @classmethod
@@ -81,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         logger.warning("Token verification failed due to missing identity claims")
         raise credentials_exception
 
-    is_valid_session = await redis.sismember(f"user_sessions:{uid}", session_id)
+    is_valid_session = await AuthenticationClient.session_is_valid(str(uid), str(session_id))
     if not is_valid_session:
         logger.warning("Attempted to use an invalidated or revoked session token")
         raise credentials_exception
@@ -89,7 +75,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     user_doc = {
         "_id": uid,
         "email": email,
-        "role": payload.get("role", "reader"),
         "system_role": payload.get("system_role", "USER"),
         "permissions": payload.get("permissions", []),
         "session_id": session_id,
@@ -117,21 +102,6 @@ async def get_current_user_token_param(token: str) -> CurrentUser:
     return await get_current_user(token)
 
 
-def require_role(required_roles: List[Role]):
-    async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
-            return current_user
-        if current_user.role not in required_roles:
-            logger.warning("Access denied due to insufficient authorization privileges")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Tài khoản của bạn không có quyền thực hiện thao tác này",
-            )
-        return current_user
-
-    return role_checker
-
-
 class RateLimiting:
     def __init__(self, calls: int, period: int):
         self.calls = calls
@@ -156,7 +126,7 @@ def require_permissions(required_permissions: List[str]):
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         user_perms = current_user.permissions or []
-        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN:
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:

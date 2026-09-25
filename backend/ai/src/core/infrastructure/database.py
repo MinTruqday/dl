@@ -77,7 +77,7 @@ async def setup_indexes():
                 IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
                 IndexModel([("status", ASCENDING), ("updated_at", DESCENDING)]),
             ],
-            "project_memory": [
+            "long_term_memory": [
                 IndexModel([("project_id", ASCENDING), ("created_at", DESCENDING)]),
                 IndexModel([("project_id", ASCENDING), ("trusted", ASCENDING)]),
                 IndexModel([("run_id", ASCENDING)], unique=True),

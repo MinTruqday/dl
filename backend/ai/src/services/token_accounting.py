@@ -13,7 +13,8 @@ def usage_values(response: Any, input_chars: int, output_chars: int) -> dict[str
     if isinstance(usage, dict):
         get_value = usage.get
     else:
-        get_value = lambda key, default=0: getattr(usage, key, default)
+        def get_value(key, default=0):
+            return getattr(usage, key, default)
     prompt = int(get_value("prompt_tokens", 0) or get_value("input_tokens", 0) or 0)
     completion = int(get_value("completion_tokens", 0) or get_value("output_tokens", 0) or 0)
     cached = int(get_value("cached_tokens", 0) or get_value("cache_read_input_tokens", 0) or 0)

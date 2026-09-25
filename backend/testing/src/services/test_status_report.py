@@ -4,27 +4,39 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.core.database import database
 from src.domain.test_status_report import status_report_hash, status_report_snapshot
 from src.repositories.test_status_report import (
+    find_ai_result,
+    find_build,
+    find_monitoring_snapshot,
+    find_plan,
     find_report,
+    find_report_by_idempotency,
+    insert_ai_result,
+    insert_report,
+    list_control_actions,
     list_reports,
     next_sequence,
     update_report,
 )
+from src.services.domain_policy import domain_policy
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.test_monitoring import effective_snapshot
 
 
+STATUS_REPORT_POLICY = domain_policy("test_status_report")
+
+
 def default_recommendation(snapshot):
+    policy = STATUS_REPORT_POLICY
     status = snapshot.get("effective_quality_gate_status") or snapshot.get("quality_gate_status")
     if snapshot.get("blockers"):
-        return "BLOCKED"
-    if status == "PASS":
-        return "ON_TRACK"
-    if status == "FAIL":
-        return "NOT_READY"
-    return "AT_RISK"
+        return policy["blocked_recommendation"]
+    if status == policy["pass_gate_status"]:
+        return policy["on_track_recommendation"]
+    if status == policy["fail_gate_status"]:
+        return policy["not_ready_recommendation"]
+    return policy["at_risk_recommendation"]
 
 
 def text_document(value):
@@ -52,20 +64,20 @@ def normalized_forecast(value):
 
 def generated_summaries(snapshot):
     metrics = snapshot.get("metrics") or {}
-    progress = "Đã thực thi {executed}/{planned} ca kiểm thử đạt {percent}%".format(
+    progress = STATUS_REPORT_POLICY["progress_summary_template"].format(
         executed=metrics.get("executed_test_count", 0),
         planned=metrics.get("planned_test_count", 0),
         percent=metrics.get("execution_percent", 0),
     )
     coverage = (
-        "Độ phủ yêu cầu {requirements}% điều kiện kiểm thử {conditions}% và rủi ro {risks}%".format(
+        STATUS_REPORT_POLICY["coverage_summary_template"].format(
             requirements=metrics.get("requirement_coverage", 0),
             conditions=metrics.get("test_condition_coverage", 0),
             risks=metrics.get("risk_coverage", 0),
         )
     )
     defects = (
-        "Lỗi đang mở gồm {blocker} blocker và {critical} critical với {reopened} lỗi mở lại".format(
+        STATUS_REPORT_POLICY["defect_summary_template"].format(
             blocker=metrics.get("open_blocker", 0),
             critical=metrics.get("open_critical", 0),
             reopened=metrics.get("reopened", 0),
@@ -74,68 +86,59 @@ def generated_summaries(snapshot):
     return progress, coverage, defects
 
 
-async def get_report_for_user(report_id, user, permission="teststatusreport.read"):
+async def get_report_for_user(report_id, user, permission=None):
     report = await find_report(report_id)
     if not report:
-        raise HTTPException(status_code=404, detail={"code": "STATUS_REPORT_NOT_FOUND"})
-    await get_project(report["project_id"], user, permission)
+        raise HTTPException(status_code=404, detail={"code": STATUS_REPORT_POLICY["not_found_code"]})
+    await get_project(report["project_id"], user, permission or STATUS_REPORT_POLICY["read_permission"])
     return report
 
 
 async def list_status_reports(project_id, test_plan_id, release_id, status, limit, user):
-    await get_project(project_id, user, "teststatusreport.read")
+    await get_project(project_id, user, STATUS_REPORT_POLICY["read_permission"])
     return await list_reports(project_id, test_plan_id, release_id, status, limit)
 
 
 async def generate_status_report(project_id, payload, user):
-    await get_project(project_id, user, "teststatusreport.create")
+    policy = STATUS_REPORT_POLICY
+    await get_project(project_id, user, policy["create_permission"])
     if payload.idempotency_key:
-        existing = await database.value.test_status_reports.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await find_report_by_idempotency(
+            project_id, payload.idempotency_key
         )
         if existing:
             if (
                 existing.get("snapshot_id") != payload.snapshot_id
                 or existing.get("build_id") != payload.build_id
             ):
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_CONFLICT"})
+                raise HTTPException(status_code=409, detail={"code": policy["idempotency_conflict_code"]})
             return existing
-    snapshot = await database.value.test_monitoring_snapshots.find_one(
-        {"_id": payload.snapshot_id, "project_id": project_id}
-    )
+    snapshot = await find_monitoring_snapshot(payload.snapshot_id, project_id)
     if not snapshot:
-        raise HTTPException(status_code=422, detail={"code": "INVALID_MONITORING_SNAPSHOT"})
+        raise HTTPException(status_code=422, detail={"code": policy["invalid_snapshot_code"]})
     snapshot = await effective_snapshot(snapshot)
-    plan = await database.value.test_plans.find_one(
-        {"_id": snapshot["test_plan_id"], "project_id": project_id}
-    )
+    plan = await find_plan(snapshot["test_plan_id"], project_id)
     if not plan:
-        raise HTTPException(status_code=422, detail={"code": "TEST_PLAN_NOT_FOUND"})
-    build = await database.value.builds.find_one(
-        {"_id": payload.build_id, "project_id": project_id}
-    )
+        raise HTTPException(status_code=422, detail={"code": policy["plan_not_found_code"]})
+    build = await find_build(payload.build_id, project_id)
     if not build:
-        raise HTTPException(status_code=422, detail={"code": "INVALID_BUILD"})
+        raise HTTPException(status_code=422, detail={"code": policy["invalid_build_code"]})
     release_id = snapshot.get("release_id")
     if release_id and build.get("release_id") and build["release_id"] != release_id:
-        raise HTTPException(status_code=422, detail={"code": "BUILD_RELEASE_MISMATCH"})
-    actions = (
-        await database.value.test_control_actions.find(
-            {"project_id": project_id, "snapshot_id": snapshot["_id"]}
-        )
-        .sort("created_at", 1)
-        .to_list(5000)
+        raise HTTPException(status_code=422, detail={"code": policy["build_release_mismatch_code"]})
+    actions = await list_control_actions(
+        project_id, snapshot["_id"], policy["control_action_limit"]
     )
     progress, coverage, defects = generated_summaries(snapshot)
     recommendation = default_recommendation(snapshot)
     if payload.recommendation and payload.recommendation != recommendation:
         raise HTTPException(
             status_code=422,
-            detail={"code": "STATUS_REPORT_RECOMMENDATION_MISMATCH", "expected": recommendation},
+            detail={"code": policy["recommendation_mismatch_code"], "expected": recommendation},
         )
     timestamp = now()
     report = {
-        "_id": new_id("TSR"),
+        "_id": new_id(policy["report_id_prefix"]),
         "project_id": project_id,
         "idempotency_key": payload.idempotency_key,
         "test_plan_id": snapshot["test_plan_id"],
@@ -191,21 +194,21 @@ async def generate_status_report(project_id, payload, user):
         "recommendation_narrative": "",
         "distribution": payload.distribution,
         "evidence_refs": payload.evidence_refs,
-        "status": "DRAFT",
+        "status": policy["draft_status"],
         "sequence": await next_sequence(project_id, snapshot["test_plan_id"], release_id),
         "review_history": [],
         "approval_history": [],
-        "revision": 1,
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     try:
-        await database.value.test_status_reports.insert_one(report)
+        await insert_report(report)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            existing = await database.value.test_status_reports.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            existing = await find_report_by_idempotency(
+                project_id, payload.idempotency_key
             )
             if (
                 existing
@@ -216,8 +219,8 @@ async def generate_status_report(project_id, payload, user):
         raise
     await audit(
         user.id,
-        "status_report_created",
-        "TestStatusReport",
+        policy["created_event"],
+        policy["report_entity"],
         report["_id"],
         project_id,
         {"snapshot_id": snapshot["_id"], "source_fingerprint": snapshot["source_fingerprint"]},
@@ -226,9 +229,10 @@ async def generate_status_report(project_id, payload, user):
 
 
 async def update_status_report(report_id, payload, user):
-    report = await get_report_for_user(report_id, user, "teststatusreport.update")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "STATUS_REPORT_IMMUTABLE"})
+    policy = STATUS_REPORT_POLICY
+    report = await get_report_for_user(report_id, user, policy["update_permission"])
+    if report["status"] != policy["draft_status"]:
+        raise HTTPException(status_code=409, detail={"code": policy["immutable_code"]})
     changes = payload.model_dump(exclude_unset=True, exclude_none=True)
     changes.pop("expected_revision", None)
     if "executive_summary" in changes:
@@ -237,14 +241,18 @@ async def update_status_report(report_id, payload, user):
         changes["forecast"] = normalized_forecast(changes["forecast"])
     changes["updated_at"] = now()
     updated = await update_report(
-        report_id, report["project_id"], payload.expected_revision, {"DRAFT"}, changes
+        report_id,
+        report["project_id"],
+        payload.expected_revision,
+        {policy["draft_status"]},
+        changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "STATUS_REPORT_REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "test_status_report_updated",
-        "TestStatusReport",
+        policy["updated_event"],
+        policy["report_entity"],
         report_id,
         report["project_id"],
         {"fields": sorted(changes)},
@@ -253,18 +261,19 @@ async def update_status_report(report_id, payload, user):
 
 
 async def generate_status_report_narrative(report_id, payload, user):
-    report = await get_report_for_user(report_id, user, "teststatusreport.update")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "STATUS_REPORT_IMMUTABLE"})
-    existing = await database.value.ai_results.find_one(
-        {"project_id": report["project_id"], "idempotency_key": payload.idempotency_key}
+    policy = STATUS_REPORT_POLICY
+    report = await get_report_for_user(report_id, user, policy["update_permission"])
+    if report["status"] != policy["draft_status"]:
+        raise HTTPException(status_code=409, detail={"code": policy["immutable_code"]})
+    existing = await find_ai_result(
+        report["project_id"], payload.idempotency_key
     )
     if existing:
         if (
-            existing.get("result_type") != "STATUS_REPORT_NARRATIVE"
+            existing.get("result_type") != policy["narrative_result_type"]
             or existing.get("subject_id") != report_id
         ):
-            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+            raise HTTPException(status_code=409, detail={"code": policy["idempotency_reused_code"]})
         return existing
     narrative_basis = {
         key: report.get(key)
@@ -289,9 +298,9 @@ async def generate_status_report_narrative(report_id, payload, user):
     }
     evidence = [
         {
-            "artifact_type": "test_status_report",
+            "artifact_type": policy["report_artifact_type"],
             "artifact_id": report_id,
-            "authority": "PROJECT_RECORD",
+            "authority": policy["project_record_authority"],
             "text": json.dumps(narrative_basis, ensure_ascii=False, default=str),
         }
     ]
@@ -300,12 +309,12 @@ async def generate_status_report_narrative(report_id, payload, user):
         ensure_ascii=False,
     )
     ai = await request_design_assistance(
-        "status_report_narrative", report["project_id"], instruction, evidence
+        policy["narrative_assistance_type"], report["project_id"], instruction, evidence
     )
     result = {
-        "_id": new_id("AIR"),
+        "_id": new_id(policy["ai_result_id_prefix"]),
         "project_id": report["project_id"],
-        "result_type": "STATUS_REPORT_NARRATIVE",
+        "result_type": policy["narrative_result_type"],
         "subject_id": report_id,
         "candidate_only": True,
         "human_confirmation_required": True,
@@ -316,15 +325,15 @@ async def generate_status_report_narrative(report_id, payload, user):
         "created_at": now(),
     }
     try:
-        await database.value.ai_results.insert_one(result)
+        await insert_ai_result(result)
     except DuplicateKeyError:
-        return await database.value.ai_results.find_one(
-            {"project_id": report["project_id"], "idempotency_key": payload.idempotency_key}
+        return await find_ai_result(
+            report["project_id"], payload.idempotency_key
         )
     await audit(
         user.id,
-        "test_status_report_ai_narrative_generated",
-        "AIResult",
+        policy["narrative_generated_event"],
+        policy["ai_result_entity"],
         result["_id"],
         report["project_id"],
         {"report_id": report_id},
@@ -333,23 +342,24 @@ async def generate_status_report_narrative(report_id, payload, user):
 
 
 async def attach_status_report_evidence(report_id, payload, user):
-    report = await get_report_for_user(report_id, user, "teststatusreport.update")
-    if report["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "STATUS_REPORT_IMMUTABLE"})
+    policy = STATUS_REPORT_POLICY
+    report = await get_report_for_user(report_id, user, policy["update_permission"])
+    if report["status"] != policy["draft_status"]:
+        raise HTTPException(status_code=409, detail={"code": policy["immutable_code"]})
     evidence_refs = list(dict.fromkeys([*report.get("evidence_refs", []), *payload.evidence_refs]))
     updated = await update_report(
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {"DRAFT"},
+        {policy["draft_status"]},
         {"evidence_refs": evidence_refs, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "STATUS_REPORT_REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "test_status_report_evidence_attached",
-        "TestStatusReport",
+        policy["evidence_attached_event"],
+        policy["report_entity"],
         report_id,
         report["project_id"],
         {"evidence_refs": payload.evidence_refs},
@@ -357,20 +367,28 @@ async def attach_status_report_evidence(report_id, payload, user):
     return updated
 
 
-async def transition_status_report(report_id, payload, user, source, target, permission, action):
-    report = await get_report_for_user(report_id, user, permission)
+async def transition_status_report(report_id, payload, user, transition_action):
+    policy = STATUS_REPORT_POLICY
+    transition = policy["transition_actions"][transition_action]
+    source = transition["source"]
+    target = transition["target"]
+    report = await get_report_for_user(report_id, user, transition["permission"])
     timestamp = now()
     event = {"actor_id": user.id, "action": target, "note": payload.note, "at": timestamp}
     changes = {"status": target, "updated_at": timestamp}
-    history_field = "approval_history" if target in {"APPROVED", "PUBLISHED"} else "review_history"
+    history_field = (
+        "approval_history"
+        if target in policy["approval_history_statuses"]
+        else "review_history"
+    )
     changes[history_field] = [*report.get(history_field, []), event]
-    if target == "IN_REVIEW":
+    if target == policy["review_status"]:
         changes.update({"submitted_by": user.id, "submitted_at": timestamp})
-    elif target == "DRAFT":
+    elif target == policy["draft_status"]:
         changes.update(
             {"change_request": payload.note, "reviewed_by": user.id, "reviewed_at": timestamp}
         )
-    elif target == "APPROVED":
+    elif target == policy["approved_status"]:
         approved_snapshot = status_report_snapshot(report)
         changes.update(
             {
@@ -380,7 +398,7 @@ async def transition_status_report(report_id, payload, user, source, target, per
                 "approved_snapshot_hash": status_report_hash(report),
             }
         )
-    elif target == "PUBLISHED":
+    elif target == policy["published_status"]:
         changes.update({"published_by": user.id, "published_at": timestamp})
     updated = await update_report(
         report_id, report["project_id"], payload.expected_revision, {source}, changes
@@ -388,12 +406,12 @@ async def transition_status_report(report_id, payload, user, source, target, per
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": "STATUS_REPORT_TRANSITION_CONFLICT", "expected_status": source},
+            detail={"code": policy["transition_conflict_code"], "expected_status": source},
         )
     await audit(
         user.id,
-        action,
-        "TestStatusReport",
+        transition["event"],
+        policy["report_entity"],
         report_id,
         report["project_id"],
         {"from": source, "to": target, "note": payload.note},
@@ -406,7 +424,7 @@ async def compare_status_reports(report_id, other_report_id, user):
     right = await find_report(other_report_id, left["project_id"])
     if not right:
         raise HTTPException(
-            status_code=404, detail={"code": "STATUS_REPORT_COMPARE_TARGET_NOT_FOUND"}
+            status_code=404, detail={"code": STATUS_REPORT_POLICY["compare_target_not_found_code"]}
         )
     fields = (
         "executive_summary",

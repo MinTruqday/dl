@@ -1,32 +1,32 @@
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
+from src.repositories import quality_repository
+from src.services.domain_policy import domain_policy
 from src.services.test_monitoring import effective_snapshot
 
-LOWER_IS_BETTER = {
-    "BLOCKED_RATE",
-    "DEFECT_REOPEN_RATE",
-    "CRITICAL_DEFECT_AGING",
-    "MEAN_TIME_TO_RETEST",
-    "STALE_TEST_RATIO",
-    "REQUIREMENT_VOLATILITY",
-    "ESCAPED_DEFECT_RATE",
-}
+
+QUALITY_POLICY = domain_policy("quality_evaluation")
 
 
 def system_recommendation(gate_status, critical_risks):
-    if gate_status == "FAIL":
-        return "NO_GO"
-    if gate_status in {"INSUFFICIENT_DATA", "MANUAL_REQUIRED", "NOT_CONFIGURED", None}:
-        return "INSUFFICIENT_DATA"
-    if gate_status == "WARN":
-        return "MORE_TESTING_REQUIRED"
-    return "GO_WITH_RISK" if critical_risks else "GO"
+    policy = QUALITY_POLICY
+    if gate_status == policy["failed_gate_status"]:
+        return policy["recommendations"]["failed"]
+    if gate_status in policy["insufficient_gate_statuses"]:
+        return policy["recommendations"]["insufficient"]
+    if gate_status == policy["warning_gate_status"]:
+        return policy["recommendations"]["warning"]
+    return (
+        policy["recommendations"]["risk"]
+        if critical_risks
+        else policy["recommendations"]["pass"]
+    )
 
 
 def evaluate_quality_objectives(objectives, snapshots):
+    policy = QUALITY_POLICY
     measurements = {}
     for snapshot in sorted(
         snapshots,
@@ -46,11 +46,11 @@ def evaluate_quality_objectives(objectives, snapshots):
             or not isinstance(target, (int, float))
             or isinstance(target, bool)
         ):
-            status = "INSUFFICIENT_DATA"
-        elif key in LOWER_IS_BETTER:
-            status = "PASS" if actual <= target else "FAIL"
+            status = policy["insufficient_status"]
+        elif key in policy["lower_is_better"]:
+            status = policy["pass_status"] if actual <= target else policy["fail_status"]
         else:
-            status = "PASS" if actual >= target else "FAIL"
+            status = policy["pass_status"] if actual >= target else policy["fail_status"]
         results.append(
             {
                 **objective,
@@ -69,48 +69,56 @@ def rationale_document(value):
     }
 
 
-async def get_evaluation(db, evaluation_id, user, permission="qualityevaluation.read"):
-    value = await db.product_quality_evaluations.find_one({"_id": evaluation_id})
+async def get_evaluation(evaluation_id, user, permission=None):
+    policy = QUALITY_POLICY
+    value = await quality_repository.find_evaluation(evaluation_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, permission)
+        raise HTTPException(
+            status_code=404, detail={"code": policy["error_codes"]["not_found"]}
+        )
+    await get_project(
+        value["project_id"], user, permission or policy["permissions"]["read"]
+    )
     return value
 
 
-async def list_evaluations(db, project_id, release_id, user):
-    await get_project(project_id, user, "qualityevaluation.read")
+async def list_evaluations(project_id, release_id, user):
+    policy = QUALITY_POLICY
+    await get_project(project_id, user, policy["permissions"]["read"])
     query = {"project_id": project_id}
     if release_id:
         query["release_id"] = release_id
-    items = await db.product_quality_evaluations.find(query).sort("created_at", -1).to_list(500)
+    items = await quality_repository.list_evaluations(
+        query, policy["list_limit"]
+    )
     return {"items": items, "total": len(items)}
 
 
-async def create_evaluation(db, project_id, payload, user):
-    await get_project(project_id, user, "qualityevaluation.create")
+async def create_evaluation(project_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    await get_project(project_id, user, policy["permissions"]["create"])
     if payload.idempotency_key:
-        existing = await db.product_quality_evaluations.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await quality_repository.find_evaluation_by_idempotency_key(
+            project_id, payload.idempotency_key
         )
         if existing:
             if (
                 existing.get("release_id") != payload.release_id
                 or existing.get("build_id") != payload.build_id
             ):
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(
+                    status_code=409, detail={"code": codes["idempotency_reused"]}
+                )
             return existing
-    release = await db.releases.find_one({"_id": payload.release_id, "project_id": project_id})
-    build = await db.builds.find_one({"_id": payload.build_id, "project_id": project_id})
-    monitoring = await db.test_monitoring_snapshots.find_one(
-        {
-            "_id": payload.monitoring_snapshot_id,
-            "project_id": project_id,
-            "release_id": payload.release_id,
-        }
+    release = await quality_repository.find_release(payload.release_id, project_id)
+    build = await quality_repository.find_build(payload.build_id, project_id)
+    monitoring = await quality_repository.find_monitoring_snapshot(
+        payload.monitoring_snapshot_id, project_id, payload.release_id
     )
-    snapshots = await db.measurement_snapshots.find(
-        {"_id": {"$in": payload.measurement_snapshot_refs}, "project_id": project_id}
-    ).to_list(1000)
+    snapshots = await quality_repository.list_measurement_snapshots(
+        payload.measurement_snapshot_refs, project_id, policy["measurement_limit"]
+    )
     if (
         not release
         or not build
@@ -118,32 +126,32 @@ async def create_evaluation(db, project_id, payload, user):
         or len(snapshots) != len(set(payload.measurement_snapshot_refs))
     ):
         raise HTTPException(
-            status_code=422, detail={"code": "QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT"}
+            status_code=422, detail={"code": codes["source_not_in_project"]}
         )
     if any(item.get("release_id") not in {None, payload.release_id} for item in snapshots):
-        raise HTTPException(status_code=422, detail={"code": "MEASUREMENT_RELEASE_MISMATCH"})
+        raise HTTPException(
+            status_code=422, detail={"code": codes["measurement_release_mismatch"]}
+        )
     monitoring = await effective_snapshot(monitoring)
-    plan = await db.test_plans.find_one(
-        {"_id": monitoring["test_plan_id"], "project_id": project_id}
+    plan = await quality_repository.find_test_plan(
+        monitoring["test_plan_id"], project_id
     )
-    strategy = await db.test_strategies.find_one(
-        {"_id": (plan or {}).get("strategy_version_id"), "project_id": project_id}
+    strategy = await quality_repository.find_strategy(
+        (plan or {}).get("strategy_version_id"), project_id
     )
-    gate = await db.quality_gate_evaluations.find_one(
-        {"snapshot_id": monitoring["_id"], "project_id": project_id}
+    gate = await quality_repository.find_gate_for_project(
+        monitoring["_id"], project_id
     )
     if not plan or not strategy or not gate:
         raise HTTPException(
-            status_code=422, detail={"code": "QUALITY_EVALUATION_SOURCE_INCOMPLETE"}
+            status_code=422, detail={"code": codes["source_incomplete"]}
         )
-    unresolved = await db.defects.find(
-        {
-            "project_id": project_id,
-            "release_id": payload.release_id,
-            "status": {"$nin": ["CLOSED", "REJECTED"]},
-        },
-        {"_id": 1, "key": 1, "severity": 1, "status": 1, "title": 1},
-    ).to_list(5000)
+    unresolved = await quality_repository.list_unresolved_defects(
+        project_id,
+        payload.release_id,
+        policy["resolved_defect_statuses"],
+        policy["defect_limit"],
+    )
     gate_status = monitoring.get(
         "effective_quality_gate_status", monitoring.get("quality_gate_status")
     )
@@ -151,14 +159,14 @@ async def create_evaluation(db, project_id, payload, user):
     if payload.recommendation and payload.recommendation != recommendation:
         raise HTTPException(
             status_code=422,
-            detail={"code": "SYSTEM_RECOMMENDATION_MISMATCH", "expected": recommendation},
+            detail={"code": codes["recommendation_mismatch"], "expected": recommendation},
         )
-    human_decision = await db.quality_decisions.find_one(
-        {"snapshot_id": monitoring["_id"], "project_id": project_id}, sort=[("decided_at", -1)]
+    human_decision = await quality_repository.find_latest_decision(
+        monitoring["_id"], project_id
     )
     timestamp = now()
     value = {
-        "_id": new_id("PQE"),
+        "_id": new_id(policy["evaluation_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(exclude={"recommendation"}),
         "snapshot_id": monitoring["_id"],
@@ -180,24 +188,24 @@ async def create_evaluation(db, project_id, payload, user):
         "waivers": [],
         "reviewed_by": [],
         "approved_by": None,
-        "status": "DRAFT",
-        "revision": 1,
+        "status": policy["draft_status"],
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     try:
-        await db.product_quality_evaluations.insert_one(value)
+        await quality_repository.insert_evaluation(value)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            return await db.product_quality_evaluations.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            return await quality_repository.find_evaluation_by_idempotency_key(
+                project_id, payload.idempotency_key
             )
         raise
     await audit(
         user.id,
-        "quality_evaluation_created",
-        "ProductQualityEvaluation",
+        policy["events"]["created"],
+        policy["entity_type"],
         value["_id"],
         project_id,
         {
@@ -209,31 +217,38 @@ async def create_evaluation(db, project_id, payload, user):
     return value
 
 
-async def update_evaluation(db, evaluation_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.create")
-    if value["status"] != "DRAFT":
-        raise HTTPException(status_code=409, detail={"code": "QUALITY_EVALUATION_IMMUTABLE"})
+async def update_evaluation(evaluation_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(evaluation_id, user, policy["permissions"]["create"])
+    if value["status"] != policy["draft_status"]:
+        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "recommendation" in changes and changes["recommendation"] != value.get(
         "system_recommendation", value.get("recommendation")
     ):
-        raise HTTPException(status_code=409, detail={"code": "SYSTEM_RECOMMENDATION_IMMUTABLE"})
+        raise HTTPException(
+            status_code=409, detail={"code": codes["recommendation_immutable"]}
+        )
     changes.pop("recommendation", None)
     if "rationale" in changes:
         changes["rationale_doc"] = rationale_document(changes["rationale"])
     changes["updated_at"] = now()
-    updated = await db.product_quality_evaluations.find_one_and_update(
-        {"_id": evaluation_id, "revision": payload.expected_revision, "status": "DRAFT"},
+    updated = await quality_repository.update_evaluation(
+        {
+            "_id": evaluation_id,
+            "revision": payload.expected_revision,
+            "status": policy["draft_status"],
+        },
         {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "quality_evaluation_updated",
-        "ProductQualityEvaluation",
+        policy["events"]["updated"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -241,17 +256,23 @@ async def update_evaluation(db, evaluation_id, payload, user):
     return updated
 
 
-async def submit_evaluation(db, evaluation_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.review")
-    if value["status"] != "DRAFT":
+async def submit_evaluation(evaluation_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(evaluation_id, user, policy["permissions"]["review"])
+    if value["status"] != policy["draft_status"]:
         raise HTTPException(
-            status_code=409, detail={"code": "INVALID_QUALITY_EVALUATION_TRANSITION"}
+            status_code=409, detail={"code": codes["invalid_transition"]}
         )
-    updated = await db.product_quality_evaluations.find_one_and_update(
-        {"_id": evaluation_id, "revision": payload.expected_revision, "status": "DRAFT"},
+    updated = await quality_repository.update_evaluation(
+        {
+            "_id": evaluation_id,
+            "revision": payload.expected_revision,
+            "status": policy["draft_status"],
+        },
         {
             "$set": {
-                "status": "IN_REVIEW",
+                "status": policy["review_status"],
                 "submitted_by": user.id,
                 "submitted_at": now(),
                 "submission_note": payload.note,
@@ -259,14 +280,13 @@ async def submit_evaluation(db, evaluation_id, payload, user):
             },
             "$inc": {"revision": 1},
         },
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "quality_evaluation_submitted",
-        "ProductQualityEvaluation",
+        policy["events"]["submitted"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {"note": payload.note},
@@ -274,28 +294,33 @@ async def submit_evaluation(db, evaluation_id, payload, user):
     return updated
 
 
-async def review_evaluation(db, evaluation_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.review")
-    if value["status"] != "IN_REVIEW":
-        raise HTTPException(status_code=409, detail={"code": "QUALITY_EVALUATION_NOT_IN_REVIEW"})
+async def review_evaluation(evaluation_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(evaluation_id, user, policy["permissions"]["review"])
+    if value["status"] != policy["review_status"]:
+        raise HTTPException(status_code=409, detail={"code": codes["not_in_review"]})
     history = [
         *value.get("reviewed_by", []),
         {"actor_id": user.id, "decision": payload.decision, "note": payload.note, "at": now()},
     ]
     changes = {"reviewed_by": history, "updated_at": now()}
-    if payload.decision == "REQUEST_CHANGES":
-        changes["status"] = "DRAFT"
-    updated = await db.product_quality_evaluations.find_one_and_update(
-        {"_id": evaluation_id, "revision": payload.expected_revision, "status": "IN_REVIEW"},
+    if payload.decision == policy["request_changes_decision"]:
+        changes["status"] = policy["draft_status"]
+    updated = await quality_repository.update_evaluation(
+        {
+            "_id": evaluation_id,
+            "revision": payload.expected_revision,
+            "status": policy["review_status"],
+        },
         {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "quality_evaluation_reviewed",
-        "ProductQualityEvaluation",
+        policy["events"]["reviewed"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {"decision": payload.decision},
@@ -303,40 +328,43 @@ async def review_evaluation(db, evaluation_id, payload, user):
     return updated
 
 
-async def add_waiver(db, evaluation_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.create")
-    if value["status"] not in {"DRAFT", "IN_REVIEW"}:
-        raise HTTPException(status_code=409, detail={"code": "QUALITY_EVALUATION_IMMUTABLE"})
+async def add_waiver(evaluation_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(evaluation_id, user, policy["permissions"]["create"])
+    if value["status"] not in policy["editable_statuses"]:
+        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
     if payload.expiry_at <= now():
-        raise HTTPException(status_code=422, detail={"code": "WAIVER_EXPIRY_MUST_BE_FUTURE"})
-    if not await db.project_members.find_one(
-        {"project_id": value["project_id"], "user_id": payload.owner_id, "status": "ACTIVE"}
+        raise HTTPException(status_code=422, detail={"code": codes["waiver_expiry_future"]})
+    if not await quality_repository.find_active_member(
+        value["project_id"], payload.owner_id, policy["active_membership_status"]
     ):
-        raise HTTPException(status_code=422, detail={"code": "WAIVER_OWNER_NOT_PROJECT_MEMBER"})
+        raise HTTPException(
+            status_code=422, detail={"code": codes["waiver_owner_not_member"]}
+        )
     expected_revision = payload.expected_revision or value["revision"]
     waiver = {
-        "waiver_id": new_id("WVR"),
+        "waiver_id": new_id(policy["waiver_id_prefix"]),
         **payload.model_dump(exclude={"expected_revision"}),
-        "status": "PENDING",
+        "status": policy["pending_status"],
         "approved_by": None,
         "created_by": user.id,
         "created_at": now(),
     }
-    updated = await db.product_quality_evaluations.find_one_and_update(
+    updated = await quality_repository.update_evaluation(
         {
             "_id": evaluation_id,
             "revision": expected_revision,
-            "status": {"$in": ["DRAFT", "IN_REVIEW"]},
+            "status": {"$in": policy["editable_statuses"]},
         },
         {"$push": {"waivers": waiver}, "$set": {"updated_at": now()}, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "STALE_REVISION"})
+        raise HTTPException(status_code=409, detail={"code": codes["stale_revision"]})
     await audit(
         user.id,
-        "quality_waiver_created",
-        "ProductQualityEvaluation",
+        policy["events"]["waiver_created"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {"waiver_id": waiver["waiver_id"], "risk": waiver["risk"]},
@@ -344,19 +372,27 @@ async def add_waiver(db, evaluation_id, payload, user):
     return updated
 
 
-async def decide_waiver(db, evaluation_id, waiver_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.waiver.approve")
+async def decide_waiver(evaluation_id, waiver_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(
+        evaluation_id, user, policy["permissions"]["waiver_approve"]
+    )
     waiver = next(
         (item for item in value.get("waivers", []) if item["waiver_id"] == waiver_id), None
     )
     if not waiver:
-        raise HTTPException(status_code=404, detail={"code": "WAIVER_NOT_FOUND"})
-    if waiver["status"] != "PENDING":
-        raise HTTPException(status_code=409, detail={"code": "WAIVER_ALREADY_DECIDED"})
+        raise HTTPException(status_code=404, detail={"code": codes["waiver_not_found"]})
+    if waiver["status"] != policy["pending_status"]:
+        raise HTTPException(
+            status_code=409, detail={"code": codes["waiver_already_decided"]}
+        )
     waivers = [
         {
             **item,
-            "status": "APPROVED" if payload.decision == "APPROVE" else "REJECTED",
+            "status": policy["approved_status"]
+            if payload.decision == policy["approve_decision"]
+            else policy["rejected_status"],
             "approved_by": user.id,
             "approved_at": now(),
             "decision_note": payload.note,
@@ -365,21 +401,20 @@ async def decide_waiver(db, evaluation_id, waiver_id, payload, user):
         else item
         for item in value["waivers"]
     ]
-    updated = await db.product_quality_evaluations.find_one_and_update(
+    updated = await quality_repository.update_evaluation(
         {
             "_id": evaluation_id,
             "revision": payload.expected_revision,
             "waivers.waiver_id": waiver_id,
         },
         {"$set": {"waivers": waivers, "updated_at": now()}, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "quality_waiver_decided",
-        "ProductQualityEvaluation",
+        policy["events"]["waiver_decided"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {"waiver_id": waiver_id, "decision": payload.decision},
@@ -387,35 +422,48 @@ async def decide_waiver(db, evaluation_id, waiver_id, payload, user):
     return updated
 
 
-async def approve_evaluation(db, evaluation_id, payload, user):
-    value = await get_evaluation(db, evaluation_id, user, "qualityevaluation.approve")
-    if value["status"] != "IN_REVIEW":
-        raise HTTPException(status_code=409, detail={"code": "QUALITY_EVALUATION_NOT_IN_REVIEW"})
-    if not any(item.get("decision") == "ENDORSE" for item in value.get("reviewed_by", [])):
-        raise HTTPException(
-            status_code=409, detail={"code": "QUALITY_EVALUATION_ENDORSEMENT_REQUIRED"}
-        )
-    if any(item.get("status") == "PENDING" for item in value.get("waivers", [])):
-        raise HTTPException(status_code=409, detail={"code": "PENDING_QUALITY_WAIVER"})
-    recommendation = value.get("system_recommendation", value.get("recommendation"))
-    if (
-        value.get("quality_gate_status") == "FAIL"
-        and recommendation in {"GO", "GO_WITH_RISK"}
-        and not any(item.get("status") == "APPROVED" for item in value.get("waivers", []))
+async def approve_evaluation(evaluation_id, payload, user):
+    policy = QUALITY_POLICY
+    codes = policy["error_codes"]
+    value = await get_evaluation(evaluation_id, user, policy["permissions"]["approve"])
+    if value["status"] != policy["review_status"]:
+        raise HTTPException(status_code=409, detail={"code": codes["not_in_review"]})
+    if not any(
+        item.get("decision") == policy["endorse_decision"]
+        for item in value.get("reviewed_by", [])
     ):
         raise HTTPException(
-            status_code=409, detail={"code": "FAILED_GATE_REQUIRES_APPROVED_WAIVER"}
+            status_code=409, detail={"code": codes["endorsement_required"]}
         )
-    human_decision = await db.quality_decisions.find_one(
-        {"snapshot_id": value["snapshot_id"], "project_id": value["project_id"]},
-        sort=[("decided_at", -1)],
+    if any(
+        item.get("status") == policy["pending_status"] for item in value.get("waivers", [])
+    ):
+        raise HTTPException(status_code=409, detail={"code": codes["pending_waiver"]})
+    recommendation = value.get("system_recommendation", value.get("recommendation"))
+    if (
+        value.get("quality_gate_status") == policy["failed_gate_status"]
+        and recommendation in policy["go_recommendations"]
+        and not any(
+            item.get("status") == policy["approved_status"]
+            for item in value.get("waivers", [])
+        )
+    ):
+        raise HTTPException(
+            status_code=409, detail={"code": codes["failed_gate_waiver_required"]}
+        )
+    human_decision = await quality_repository.find_latest_decision(
+        value["snapshot_id"], value["project_id"]
     )
     timestamp = now()
-    updated = await db.product_quality_evaluations.find_one_and_update(
-        {"_id": evaluation_id, "revision": payload.expected_revision, "status": "IN_REVIEW"},
+    updated = await quality_repository.update_evaluation(
+        {
+            "_id": evaluation_id,
+            "revision": payload.expected_revision,
+            "status": policy["review_status"],
+        },
         {
             "$set": {
-                "status": "APPROVED",
+                "status": policy["approved_status"],
                 "approved_by": user.id,
                 "approved_at": timestamp,
                 "approval_note": payload.note,
@@ -425,14 +473,13 @@ async def approve_evaluation(db, evaluation_id, payload, user):
             },
             "$inc": {"revision": 1},
         },
-        return_document=ReturnDocument.AFTER,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
     await audit(
         user.id,
-        "product_quality_evaluation_approved",
-        "ProductQualityEvaluation",
+        policy["events"]["approved"],
+        policy["entity_type"],
         evaluation_id,
         value["project_id"],
         {
@@ -441,3 +488,41 @@ async def approve_evaluation(db, evaluation_id, payload, user):
         },
     )
     return updated
+
+
+class QualityEvaluationService:
+    @staticmethod
+    async def list(project_id, release_id, user):
+        return await list_evaluations(project_id, release_id, user)
+
+    @staticmethod
+    async def create(project_id, payload, user):
+        return await create_evaluation(project_id, payload, user)
+
+    @staticmethod
+    async def get(evaluation_id, user):
+        return await get_evaluation(evaluation_id, user)
+
+    @staticmethod
+    async def update(evaluation_id, payload, user):
+        return await update_evaluation(evaluation_id, payload, user)
+
+    @staticmethod
+    async def submit(evaluation_id, payload, user):
+        return await submit_evaluation(evaluation_id, payload, user)
+
+    @staticmethod
+    async def review(evaluation_id, payload, user):
+        return await review_evaluation(evaluation_id, payload, user)
+
+    @staticmethod
+    async def add_waiver(evaluation_id, payload, user):
+        return await add_waiver(evaluation_id, payload, user)
+
+    @staticmethod
+    async def decide_waiver(evaluation_id, waiver_id, payload, user):
+        return await decide_waiver(evaluation_id, waiver_id, payload, user)
+
+    @staticmethod
+    async def approve(evaluation_id, payload, user):
+        return await approve_evaluation(evaluation_id, payload, user)

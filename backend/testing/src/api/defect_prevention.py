@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.core.database import database
 from src.domain.causal_analysis import (
     CausalAiRequest,
     CausalAnalysisCreate,
@@ -17,56 +16,34 @@ from src.domain.causal_analysis import (
     PreventionActionCreate,
     PreventionActionPatch,
 )
-from src.services.causal_analysis import (
-    add_five_why,
-    approve_analysis,
-    assign_action,
-    close_analysis,
-    create_action,
-    create_analysis,
-    generate_hypotheses,
-    get_analysis,
-    link_defects,
-    list_analyses,
-    record_root_cause,
-    review_effectiveness,
-    submit_review,
-    suggest_candidates,
-    update_action,
-    update_analysis,
-)
+from src.services.causal_analysis import CausalAnalysisService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phòng ngừa lỗi"])
 
 
 @router.get("/du-an/{project_id}/phan-tich-nguyen-nhan")
 async def list_causal_analyses(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(await list_analyses(database.value, project_id, user))
+    return envelope(await CausalAnalysisService.list(project_id, user))
 
 
 @router.get("/du-an/{project_id}/phan-tich-nguyen-nhan/ung-vien")
 async def suggest_causal_analysis_candidates(
     project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
-    return envelope(await suggest_candidates(database.value, project_id, user))
+    return envelope(await CausalAnalysisService.candidates(project_id, user))
 
 
 @router.post("/du-an/{project_id}/phan-tich-nguyen-nhan", status_code=201)
 async def create_causal_analysis(
     project_id: str, payload: CausalAnalysisCreate, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await create_analysis(database.value, project_id, payload, user)
+    value = await CausalAnalysisService.create(project_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
 @router.get("/phan-tich-nguyen-nhan/{analysis_id}")
 async def get_causal_analysis(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
-    value = await get_analysis(database.value, analysis_id, user)
-    value["actions"] = (
-        await database.value.preventive_actions.find({"causal_analysis_id": analysis_id})
-        .sort("created_at", 1)
-        .to_list(1000)
-    )
+    value = await CausalAnalysisService.get(analysis_id, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -74,7 +51,7 @@ async def get_causal_analysis(analysis_id: str, user: CurrentUser = Depends(get_
 async def patch_causal_analysis(
     analysis_id: str, payload: CausalAnalysisPatch, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await update_analysis(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.update(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -82,7 +59,7 @@ async def patch_causal_analysis(
 async def link_causal_analysis_defects(
     analysis_id: str, payload: CausalDefectLink, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await link_defects(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.link_defects(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -90,7 +67,7 @@ async def link_causal_analysis_defects(
 async def add_causal_analysis_five_why(
     analysis_id: str, payload: CausalFiveWhyInput, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await add_five_why(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.add_five_why(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -98,7 +75,7 @@ async def add_causal_analysis_five_why(
 async def record_causal_analysis_root_cause(
     analysis_id: str, payload: CausalRootCauseInput, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await record_root_cause(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.record_root_cause(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -106,7 +83,9 @@ async def record_causal_analysis_root_cause(
 async def create_corrective_action(
     analysis_id: str, payload: PreventionActionCreate, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await create_action(database.value, analysis_id, payload, user, "CORRECTIVE")
+    value = await CausalAnalysisService.create_action(
+        analysis_id, payload, user, "CORRECTIVE"
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -114,7 +93,9 @@ async def create_corrective_action(
 async def create_preventive_action(
     analysis_id: str, payload: PreventionActionCreate, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await create_action(database.value, analysis_id, payload, user, "PREVENTIVE")
+    value = await CausalAnalysisService.create_action(
+        analysis_id, payload, user, "PREVENTIVE"
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -122,7 +103,7 @@ async def create_preventive_action(
 async def assign_prevention_action(
     action_id: str, payload: PreventionActionAssign, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await assign_action(database.value, action_id, payload, user)
+    value = await CausalAnalysisService.assign_action(action_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -130,7 +111,7 @@ async def assign_prevention_action(
 async def patch_prevention_action(
     action_id: str, payload: PreventionActionPatch, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await update_action(database.value, action_id, payload, user)
+    value = await CausalAnalysisService.update_action(action_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -138,7 +119,7 @@ async def patch_prevention_action(
 async def submit_causal_analysis_review(
     analysis_id: str, payload: CausalReviewInput, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await submit_review(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.submit_review(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -146,7 +127,7 @@ async def submit_causal_analysis_review(
 async def approve_causal_analysis(
     analysis_id: str, payload: CausalApproval, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await approve_analysis(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.approve(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -156,7 +137,9 @@ async def review_causal_analysis_effectiveness(
     payload: CausalEffectivenessInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    value = await review_effectiveness(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.review_effectiveness(
+        analysis_id, payload, user
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -164,7 +147,7 @@ async def review_causal_analysis_effectiveness(
 async def close_causal_analysis(
     analysis_id: str, payload: CausalReviewInput, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await close_analysis(database.value, analysis_id, payload, user)
+    value = await CausalAnalysisService.close(analysis_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
@@ -172,4 +155,6 @@ async def close_causal_analysis(
 async def generate_causal_analysis_hypotheses(
     analysis_id: str, payload: CausalAiRequest, user: CurrentUser = Depends(get_current_user)
 ):
-    return envelope(await generate_hypotheses(database.value, analysis_id, payload, user))
+    return envelope(
+        await CausalAnalysisService.generate_hypotheses(analysis_id, payload, user)
+    )

@@ -23,7 +23,7 @@ from src.schemas.inference import (
     TestingAssistanceRequest,
     TestingAssistanceResult,
 )
-from src.services.inference import chat, structured
+from src.services.inference import structured
 
 
 SCHEMAS = {
@@ -85,11 +85,11 @@ def nested_values(value, key_name):
 async def generate_testing_assistance(req: TestingAssistanceRequest):
     evidence = [
         {
-            "artifact_type": item.get("artifact_type"),
-            "artifact_id": item.get("artifact_id"),
-            "artifact_version_id": item.get("artifact_version_id"),
-            "authority": item.get("authority"),
-            "text": str(item.get("text", ""))[:4000],
+            "artifact_type": item.artifact_type,
+            "artifact_id": item.artifact_id,
+            "artifact_version_id": item.artifact_version_id,
+            "authority": item.authority,
+            "text": item.text,
         }
         for item in req.evidence
     ]
@@ -111,38 +111,19 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
     model = {
         "provider": "primary",
         "model": settings.LLM_MODEL,
-        "prompt_version": "testing_assistance",
+        "prompt_version": "testing_assistance_v2_structured_few_shot",
         "tool_schema_version": "testing_assistance",
         "retrieval_version": "project_evidence",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        if req.capability == "project_question":
-            answer = await chat(
-                [{"role": "user", "content": prompt}],
-                max_tokens=capability_token_budget(req.capability),
-                temperature=0.1,
-                attempts=1,
-                timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
-            )
-            output_check = guardrails_engine.inspect_output(answer)
-            if not output_check.get("is_safe", False):
-                raise ValueError("AI_OUTPUT_UNSAFE")
-            generated = ProjectQuestionOutput(
-                capability="project_question",
-                answer=str(output_check.get("sanitized_text") or "").strip().rstrip(" .!?…"),
-                evidence_refs=allowed_evidence_refs,
-                confidence=0.8,
-                warnings=[],
-            )
-        else:
-            generated = await structured(
-                prompt,
-                SCHEMAS[req.capability],
-                max_tokens=capability_token_budget(req.capability),
-                timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
-                provider_schema=req.capability != "test_condition_generation",
-            )
+        generated = await structured(
+            prompt,
+            SCHEMAS[req.capability],
+            max_tokens=capability_token_budget(req.capability),
+            timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
+            provider_schema=req.capability != "test_condition_generation",
+        )
         generated_data = normalize_narrative_payload(generated.model_dump())
         unknown_refs = sorted(
             set(nested_values(generated_data, "evidence_refs")) - set(allowed_evidence_refs)
@@ -171,27 +152,32 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
             "ValueError",
         }
         failure_code = "AI_OUTPUT_INVALID" if output_invalid else "AI_PROVIDER_UNAVAILABLE"
+        degraded_mode = "DEGRADED_OUTPUT" if output_invalid else "DEGRADED_AI"
+        provider = model["provider"] if output_invalid else "unavailable"
+        answer = (
+            "The model output did not satisfy the required response contract"
+            if output_invalid
+            else "An evidence grounded answer cannot be produced while the AI provider is unavailable"
+        )
         result = TestingAssistanceResult(
             capability=req.capability,
             suggestions=[],
-            evidence_refs=evidence_reference_ids(req.evidence),
+            evidence_refs=evidence_reference_ids(evidence),
             confidence=0,
             warnings=[failure_code, "MANUAL_REVIEW_REQUIRED"],
             status="DEGRADED",
-            degraded_mode="DEGRADED_AI",
-            provider="unavailable",
-            model={**model, "provider": "unavailable"},
+            degraded_mode=degraded_mode,
+            provider=provider,
+            model={**model, "provider": provider},
             prompt_version=model["prompt_version"],
             tool_schema_version=model["tool_schema_version"],
             retrieval_version=model["retrieval_version"],
             created_at=model["created_at"],
             reason_codes=[failure_code, "MANUAL_REVIEW_REQUIRED"],
-            answer="Không thể tạo câu trả lời có căn cứ khi nhà cung cấp AI chưa sẵn sàng",
+            answer=answer,
         )
     if result.capability != req.capability:
         raise HTTPException(status_code=502, detail={"code": "qa_capability_mismatch"})
-    if not result.evidence_refs:
-        result.evidence_refs = evidence_reference_ids(req.evidence)
     if not result.reason_codes:
         result.reason_codes = (
             nested_values(result.model_dump(), "reason_codes")[:100]

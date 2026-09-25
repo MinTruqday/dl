@@ -1,14 +1,13 @@
 from fastapi import HTTPException
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 from src.core.storage import get_bucket, get_storage_client
+from src.repositories import storage_repository
 
 
 class DownloadService:
     @staticmethod
     async def generate_download_url(file_id: str, owner_id: str, expires_in: int = 3600) -> dict:
-        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+        item = await storage_repository.find_one(
             {"_id": file_id, "owner_id": owner_id, "is_folder": False}
         )
         if not item:

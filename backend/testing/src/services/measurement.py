@@ -1,391 +1,41 @@
-import ast
 import hashlib
 import json
-import math
 
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.measurement import validate_threshold_order
-
-MONITORING_KEYS = {
-    "REQUIREMENT_COVERAGE": "requirement_coverage",
-    "AC_COVERAGE": "acceptance_criteria_coverage",
-    "ACCEPTANCE_CRITERION_COVERAGE": "acceptance_criteria_coverage",
-    "CONDITION_COVERAGE": "test_condition_coverage",
-    "TEST_CONDITION_COVERAGE": "test_condition_coverage",
-    "RISK_COVERAGE": "risk_coverage",
-    "EXECUTION_PROGRESS": "execution_percent",
-    "PASS_RATE": "pass_rate",
-}
-ALLOWED_DATA_SOURCES = {
-    "testing-domain",
-    "test_monitoring_snapshots",
-    "test_results",
-    "test_cases",
-    "test_case_versions",
-    "automation_script_drafts",
-    "automation_executions",
-    "defects",
-    "requirements",
-    "requirement_versions",
-    "maintenance_proposals",
-    "regression_recommendations",
-    "environment_incidents",
-}
-SAFE_EXPRESSION_NODES = (
-    ast.Expression,
-    ast.BinOp,
-    ast.UnaryOp,
-    ast.Name,
-    ast.Load,
-    ast.Constant,
-    ast.Add,
-    ast.Sub,
-    ast.Mult,
-    ast.Div,
-    ast.Mod,
-    ast.Pow,
-    ast.USub,
-    ast.UAdd,
+from src.repositories.measurement import measurement_repository
+from src.services.domain_policy import domain_policy
+from src.services.measurement_engine import (
+    compute_custom_metric,
+    compute_metric,
+    validate_formula_source,
 )
+from src.services.measurement_export import export_metric_csv
 
-
-def ratio(numerator, denominator):
-    if not denominator:
-        return None
-    return round(float(numerator) * 100 / float(denominator), 4)
-
-
-def validate_formula_source(formula_type, formula, data_sources):
-    unknown_sources = sorted(set(data_sources) - ALLOWED_DATA_SOURCES)
-    if unknown_sources:
-        return {
-            "valid": False,
-            "errors": [{"code": "MEASUREMENT_SOURCE_UNSUPPORTED", "sources": unknown_sources}],
-        }
-    if formula_type != "CUSTOM_SAFE_EXPRESSION":
-        return {"valid": True, "errors": []}
-    try:
-        tree = ast.parse(formula, mode="eval")
-    except SyntaxError:
-        return {"valid": False, "errors": [{"code": "MEASUREMENT_FORMULA_SYNTAX_INVALID"}]}
-    forbidden = sorted(
-        {
-            type(node).__name__
-            for node in ast.walk(tree)
-            if not isinstance(node, SAFE_EXPRESSION_NODES)
-        }
-    )
-    if forbidden:
-        return {
-            "valid": False,
-            "errors": [{"code": "MEASUREMENT_FORMULA_OPERATION_UNSUPPORTED", "nodes": forbidden}],
-        }
-    nodes = list(ast.walk(tree))
-    if len(nodes) > 100:
-        return {"valid": False, "errors": [{"code": "MEASUREMENT_FORMULA_TOO_COMPLEX"}]}
-    if any(
-        isinstance(node, ast.Constant)
-        and (isinstance(node.value, bool) or not isinstance(node.value, (int, float)))
-        for node in nodes
-    ):
-        return {"valid": False, "errors": [{"code": "MEASUREMENT_FORMULA_CONSTANT_INVALID"}]}
-    if any(
-        isinstance(node, ast.BinOp)
-        and isinstance(node.op, ast.Pow)
-        and isinstance(node.right, ast.Constant)
-        and abs(node.right.value) > 10
-        for node in nodes
-    ):
-        return {"valid": False, "errors": [{"code": "MEASUREMENT_FORMULA_EXPONENT_INVALID"}]}
-    return {
-        "valid": True,
-        "errors": [],
-        "variables": sorted({node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}),
-    }
-
-
-def evaluate_safe_expression(formula, variables):
-    tree = ast.parse(formula, mode="eval")
-
-    def evaluate(node):
-        if isinstance(node, ast.Expression):
-            return evaluate(node.body)
-        if isinstance(node, ast.Constant):
-            if isinstance(node.value, bool) or not isinstance(node.value, (int, float)):
-                raise ValueError("MEASUREMENT_FORMULA_CONSTANT_INVALID")
-            return float(node.value)
-        if isinstance(node, ast.Name):
-            value = variables.get(node.id)
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError("MEASUREMENT_FORMULA_VARIABLE_UNAVAILABLE")
-            return float(value)
-        if isinstance(node, ast.UnaryOp):
-            value = evaluate(node.operand)
-            return value if isinstance(node.op, ast.UAdd) else -value
-        left = evaluate(node.left)
-        right = evaluate(node.right)
-        if isinstance(node.op, ast.Add):
-            result = left + right
-        elif isinstance(node.op, ast.Sub):
-            result = left - right
-        elif isinstance(node.op, ast.Mult):
-            result = left * right
-        elif isinstance(node.op, ast.Div):
-            result = left / right
-        elif isinstance(node.op, ast.Mod):
-            result = left % right
-        elif isinstance(node.op, ast.Pow):
-            if abs(right) > 10 or abs(left) > 1_000_000:
-                raise ValueError("MEASUREMENT_FORMULA_EXPONENT_INVALID")
-            result = left**right
-        else:
-            raise ValueError("MEASUREMENT_FORMULA_OPERATION_UNSUPPORTED")
-        if not math.isfinite(result) or abs(result) > 1_000_000_000_000:
-            raise ValueError("MEASUREMENT_FORMULA_RESULT_INVALID")
-        return result
-
-    return round(evaluate(tree), 6)
-
-
-async def compute_custom_metric(db, project_id, release_id, definition):
-    query = {"project_id": project_id}
-    if release_id:
-        query["release_id"] = release_id
-    snapshot = await db.test_monitoring_snapshots.find_one(query, sort=[("snapshot_at", -1)])
-    variables = {}
-    if snapshot:
-        variables.update(
-            {
-                key: value
-                for key, value in snapshot.get("metrics", {}).items()
-                if isinstance(value, (int, float)) and not isinstance(value, bool)
-            }
-        )
-    collection_names = {
-        "requirements",
-        "acceptance_criteria",
-        "test_conditions",
-        "test_results",
-        "test_cases",
-        "test_case_versions",
-        "automation_script_drafts",
-        "automation_executions",
-        "defects",
-        "maintenance_proposals",
-        "regression_recommendations",
-        "environment_incidents",
-    }
-    requested = (
-        collection_names
-        if "testing-domain" in definition.get("data_sources", [])
-        else collection_names & set(definition.get("data_sources", []))
-    )
-    for collection_name in requested:
-        count_query = {"project_id": project_id}
-        if release_id and collection_name in {
-            "test_results",
-            "automation_executions",
-            "defects",
-            "environment_incidents",
-        }:
-            count_query["release_id"] = release_id
-        variables[f"{collection_name}_count"] = await db[collection_name].count_documents(
-            count_query
-        )
-    validation = validate_formula_source(
-        definition["formula_type"], definition["formula"], definition["data_sources"]
-    )
-    if not validation["valid"]:
-        return None, {"reason": "MEASUREMENT_DEFINITION_INVALID", "errors": validation["errors"]}
-    missing = sorted(set(validation.get("variables", [])) - set(variables))
-    if missing:
-        return None, {"reason": "MEASUREMENT_FORMULA_VARIABLE_UNAVAILABLE", "variables": missing}
-    try:
-        value = evaluate_safe_expression(definition["formula"], variables)
-    except (ValueError, ZeroDivisionError, OverflowError) as error:
-        return None, {"reason": str(error) or "MEASUREMENT_FORMULA_EVALUATION_FAILED"}
-    return value, {
-        "formula": definition["formula"],
-        "variables": {key: variables[key] for key in validation.get("variables", [])},
-        "monitoring_snapshot_id": snapshot.get("_id") if snapshot else None,
-    }
-
-
-async def compute_metric(db, project_id, release_id, key):
-    source = {"key": key, "release_id": release_id}
-    if key in MONITORING_KEYS:
-        query = {"project_id": project_id}
-        if release_id:
-            query["release_id"] = release_id
-        snapshot = await db.test_monitoring_snapshots.find_one(query, sort=[("snapshot_at", -1)])
-        if not snapshot:
-            return None, source
-        metrics = snapshot.get("metrics", {})
-        value = metrics.get(MONITORING_KEYS[key])
-        source.update(
-            {
-                "monitoring_snapshot_id": snapshot["_id"],
-                "monitoring_source_fingerprint": snapshot.get("source_fingerprint"),
-            }
-        )
-        return value, source
-    if key == "BLOCKED_RATE":
-        query = {"project_id": project_id}
-        if release_id:
-            query["release_id"] = release_id
-        snapshot = await db.test_monitoring_snapshots.find_one(query, sort=[("snapshot_at", -1)])
-        if not snapshot:
-            return None, source
-        metrics = snapshot.get("metrics", {})
-        denominator = (
-            int(metrics.get("pass", 0))
-            + int(metrics.get("fail", 0))
-            + int(metrics.get("blocked", 0))
-        )
-        source.update(
-            {
-                "monitoring_snapshot_id": snapshot["_id"],
-                "blocked": metrics.get("blocked", 0),
-                "decisive": denominator,
-            }
-        )
-        return ratio(metrics.get("blocked", 0), denominator), source
-    if key == "STALE_TEST_RATIO":
-        total = await db.test_cases.count_documents(
-            {"project_id": project_id, "status": {"$ne": "ARCHIVED"}}
-        )
-        stale = await db.test_cases.count_documents(
-            {"project_id": project_id, "status": "NEEDS_UPDATE"}
-        )
-        source.update({"test_case_count": total, "stale_count": stale})
-        return ratio(stale, total), source
-    if key == "AUTOMATION_COVERAGE":
-        total = await db.test_case_versions.count_documents(
-            {"project_id": project_id, "status": {"$in": ["APPROVED", "FROZEN"]}}
-        )
-        automated = await db.automation_script_drafts.count_documents(
-            {"project_id": project_id, "status": "APPROVED"}
-        )
-        source.update({"test_case_version_count": total, "approved_script_count": automated})
-        return ratio(min(automated, total), total), source
-    defects = {"project_id": project_id}
-    runs = {"project_id": project_id}
-    if release_id:
-        defects["release_id"] = release_id
-        runs["release_id"] = release_id
-    if key == "DEFECT_REOPEN_RATE":
-        total = await db.defects.count_documents(defects)
-        reopened = await db.defects.count_documents(
-            {**defects, "$or": [{"reopen_count": {"$gt": 0}}, {"history.action": "REOPENED"}]}
-        )
-        source.update({"defect_count": total, "reopened_count": reopened})
-        return ratio(reopened, total), source
-    if key == "CRITICAL_DEFECT_AGING":
-        rows = await db.defects.find(
-            {
-                **defects,
-                "severity": {"$in": ["blocker", "critical", "BLOCKER", "CRITICAL"]},
-                "status": {"$nin": ["CLOSED", "REJECTED"]},
-            },
-            {"created_at": 1},
-        ).to_list(10000)
-        if not rows:
-            return None, source
-        timestamp = now()
-        value = (
-            sum(max(0, (timestamp - item["created_at"]).total_seconds()) for item in rows)
-            / len(rows)
-            / 86400
-        )
-        source["defect_ids"] = [item["_id"] for item in rows]
-        return round(value, 4), source
-    if key == "MEAN_TIME_TO_RETEST":
-        rows = await db.defects.find(
-            {**defects, "resolved_at": {"$type": "date"}, "retested_at": {"$type": "date"}},
-            {"resolved_at": 1, "retested_at": 1},
-        ).to_list(10000)
-        durations = [
-            (item["retested_at"] - item["resolved_at"]).total_seconds() / 3600
-            for item in rows
-            if item["retested_at"] >= item["resolved_at"]
-        ]
-        source["sample_size"] = len(durations)
-        return round(sum(durations) / len(durations), 4) if durations else None, source
-    if key == "REQUIREMENT_VOLATILITY":
-        total = await db.requirements.count_documents({"project_id": project_id})
-        changed = len(
-            await db.requirement_versions.distinct(
-                "requirement_id", {"project_id": project_id, "version": {"$gt": 1}}
-            )
-        )
-        source.update({"requirement_count": total, "changed_requirement_count": changed})
-        return ratio(changed, total), source
-    if key == "IMPACT_PROPOSAL_ACCEPTANCE_RATE":
-        query = {"project_id": project_id}
-        total = await db.maintenance_proposals.count_documents(query)
-        accepted = await db.maintenance_proposals.count_documents(
-            {**query, "status": {"$in": ["ACCEPTED", "APPROVED", "APPLIED"]}}
-        )
-        source.update({"proposal_count": total, "accepted_count": accepted})
-        return ratio(accepted, total), source
-    if key == "REGRESSION_EFFECTIVENESS":
-        rows = await db.regression_recommendations.find(
-            {"project_id": project_id}, {"selected_test_case_ids": 1, "detected_defect_ids": 1}
-        ).to_list(10000)
-        selected = sum(len(item.get("selected_test_case_ids", [])) for item in rows)
-        detected = sum(len(item.get("detected_defect_ids", [])) for item in rows)
-        source.update({"selected_count": selected, "detected_defect_count": detected})
-        return ratio(detected, selected), source
-    if key in {"AUTOMATION_STABILITY", "AUTOMATION_PASS_STABILITY"}:
-        rows = await db.automation_executions.find(runs, {"status": 1}).to_list(10000)
-        completed = [
-            item for item in rows if item.get("status") in {"PASSED", "FAILED", "COMPLETED"}
-        ]
-        passed = sum(1 for item in completed if item.get("status") == "PASSED")
-        source.update({"execution_count": len(completed), "passed_count": passed})
-        return ratio(passed, len(completed)), source
-    if key in {"ESCAPED_DEFECT_RATE", "DEFECT_REMOVAL_EFFICIENCY"}:
-        production = await db.environment_incidents.count_documents(
-            {"project_id": project_id, "production": True, "linked_defect_ids.0": {"$exists": True}}
-        )
-        removed = await db.defects.count_documents({**defects, "status": "CLOSED"})
-        if not production:
-            return None, {**source, "reason": "PRODUCTION_INCIDENT_DATA_UNAVAILABLE"}
-        denominator = production + removed
-        source.update({"escaped_count": production, "removed_count": removed})
-        return (
-            ratio(production, denominator)
-            if key == "ESCAPED_DEFECT_RATE"
-            else ratio(removed, denominator)
-        ), source
-    return None, {**source, "reason": "METRIC_SOURCE_UNAVAILABLE"}
-
-
-async def list_definitions(db, project_id, user):
-    await get_project(project_id, user, "measurement.read")
-    items = (
-        await db.measurement_definitions.find(
-            {"$or": [{"project_id": project_id}, {"project_id": None}]}
-        )
-        .sort([("key", 1), ("version", -1)])
-        .to_list(1000)
+async def list_definitions(project_id, user):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["read_permission"])
+    items = await measurement_repository.list_definitions(
+        project_id, policy["definition_limit"]
     )
     return {"items": items, "total": len(items)}
 
 
-async def create_definition(db, project_id, payload, user):
-    await get_project(project_id, user, "measurement.manage")
+async def create_definition(project_id, payload, user):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["manage_permission"])
     if payload.idempotency_key:
-        existing = await db.measurement_definitions.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await measurement_repository.find_definition_idempotency(
+            project_id, payload.idempotency_key
         )
         if existing:
             if existing.get("key") != payload.key:
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(
+                    status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                )
             return existing
     validation = validate_formula_source(
         payload.formula_type, payload.formula, payload.data_sources
@@ -393,35 +43,33 @@ async def create_definition(db, project_id, payload, user):
     if not validation["valid"]:
         raise HTTPException(
             status_code=422,
-            detail={"code": "MEASUREMENT_DEFINITION_INVALID", "errors": validation["errors"]},
+            detail={"code": policy["definition_invalid_code"], "errors": validation["errors"]},
         )
-    latest = await db.measurement_definitions.find_one(
-        {"project_id": project_id, "key": payload.key}, sort=[("version", -1)]
-    )
+    latest = await measurement_repository.find_latest_definition(project_id, payload.key)
     timestamp = now()
     value = {
-        "_id": new_id("METDEF"),
+        "_id": new_id(policy["definition_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(),
-        "version": int(latest.get("version", 0)) + 1 if latest else 1,
-        "status": "DRAFT",
-        "revision": 1,
+        "version": int(latest.get("version", 0)) + 1 if latest else policy["initial_version"],
+        "status": policy["draft_status"],
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     try:
-        await db.measurement_definitions.insert_one(value)
+        await measurement_repository.insert_definition(value)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            return await db.measurement_definitions.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            return await measurement_repository.find_definition_idempotency(
+                project_id, payload.idempotency_key
             )
         raise
     await audit(
         user.id,
-        "measurement_definition_created",
-        "MeasurementDefinition",
+        policy["definition_created_event"],
+        policy["definition_entity_type"],
         value["_id"],
         project_id,
         {"key": value["key"], "version": value["version"]},
@@ -429,14 +77,15 @@ async def create_definition(db, project_id, payload, user):
     return value
 
 
-async def update_definition(db, definition_id, payload, user):
-    value = await db.measurement_definitions.find_one({"_id": definition_id})
+async def update_definition(definition_id, payload, user):
+    policy = domain_policy("measurement")
+    value = await measurement_repository.find_definition(definition_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, "measurement.manage")
-    if value["status"] != "DRAFT":
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(value["project_id"], user, policy["manage_permission"])
+    if value["status"] != policy["draft_status"]:
         raise HTTPException(
-            status_code=409, detail={"code": "ACTIVE_MEASUREMENT_DEFINITION_IMMUTABLE"}
+            status_code=409, detail={"code": policy["active_immutable_code"]}
         )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
@@ -450,30 +99,28 @@ async def update_definition(db, definition_id, payload, user):
     except ValueError as error:
         raise HTTPException(
             status_code=422,
-            detail={"code": "INVALID_MEASUREMENT_THRESHOLDS", "message": str(error)},
+            detail={"code": policy["invalid_threshold_code"], "message": str(error)},
         ) from error
     validation = validate_formula_source(
-        changes.get("formula_type", value.get("formula_type", "BUILT_IN")),
+        changes.get("formula_type", value.get("formula_type", policy["built_in_formula_type"])),
         changes.get("formula", value["formula"]),
         changes.get("data_sources", value["data_sources"]),
     )
     if not validation["valid"]:
         raise HTTPException(
             status_code=422,
-            detail={"code": "MEASUREMENT_DEFINITION_INVALID", "errors": validation["errors"]},
+            detail={"code": policy["definition_invalid_code"], "errors": validation["errors"]},
         )
     changes["updated_at"] = now()
-    updated = await db.measurement_definitions.find_one_and_update(
-        {"_id": definition_id, "revision": payload.expected_revision, "status": "DRAFT"},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+    updated = await measurement_repository.update_definition(
+        definition_id, payload.expected_revision, policy["draft_status"], changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "measurement_definition_updated",
-        "MeasurementDefinition",
+        policy["definition_updated_event"],
+        policy["definition_entity_type"],
         definition_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -481,57 +128,51 @@ async def update_definition(db, definition_id, payload, user):
     return updated
 
 
-async def transition_definition(db, definition_id, payload, user):
-    value = await db.measurement_definitions.find_one({"_id": definition_id})
+async def transition_definition(definition_id, payload, user):
+    policy = domain_policy("measurement")
+    value = await measurement_repository.find_definition(definition_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, "measurement.manage")
-    allowed = {("DRAFT", "ACTIVE"), ("ACTIVE", "ARCHIVED"), ("DRAFT", "ARCHIVED")}
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(value["project_id"], user, policy["manage_permission"])
+    allowed = {tuple(item) for item in policy["allowed_transitions"]}
     if (value["status"], payload.status) not in allowed:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_MEASUREMENT_TRANSITION"})
+        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
     timestamp = now()
-    if payload.status == "ACTIVE":
-        await db.measurement_definitions.update_many(
-            {
-                "project_id": value["project_id"],
-                "key": value["key"],
-                "status": "ACTIVE",
-                "_id": {"$ne": definition_id},
-            },
-            {"$set": {"status": "ARCHIVED", "updated_at": timestamp}, "$inc": {"revision": 1}},
+    if payload.status == policy["active_status"]:
+        await measurement_repository.archive_other_active_definitions(
+            value["project_id"],
+            value["key"],
+            definition_id,
+            policy["active_status"],
+            policy["archived_status"],
+            timestamp,
         )
     try:
-        updated = await db.measurement_definitions.find_one_and_update(
+        updated = await measurement_repository.update_definition(
+            definition_id,
+            payload.expected_revision,
+            value["status"],
             {
-                "_id": definition_id,
-                "revision": payload.expected_revision,
-                "status": value["status"],
+                "status": payload.status,
+                "transition_note": payload.note,
+                "updated_at": timestamp,
             },
-            {
-                "$set": {
-                    "status": payload.status,
-                    "transition_note": payload.note,
-                    "updated_at": timestamp,
-                },
-                "$inc": {"revision": 1},
-            },
-            return_document=ReturnDocument.AFTER,
         )
     except DuplicateKeyError as error:
         raise HTTPException(
-            status_code=409, detail={"code": "ACTIVE_MEASUREMENT_DEFINITION_EXISTS"}
+            status_code=409, detail={"code": policy["active_definition_exists_code"]}
         ) from error
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     event = (
-        "measurement_definition_activated"
-        if payload.status == "ACTIVE"
-        else "measurement_definition_status_changed"
+        policy["definition_activated_event"]
+        if payload.status == policy["active_status"]
+        else policy["definition_status_changed_event"]
     )
     await audit(
         user.id,
         event,
-        "MeasurementDefinition",
+        policy["definition_entity_type"],
         definition_id,
         value["project_id"],
         {"from": value["status"], "to": payload.status},
@@ -539,39 +180,41 @@ async def transition_definition(db, definition_id, payload, user):
     return updated
 
 
-async def create_snapshot(db, project_id, payload, user):
-    await get_project(project_id, user, "measurement.snapshot.create")
-    definition = await db.measurement_definitions.find_one(
-        {"_id": payload.definition_id, "project_id": project_id, "status": "ACTIVE"}
+async def create_snapshot(project_id, payload, user):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["snapshot_permission"])
+    definition = await measurement_repository.find_definition(
+        payload.definition_id,
+        {"project_id": project_id, "status": policy["active_status"]},
     )
     if not definition:
         raise HTTPException(
-            status_code=422, detail={"code": "ACTIVE_MEASUREMENT_DEFINITION_REQUIRED"}
+            status_code=422, detail={"code": policy["active_definition_required_code"]}
         )
-    if payload.release_id and not await db.releases.find_one(
-        {"_id": payload.release_id, "project_id": project_id}
+    if payload.release_id and not await measurement_repository.find_release(
+        payload.release_id, project_id
     ):
-        raise HTTPException(status_code=422, detail={"code": "RELEASE_NOT_IN_PROJECT"})
+        raise HTTPException(status_code=422, detail={"code": policy["release_not_in_project_code"]})
     if payload.idempotency_key:
-        existing = await db.measurement_snapshots.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await measurement_repository.find_snapshot_idempotency(
+            project_id, payload.idempotency_key
         )
         if existing:
             if (
                 existing.get("measurement_definition_id") != payload.definition_id
                 or existing.get("release_id") != payload.release_id
             ):
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(status_code=409, detail={"code": policy["idempotency_reused_code"]})
             return existing
-    if definition.get("formula_type") == "CUSTOM_SAFE_EXPRESSION":
-        value, source = await compute_custom_metric(db, project_id, payload.release_id, definition)
+    if definition.get("formula_type") == policy["custom_formula_type"]:
+        value, source = await compute_custom_metric(project_id, payload.release_id, definition)
     else:
-        value, source = await compute_metric(db, project_id, payload.release_id, definition["key"])
+        value, source = await compute_metric(project_id, payload.release_id, definition["key"])
     if value is None:
         raise HTTPException(
             status_code=422,
             detail={
-                "code": "METRIC_SOURCE_UNAVAILABLE",
+                "code": policy["source_unavailable_code"],
                 "metric": definition["key"],
                 "source": source,
             },
@@ -581,7 +224,7 @@ async def create_snapshot(db, project_id, payload, user):
     ).hexdigest()
     timestamp = now()
     snapshot = {
-        "_id": new_id("METSNP"),
+        "_id": new_id(policy["snapshot_id_prefix"]),
         "project_id": project_id,
         "release_id": payload.release_id,
         "measurement_definition_id": definition["_id"],
@@ -598,17 +241,17 @@ async def create_snapshot(db, project_id, payload, user):
         "created_at": timestamp,
     }
     try:
-        await db.measurement_snapshots.insert_one(snapshot)
+        await measurement_repository.insert_snapshot(snapshot)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            return await db.measurement_snapshots.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            return await measurement_repository.find_snapshot_idempotency(
+                project_id, payload.idempotency_key
             )
         raise
     await audit(
         user.id,
-        "measurement_snapshot_created",
-        "MeasurementSnapshot",
+        policy["snapshot_created_event"],
+        policy["snapshot_entity_type"],
         snapshot["_id"],
         project_id,
         {"key": definition["key"], "value": value, "source_fingerprint": fingerprint},
@@ -616,33 +259,37 @@ async def create_snapshot(db, project_id, payload, user):
     return snapshot
 
 
-async def list_snapshots(db, project_id, user, definition_id, release_id):
-    await get_project(project_id, user, "measurement.read")
+async def list_snapshots(project_id, user, definition_id, release_id):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["read_permission"])
     query = {"project_id": project_id}
     if definition_id:
         query["measurement_definition_id"] = definition_id
     if release_id:
         query["release_id"] = release_id
-    items = await db.measurement_snapshots.find(query).sort("measured_at", -1).to_list(2000)
+    items = await measurement_repository.list_snapshots(
+        query, -1, policy["snapshot_limit"]
+    )
     return {"items": items, "total": len(items)}
 
 
-async def version_definition(db, definition_id, payload, user):
-    source = await db.measurement_definitions.find_one({"_id": definition_id})
+async def version_definition(definition_id, payload, user):
+    policy = domain_policy("measurement")
+    source = await measurement_repository.find_definition(definition_id)
     if not source:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(source["project_id"], user, "measurement.manage")
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(source["project_id"], user, policy["manage_permission"])
     if source["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    existing = await db.measurement_definitions.find_one(
-        {"project_id": source["project_id"], "idempotency_key": payload.idempotency_key}
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+    existing = await measurement_repository.find_definition_idempotency(
+        source["project_id"], payload.idempotency_key
     )
     if existing:
         if existing.get("supersedes_definition_id") != definition_id:
-            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+            raise HTTPException(status_code=409, detail={"code": policy["idempotency_reused_code"]})
         return existing
-    latest = await db.measurement_definitions.find_one(
-        {"project_id": source["project_id"], "key": source["key"]}, sort=[("version", -1)]
+    latest = await measurement_repository.find_latest_definition(
+        source["project_id"], source["key"]
     )
     excluded = {
         "_id",
@@ -658,10 +305,10 @@ async def version_definition(db, definition_id, payload, user):
     value = {key: item for key, item in source.items() if key not in excluded}
     value.update(
         {
-            "_id": new_id("METDEF"),
+            "_id": new_id(policy["definition_id_prefix"]),
             "version": int((latest or {}).get("version", 0)) + 1,
-            "status": "DRAFT",
-            "revision": 1,
+            "status": policy["draft_status"],
+            "revision": policy["initial_revision"],
             "idempotency_key": payload.idempotency_key,
             "supersedes_definition_id": definition_id,
             "version_note": payload.note,
@@ -671,18 +318,18 @@ async def version_definition(db, definition_id, payload, user):
         }
     )
     try:
-        await db.measurement_definitions.insert_one(value)
+        await measurement_repository.insert_definition(value)
     except DuplicateKeyError:
-        duplicate = await db.measurement_definitions.find_one(
-            {"project_id": source["project_id"], "idempotency_key": payload.idempotency_key}
+        duplicate = await measurement_repository.find_definition_idempotency(
+            source["project_id"], payload.idempotency_key
         )
         if duplicate:
             return duplicate
         raise
     await audit(
         user.id,
-        "measurement_definition_versioned",
-        "MeasurementDefinition",
+        policy["definition_versioned_event"],
+        policy["definition_entity_type"],
         value["_id"],
         source["project_id"],
         {"supersedes_definition_id": definition_id, "version": value["version"]},
@@ -690,13 +337,16 @@ async def version_definition(db, definition_id, payload, user):
     return value
 
 
-async def validate_definition(db, definition_id, user):
-    value = await db.measurement_definitions.find_one({"_id": definition_id})
+async def validate_definition(definition_id, user):
+    policy = domain_policy("measurement")
+    value = await measurement_repository.find_definition(definition_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, "measurement.read")
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(value["project_id"], user, policy["read_permission"])
     result = validate_formula_source(
-        value.get("formula_type", "BUILT_IN"), value["formula"], value["data_sources"]
+        value.get("formula_type", policy["built_in_formula_type"]),
+        value["formula"],
+        value["data_sources"],
     )
     return {
         **result,
@@ -706,15 +356,18 @@ async def validate_definition(db, definition_id, user):
     }
 
 
-async def measurement_trend(db, definition_id, release_id, user):
-    definition = await db.measurement_definitions.find_one({"_id": definition_id})
+async def measurement_trend(definition_id, release_id, user):
+    policy = domain_policy("measurement")
+    definition = await measurement_repository.find_definition(definition_id)
     if not definition:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(definition["project_id"], user, "measurement.read")
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(definition["project_id"], user, policy["read_permission"])
     query = {"project_id": definition["project_id"], "measurement_key": definition["key"]}
     if release_id:
         query["release_id"] = release_id
-    items = await db.measurement_snapshots.find(query).sort("measured_at", 1).to_list(5000)
+    items = await measurement_repository.list_snapshots(
+        query, 1, policy["trend_limit"]
+    )
     return {
         "definition_id": definition_id,
         "measurement_key": definition["key"],
@@ -723,19 +376,18 @@ async def measurement_trend(db, definition_id, release_id, user):
     }
 
 
-async def compare_measurement_releases(db, project_id, release_a, release_b, user):
-    await get_project(project_id, user, "measurement.read")
-    releases = await db.releases.count_documents(
-        {"_id": {"$in": [release_a, release_b]}, "project_id": project_id}
+async def compare_measurement_releases(project_id, release_a, release_b, user):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["read_permission"])
+    releases = await measurement_repository.count_releases(
+        project_id, [release_a, release_b]
     )
     if releases != len({release_a, release_b}):
-        raise HTTPException(status_code=422, detail={"code": "RELEASE_NOT_IN_PROJECT"})
-    rows = (
-        await db.measurement_snapshots.find(
-            {"project_id": project_id, "release_id": {"$in": [release_a, release_b]}}
-        )
-        .sort("measured_at", -1)
-        .to_list(10000)
+        raise HTTPException(status_code=422, detail={"code": policy["release_not_in_project_code"]})
+    rows = await measurement_repository.list_snapshots(
+        {"project_id": project_id, "release_id": {"$in": [release_a, release_b]}},
+        -1,
+        policy["comparison_limit"],
     )
     latest = {}
     for item in rows:
@@ -759,45 +411,38 @@ async def compare_measurement_releases(db, project_id, release_a, release_b, use
 
 
 def threshold_level(definition, value):
+    policy = domain_policy("measurement")
     key = definition["key"]
     critical = definition.get("critical_threshold")
     warning = definition.get("warning_threshold")
     if value is None:
-        return "NO_DATA"
-    if key in {
-        "BLOCKED_RATE",
-        "DEFECT_REOPEN_RATE",
-        "CRITICAL_DEFECT_AGING",
-        "MEAN_TIME_TO_RETEST",
-        "STALE_TEST_RATIO",
-        "REQUIREMENT_VOLATILITY",
-        "ESCAPED_DEFECT_RATE",
-    }:
+        return policy["no_data_level"]
+    if key in policy["higher_is_worse_keys"]:
         if critical is not None and value >= critical:
-            return "CRITICAL"
+            return policy["critical_level"]
         if warning is not None and value >= warning:
-            return "WARNING"
+            return policy["warning_level"]
     else:
         if critical is not None and value <= critical:
-            return "CRITICAL"
+            return policy["critical_level"]
         if warning is not None and value <= warning:
-            return "WARNING"
-    return "NORMAL"
+            return policy["warning_level"]
+    return policy["normal_level"]
 
 
-async def measurement_alerts(db, project_id, user):
-    await get_project(project_id, user, "measurement.read")
-    definitions = await db.measurement_definitions.find(
-        {"project_id": project_id, "status": "ACTIVE"}
-    ).to_list(1000)
+async def measurement_alerts(project_id, user):
+    policy = domain_policy("measurement")
+    await get_project(project_id, user, policy["read_permission"])
+    definitions = await measurement_repository.list_active_definitions(
+        project_id, policy["active_status"], policy["definition_limit"]
+    )
     items = []
     for definition in definitions:
-        snapshot = await db.measurement_snapshots.find_one(
-            {"project_id": project_id, "measurement_definition_id": definition["_id"]},
-            sort=[("measured_at", -1)],
+        snapshot = await measurement_repository.find_latest_snapshot(
+            project_id, definition["_id"]
         )
         level = threshold_level(definition, snapshot.get("value") if snapshot else None)
-        if level in {"WARNING", "CRITICAL", "NO_DATA"}:
+        if level in policy["alert_levels"]:
             items.append(
                 {
                     "definition_id": definition["_id"],
@@ -810,28 +455,103 @@ async def measurement_alerts(db, project_id, user):
     return {"items": items, "total": len(items)}
 
 
-async def pin_metric(db, definition_id, payload, user):
-    definition = await db.measurement_definitions.find_one({"_id": definition_id})
+async def pin_metric(definition_id, payload, user):
+    policy = domain_policy("measurement")
+    definition = await measurement_repository.find_definition(definition_id)
     if not definition:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(definition["project_id"], user, "measurement.read")
+        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+    await get_project(definition["project_id"], user, policy["read_permission"])
     key = {
         "project_id": definition["project_id"],
         "user_id": user.id,
         "measurement_key": definition["key"],
     }
     if payload.pinned:
-        await db.metric_dashboard_pins.update_one(
-            key, {"$set": {**key, "definition_id": definition_id, "pinned_at": now()}}, upsert=True
-        )
+        await measurement_repository.set_dashboard_pin(key, definition_id, now())
     else:
-        await db.metric_dashboard_pins.delete_one(key)
+        await measurement_repository.delete_dashboard_pin(key)
     await audit(
         user.id,
-        "measurement_dashboard_pin_changed",
-        "MeasurementDefinition",
+        policy["dashboard_pin_changed_event"],
+        policy["definition_entity_type"],
         definition_id,
         definition["project_id"],
         {"pinned": payload.pinned},
     )
     return {**key, "definition_id": definition_id, "pinned": payload.pinned}
+
+
+class MeasurementService:
+    @staticmethod
+    async def list_definitions(project_id, user):
+        return await list_definitions(project_id, user)
+
+    @staticmethod
+    async def create_definition(project_id, payload, user):
+        return await create_definition(project_id, payload, user)
+
+    @staticmethod
+    async def update_definition(definition_id, payload, user):
+        return await update_definition(definition_id, payload, user)
+
+    @staticmethod
+    async def version_definition(definition_id, payload, user):
+        return await version_definition(definition_id, payload, user)
+
+    @staticmethod
+    async def transition_definition(definition_id, payload, user):
+        return await transition_definition(definition_id, payload, user)
+
+    @staticmethod
+    async def list_snapshots(project_id, user, definition_id, release_id):
+        return await list_snapshots(project_id, user, definition_id, release_id)
+
+    @staticmethod
+    async def create_snapshot(project_id, payload, user):
+        return await create_snapshot(project_id, payload, user)
+
+    @staticmethod
+    async def get_snapshot(snapshot_id, user):
+        policy = domain_policy("measurement")
+        value = await measurement_repository.find_snapshot(snapshot_id)
+        if not value:
+            raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+        await get_project(value["project_id"], user, policy["read_permission"])
+        return value
+
+    @staticmethod
+    async def trend(definition_id, release_id, user):
+        return await measurement_trend(definition_id, release_id, user)
+
+    @staticmethod
+    async def compare_releases(project_id, release_a, release_b, user):
+        return await compare_measurement_releases(project_id, release_a, release_b, user)
+
+    @staticmethod
+    async def alerts(project_id, user):
+        return await measurement_alerts(project_id, user)
+
+    @staticmethod
+    async def validate(definition_id, user):
+        return await validate_definition(definition_id, user)
+
+    @staticmethod
+    async def pin(definition_id, payload, user):
+        return await pin_metric(definition_id, payload, user)
+
+    @staticmethod
+    async def export(definition_id, user):
+        policy = domain_policy("measurement")
+        definition = await measurement_repository.find_definition(definition_id)
+        if not definition:
+            raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
+        await get_project(definition["project_id"], user, policy["export_permission"])
+        snapshots = await measurement_repository.list_snapshots(
+            {
+                "project_id": definition["project_id"],
+                "measurement_key": definition["key"],
+            },
+            1,
+            policy["export_limit"],
+        )
+        return definition, export_metric_csv(definition, snapshots)

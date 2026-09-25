@@ -6,8 +6,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.repositories import share_link_repository, storage_repository
 
 
 class ShareService:
@@ -15,7 +14,7 @@ class ShareService:
     async def create_protected_share_link(
         item_id: str, owner_id: str, password: Optional[str] = None, expires_in_hours: int = 24
     ) -> dict:
-        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+        item = await storage_repository.find_one(
             {"_id": item_id, "owner_id": owner_id}
         )
         if not item:
@@ -39,14 +38,12 @@ class ShareService:
             "created_at": datetime.now(timezone.utc),
             "expires_at": expires_at,
         }
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.insert_one(share_doc)
+        await share_link_repository.insert(share_doc)
         return {"share_token": token, "has_password": bool(password), "expires_at": expires_at}
 
     @staticmethod
     async def validate_protected_share_link(token: str, password: Optional[str] = None) -> dict:
-        link = await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.find_one(
-            {"_id": token}
-        )
+        link = await share_link_repository.find(token)
         if not link:
             raise HTTPException(
                 status_code=404, detail="Đường dẫn chia sẻ không tồn tại hoặc đã bị hủy"
@@ -55,9 +52,7 @@ class ShareService:
         if isinstance(expires_at, datetime) and expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         if not isinstance(expires_at, datetime) or expires_at <= datetime.now(timezone.utc):
-            await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.delete_one(
-                {"_id": token}
-            )
+            await share_link_repository.delete(token)
             raise HTTPException(status_code=410, detail="Đường dẫn chia sẻ đã hết hạn")
         if link.get("has_password"):
             if not password:
@@ -72,7 +67,7 @@ class ShareService:
                 raise HTTPException(status_code=410, detail="Đường dẫn chia sẻ không còn hợp lệ")
             if not hmac.compare_digest(candidate, link.get("password_hash", "")):
                 raise HTTPException(status_code=403, detail="Mật khẩu truy cập không chính xác")
-        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+        item = await storage_repository.find_one(
             {"_id": link["item_id"]}
         )
         if not item:

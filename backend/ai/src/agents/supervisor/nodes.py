@@ -114,7 +114,7 @@ async def plan(state):
         result = AgentResult(
             task_id=f"PLAN-{run.run_id}",
             status="INSUFFICIENT_EVIDENCE",
-            summary="Không thể lập kế hoạch khi nhà cung cấp AI chưa sẵn sàng",
+            summary="The AI provider is unavailable so a plan cannot be created",
             evidence_refs=evidence_refs,
             reason_codes=["AI_PROVIDER_UNAVAILABLE"],
             warnings=["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
@@ -172,7 +172,7 @@ async def plan(state):
             AgentResult(
                 task_id=f"PLAN-{run.run_id}",
                 status="FAILED",
-                summary="Kế hoạch không có task hợp lệ",
+                summary="The plan contains no valid task",
                 evidence_refs=evidence_refs,
                 reason_codes=["VALIDATION_FAILED"],
                 warnings=["MANUAL_REVIEW_REQUIRED"],

@@ -1,0 +1,70 @@
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+class GenerateInput(BaseModel):
+    categories: list[str] = Field(default_factory=list, max_length=20)
+    count_per_category: int = Field(default=1, ge=1, le=20)
+    instruction: str = Field(default="", max_length=5000)
+
+
+class TestCaseGenerateInput(GenerateInput):
+    requirement_version_id: str = Field(min_length=1, max_length=200)
+
+
+class SearchInput(BaseModel):
+    query: str = Field(min_length=1, max_length=1000)
+    artifact_types: list[str] = Field(default_factory=list, max_length=20)
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class ProjectQuestionInput(BaseModel):
+    question: str = Field(min_length=2, max_length=5000)
+    artifact_types: list[str] = Field(default_factory=list, max_length=20)
+    evidence_limit: int = Field(default=20, ge=1, le=50)
+
+
+class BulkTagInput(BaseModel):
+    artifact_type: Literal["requirement", "test_case"]
+    ids: list[str] = Field(min_length=1, max_length=5000)
+    add_tags: list[str] = Field(default_factory=list, max_length=100)
+    remove_tags: list[str] = Field(default_factory=list, max_length=100)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+
+
+class BulkSuiteInput(BaseModel):
+    suite_id: str = Field(min_length=1, max_length=200)
+    test_case_ids: list[str] = Field(min_length=1, max_length=5000)
+    expected_revision: int = Field(ge=1)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+
+
+class BulkReviewRequiredInput(BaseModel):
+    test_case_ids: list[str] = Field(min_length=1, max_length=5000)
+    reason: str = Field(min_length=2, max_length=2000)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+
+
+class BulkArchiveInput(BaseModel):
+    artifact_type: Literal["requirement", "test_case"]
+    ids: list[str] = Field(min_length=1, max_length=5000)
+    reason: str = Field(min_length=2, max_length=2000)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+
+
+class BulkProposalGenerateInput(BaseModel):
+    impact_analysis_ids: list[str] = Field(min_length=1, max_length=5000)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+
+
+class BulkProposalApproveInput(BaseModel):
+    proposal_ids: list[str] = Field(min_length=1, max_length=5000)
+    review_note: str = Field(min_length=2, max_length=2000)
+    preview: bool = False
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
+

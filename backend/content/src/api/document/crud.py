@@ -2,13 +2,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Header, Query
 
-from src.core.dependency import (
-    CurrentUser,
-    Role,
-    get_current_user,
-    get_current_user_optional,
-    require_role,
-)
+from src.core.dependency import CurrentUser, get_current_user, get_current_user_optional
 from src.core.response import APIResponse
 from src.schemas.document import (
     DocumentContentUpdate,
@@ -25,7 +19,7 @@ router = APIRouter()
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_document(
     doc_in: DocumentCreate,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
@@ -48,7 +42,6 @@ async def get_my_documents(
 @router.get(
     "/thung-rac",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def get_trash(current_user=Depends(get_current_user)):
     data = await DocumentService.get_trash(current_user)
@@ -73,7 +66,6 @@ async def list_documents(
 @router.post(
     "/{document_id}/khoi-phuc",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def restore_document(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
@@ -132,7 +124,7 @@ async def update_document(
 
 @router.post("/{document_id}/lap-chi-muc-lai", response_model=APIResponse[Any])
 async def retry_document_indexing(
-    document_id: str, current_user=Depends(require_role([Role.AUTHOR, Role.ADMIN]))
+    document_id: str, current_user=Depends(get_current_user)
 ):
     return APIResponse(
         data=await DocumentService.retry_document_indexing(document_id, current_user),
@@ -143,7 +135,6 @@ async def retry_document_indexing(
 @router.delete(
     "/{document_id}",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def delete_document(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
@@ -155,7 +146,6 @@ async def delete_document(document_id: str, current_user=Depends(get_current_use
 @router.post(
     "/{document_id}/bao-ve",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def set_document_password(
     document_id: str, body: DocumentPasswordRequest, current_user=Depends(get_current_user)

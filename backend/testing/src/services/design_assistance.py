@@ -1,13 +1,14 @@
-import json
 import time
 from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Awaitable, Callable
 
-import httpx
-
-from src.core.configuration import settings
+from src.clients.ai_assistance import ai_assistance_client
 from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
+from src.services.domain_policy import domain_policy
+
+
+ASSISTANCE_POLICY = domain_policy("design_assistance")
 
 stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
     "stream_sink", default=None
@@ -17,23 +18,27 @@ stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
 def ai_contract_metadata(result):
     model = result.get("model") if isinstance(result.get("model"), dict) else {}
     return {
-        "capability": result.get("capability", "unknown"),
+        "capability": result.get("capability", ASSISTANCE_POLICY["unknown_value"]),
         "evidence_refs": result.get("evidence_refs", []),
         "reason_codes": result.get("reason_codes", []),
         "confidence": result.get("confidence", 0),
-        "provider": result.get("provider") or model.get("provider") or "unknown",
+        "provider": result.get("provider")
+        or model.get("provider")
+        or ASSISTANCE_POLICY["unknown_value"],
         "model": model,
-        "prompt_version": result.get("prompt_version") or model.get("prompt_version") or "unknown",
+        "prompt_version": result.get("prompt_version")
+        or model.get("prompt_version")
+        or ASSISTANCE_POLICY["unknown_value"],
         "tool_schema_version": result.get("tool_schema_version")
         or model.get("tool_schema_version")
-        or "unknown",
+        or ASSISTANCE_POLICY["unknown_value"],
         "retrieval_version": result.get("retrieval_version")
         or model.get("retrieval_version")
-        or "unknown",
+        or ASSISTANCE_POLICY["unknown_value"],
         "created_at": result.get("created_at")
         or model.get("created_at")
         or datetime.now(timezone.utc).isoformat(),
-        "status": result.get("status", "DEGRADED"),
+        "status": result.get("status", ASSISTANCE_POLICY["degraded_status"]),
         "degraded_mode": result.get("degraded_mode"),
         "warnings": result.get("warnings", []),
     }
@@ -43,57 +48,31 @@ async def request_design_assistance(capability, project_id, instruction, evidenc
     started_at = time.perf_counter()
     try:
         sink = stream_sink.get()
-        async with httpx.AsyncClient(timeout=settings.AI_REQUEST_TIMEOUT_SECONDS) as client:
-            payload = {
+        result = await ai_assistance_client.request(
+            {
                 "capability": capability,
                 "project_id": project_id,
                 "instruction": instruction,
                 "evidence": evidence,
-            }
-            if sink:
-                async with client.stream(
-                    "POST",
-                    f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro/stream",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                    json=payload,
-                ) as response:
-                    response.raise_for_status()
-                    result = None
-                    async for line in response.aiter_lines():
-                        if not line.startswith("data: "):
-                            continue
-                        event = json.loads(line[6:])
-                        if event.get("type") == "delta":
-                            await sink(str(event.get("delta") or ""))
-                        elif event.get("type") == "result":
-                            result = event.get("data")
-                        elif event.get("type") == "error":
-                            raise RuntimeError(str(event.get("code") or "AI_STREAM_FAILED"))
-                if not isinstance(result, dict):
-                    raise RuntimeError("AI_STREAM_RESULT_MISSING")
-            else:
-                response = await client.post(
-                    f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                    json=payload,
-                )
-                response.raise_for_status()
-                result = response.json()
+            },
+            sink,
+        )
         if result.get("capability") != capability:
-            raise ValueError("AI capability mismatch")
+            raise ValueError(ASSISTANCE_POLICY["capability_mismatch_error"])
         result["latency_ms"] = round((time.perf_counter() - started_at) * 1000, 3)
         AI_GENERATION_LATENCY.labels(capability).observe(result["latency_ms"] / 1000)
         outcome = (
-            "success"
-            if result.get("status") == "SUCCESS" and not result.get("degraded_mode")
-            else "degraded"
+            ASSISTANCE_POLICY["success_metric"]
+            if result.get("status") == ASSISTANCE_POLICY["success_status"]
+            and not result.get("degraded_mode")
+            else ASSISTANCE_POLICY["degraded_metric"]
         )
         AI_REQUESTS.labels(capability, outcome).inc()
         return result
     except Exception as error:
         latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
         AI_GENERATION_LATENCY.labels(capability).observe(latency_ms / 1000)
-        AI_REQUESTS.labels(capability, "degraded").inc()
+        AI_REQUESTS.labels(capability, ASSISTANCE_POLICY["degraded_metric"]).inc()
         return {
             "capability": capability,
             "suggestions": [],
@@ -103,17 +82,23 @@ async def request_design_assistance(capability, project_id, instruction, evidenc
                 if item.get("artifact_version_id") or item.get("artifact_id")
             ],
             "confidence": 0,
-            "warnings": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
-            "reason_codes": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
-            "status": "DEGRADED",
-            "degraded_mode": "DEGRADED_AI",
-            "provider": "unavailable",
+            "warnings": [
+                ASSISTANCE_POLICY["provider_unavailable_code"],
+                ASSISTANCE_POLICY["manual_review_code"],
+            ],
+            "reason_codes": [
+                ASSISTANCE_POLICY["provider_unavailable_code"],
+                ASSISTANCE_POLICY["manual_review_code"],
+            ],
+            "status": ASSISTANCE_POLICY["degraded_status"],
+            "degraded_mode": ASSISTANCE_POLICY["degraded_mode"],
+            "provider": ASSISTANCE_POLICY["unavailable_value"],
             "model": {
-                "provider": "unavailable",
+                "provider": ASSISTANCE_POLICY["unavailable_value"],
             },
-            "prompt_version": "unavailable",
-            "tool_schema_version": "1",
-            "retrieval_version": "project_evidence",
+            "prompt_version": ASSISTANCE_POLICY["unavailable_value"],
+            "tool_schema_version": ASSISTANCE_POLICY["tool_schema_version"],
+            "retrieval_version": ASSISTANCE_POLICY["retrieval_version"],
             "created_at": datetime.now(timezone.utc).isoformat(),
             "error_type": type(error).__name__,
             "latency_ms": latency_ms,

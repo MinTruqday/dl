@@ -1,0 +1,134 @@
+from pymongo import ReturnDocument
+
+from src.core.database import database
+from src.domain.contracts.common import FAILED_OUTCOME
+
+
+class AnalysisRepository:
+    async def list_requirements_by_ids(self, project_id, requirement_ids, limit):
+        return await database.value.requirements.find(
+            {"project_id": project_id, "_id": {"$in": requirement_ids}},
+            {"_id": 1, "requirement_key": 1, "title": 1},
+        ).to_list(limit)
+
+    async def list_requirement_version_labels(self, project_id, version_ids, limit):
+        return await database.value.requirement_versions.find(
+            {"project_id": project_id, "_id": {"$in": version_ids}},
+            {"_id": 1, "version": 1},
+        ).to_list(limit)
+
+    async def list_change_pair_versions(self, requirement_id, version_ids):
+        return await database.value.requirement_versions.find(
+            {"requirement_id": requirement_id, "_id": {"$in": version_ids}}
+        ).to_list(len(version_ids))
+
+    async def find_change_set_for_target(self, requirement_id, target_version_id):
+        return await database.value.requirement_change_sets.find_one(
+            {"requirement_id": requirement_id, "to_version_id": target_version_id}
+        )
+
+    async def insert_change_set(self, value):
+        await database.value.requirement_change_sets.insert_one(value)
+        return value
+
+    async def mark_traces_stale(self, project_id, source_ids, confirmed_status, stale_status, updated_at):
+        await database.value.trace_links.update_many(
+            {
+                "project_id": project_id,
+                "source_id": {"$in": source_ids},
+                "status": confirmed_status,
+            },
+            {"$set": {"status": stale_status, "updated_at": updated_at}},
+        )
+
+    async def list_change_sets(self, query, sort_field, direction, limit):
+        return await database.value.requirement_change_sets.find(query).sort(
+            sort_field, direction
+        ).to_list(limit)
+
+    async def review_change_set(self, change_set_id, project_id, revision, source_status, changes):
+        return await database.value.requirement_change_sets.find_one_and_update(
+            {
+                "_id": change_set_id,
+                "project_id": project_id,
+                "status": source_status,
+                "revision": revision,
+            },
+            {"$set": changes, "$inc": {"revision": 1}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+    async def list_acceptance_criteria(self, requirement_version_id, limit=500):
+        return await database.value.acceptance_criteria.find(
+            {"requirement_version_id": requirement_version_id}
+        ).to_list(limit)
+
+    async def list_active_test_case_versions(self, project_id, active_status, limit=2000):
+        return await database.value.test_case_versions.find(
+            {"project_id": project_id, "status": active_status}
+        ).to_list(limit)
+
+    async def list_active_defects(self, project_id, excluded_statuses, limit=2000):
+        return await database.value.defects.find(
+            {"project_id": project_id, "status": {"$nin": list(excluded_statuses)}}
+        ).sort("updated_at", -1).to_list(limit)
+
+    async def list_current_requirements(self, project_id, excluded_status, limit=2000):
+        return await database.value.requirements.find(
+            {"project_id": project_id, "status": {"$ne": excluded_status}}
+        ).to_list(limit)
+
+    async def list_requirement_versions(self, project_id, identifiers, limit=2000):
+        return await database.value.requirement_versions.find(
+            {"project_id": project_id, "_id": {"$in": identifiers}}
+        ).to_list(limit)
+
+    async def list_current_test_cases(
+        self, project_id, excluded_status, projection=None, limit=5000
+    ):
+        return await database.value.test_cases.find(
+            {"project_id": project_id, "status": {"$ne": excluded_status}},
+            projection,
+        ).to_list(limit)
+
+    async def list_test_case_versions(self, project_id, identifiers, projection=None, limit=5000):
+        return await database.value.test_case_versions.find(
+            {"project_id": project_id, "_id": {"$in": identifiers}},
+            projection,
+        ).to_list(limit)
+
+    async def find_latest_risk_ranking(self, project_id):
+        return await database.value.risk_rankings.find_one(
+            {"project_id": project_id},
+            sort=[("created_at", -1)],
+        )
+
+    async def insert_risk_ranking(self, value):
+        await database.value.risk_rankings.insert_one(value)
+        return value
+
+    async def failure_counts(self, project_id, limit=5000):
+        return await database.value.test_results.aggregate(
+            [
+                {"$match": {"project_id": project_id, "status": FAILED_OUTCOME}},
+                {"$group": {"_id": "$test_case_version_id", "count": {"$sum": 1}}},
+            ]
+        ).to_list(limit)
+
+    async def upsert_worker_event(self, event_id, value):
+        return await database.value.worker_events.update_one(
+            {"_id": event_id}, {"$set": value}, upsert=True
+        )
+
+    async def find_requirement_version(self, project_id, version_id):
+        return await database.value.requirement_versions.find_one(
+            {"_id": version_id, "project_id": project_id}
+        )
+
+    async def find_test_case_version(self, project_id, version_id):
+        return await database.value.test_case_versions.find_one(
+            {"_id": version_id, "project_id": project_id}
+        )
+
+
+analysis_repository = AnalysisRepository()

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query
 
 from src.core.dependency import verify_internal_token
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.schemas.internal import AccountLookup
+from src.services.internal_identity import InternalIdentityService
 
 router = APIRouter(
     prefix="/xac-thuc/noi-bo",
@@ -11,64 +11,36 @@ router = APIRouter(
 )
 
 
-def account_view(credential: dict):
-    account = {
-        key: credential.get(key)
-        for key in [
-            "_id",
-            "email",
-            "slug",
-            "full_name",
-            "role",
-            "system_role",
-            "permissions",
-            "is_active",
-            "storage_limit",
-            "created_at",
-            "updated_at",
-        ]
-    }
-    account.update(
-        {
-            "slug": credential.get("slug") or str(credential.get("email", "")).split("@", 1)[0],
-            "full_name": credential.get("full_name") or "Người dùng Veriq",
-            "role": credential.get("role", "reader"),
-            "system_role": credential.get(
-                "system_role", "ADMIN" if credential.get("role") == "admin" else "USER"
-            ),
-            "permissions": credential.get("permissions") or [],
-            "is_active": credential.get("is_active", True),
-            "storage_limit": credential.get("storage_limit") or 20 * 1024 * 1024 * 1024,
-        }
-    )
-    return account
+@router.post("/danh-tinh/tra-cuu", include_in_schema=False)
+async def lookup_accounts(payload: AccountLookup):
+    return {"data": await InternalIdentityService.lookup_accounts(payload.user_ids)}
+
+
+@router.get("/danh-tinh/giai-quyet", include_in_schema=False)
+async def resolve_account_reference(value: str = Query(min_length=1, max_length=320)):
+    return {"data": await InternalIdentityService.resolve_reference(value)}
+
+
+@router.get("/phien/{session_id}/nguoi-dung/{user_id}", include_in_schema=False)
+async def validate_session(session_id: str, user_id: str):
+    return {"data": await InternalIdentityService.validate_session(session_id, user_id)}
+
+
+@router.get("/cau-hinh/chinh-sach-tao-du-an", include_in_schema=False)
+async def project_creation_policy():
+    return {"data": await InternalIdentityService.project_creation_policy()}
 
 
 @router.get("/tai-khoan/{user_id}", include_in_schema=False)
 async def get_account_by_id(user_id: str):
-    credential = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
-        {"_id": user_id}
-    )
-    if not credential:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
-    return {"data": account_view(credential)}
+    return {"data": await InternalIdentityService.account_by_id(user_id)}
 
 
 @router.get("/tai-khoan/thu-dien-tu/{email}", include_in_schema=False)
 async def get_account_by_email(email: str):
-    credential = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
-        {"email": email.lower()}
-    )
-    if not credential:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
-    return {"data": account_view(credential)}
+    return {"data": await InternalIdentityService.account_by_email(email)}
 
 
 @router.get("/bao-mat/{user_id}", include_in_schema=False)
 async def get_security_state(user_id: str):
-    credential = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
-        {"_id": user_id}, {"last_password_change": 1}
-    )
-    if not credential:
-        raise HTTPException(status_code=404, detail="Không tìm thấy thông tin bảo mật")
-    return {"data": {"last_password_change": credential.get("last_password_change")}}
+    return {"data": await InternalIdentityService.security_state(user_id)}

@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.core.dependency import Role, get_current_user, require_role
+from src.core.dependency import get_current_user, require_system_admin
 from src.core.response import APIResponse
 from src.services.document import DocumentService
 
@@ -28,7 +28,7 @@ async def get_document_academic(document_id: str, current_user=Depends(get_curre
 @router.get(
     "/hang-doi-duyet",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_system_admin)],
 )
 async def get_approval_queue(cursor: Optional[str] = None, limit: int = 50):
     return APIResponse(

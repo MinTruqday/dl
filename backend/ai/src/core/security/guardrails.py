@@ -48,7 +48,8 @@ class GuardrailsEngine:
             if re.fullmatch(policy["domain_identifier_pattern"], identifier):
                 return candidate
             has_character_mix = bool(
-                re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)
+                re.search(policy["alphabetic_character_pattern"], candidate)
+                and re.search(policy["numeric_character_pattern"], candidate)
             )
             compact_ratio = sum(character.isalnum() for character in candidate) / len(candidate)
             credential_shape = (

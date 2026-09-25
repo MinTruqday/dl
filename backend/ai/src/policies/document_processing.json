@@ -1,0 +1,52 @@
+{
+  "chunking": {
+    "minimum_characters": 200,
+    "target_characters": 900,
+    "maximum_characters": 1600,
+    "semantic_similarity_minimum": 0.55,
+    "soft_boundary_similarity_minimum": 0.72,
+    "structural_boundaries": ["title", "section_header", "chapter", "heading"],
+    "paragraph_pattern": "\\n\\s*\\n+",
+    "heading_pattern": "^#{1,6}\\s+",
+    "sentence_boundary_pattern": "(?<=[.!?。！？])\\s+"
+  },
+  "retrieval": {
+    "token_pattern": "\\w+",
+    "maximum_query_characters": 10000,
+    "default_result_count": 5,
+    "candidate_multiplier": 3,
+    "maximum_candidate_count": 100,
+    "reciprocal_rank_constant": 60,
+    "dense_search_timeout_seconds": 1.0,
+    "reranking_timeout_seconds": 30.0,
+    "expanded_query_result_count": 3,
+    "hypothetical_document_result_count": 3
+  },
+  "semantic_cache": {
+    "similarity_minimum": 0.9,
+    "ttl_seconds": 86400,
+    "maximum_entries": 512
+  },
+  "project_knowledge": {
+    "maximum_artifact_characters": 50000,
+    "search_cache_ttl_seconds": 30,
+    "search_cache_maximum_entries": 512,
+    "artifact_type_maximum_characters": 100,
+    "artifact_identifier_maximum_characters": 200,
+    "title_maximum_characters": 500,
+    "status_maximum_characters": 50,
+    "authority_maximum_characters": 100,
+    "module_maximum_characters": 200,
+    "artifact_types_maximum_count": 20,
+    "default_search_result_count": 20,
+    "maximum_search_result_count": 100,
+    "authorities": [
+      "APPROVED_SOURCE",
+      "CONTROLLED_SOURCE",
+      "PROJECT_REFERENCE",
+      "SUPPLEMENTAL",
+      "DRAFT",
+      "UNVERIFIED"
+    ]
+  }
+}

@@ -69,7 +69,7 @@ async def handle_testing_job(payload: dict):
             },
         )
         return result
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=settings.WORKER_REQUEST_TIMEOUT_SECONDS) as client:
         response = await client.post(
             f"{settings.TESTING_URL}/kiem-thu/noi-bo/tac-vu/{payload.get('event')}",
             headers={
@@ -146,7 +146,9 @@ async def run_newman(job_id, payload, job_payload):
             env=automation_environment(directory, environment),
         )
         try:
-            return_code = await asyncio.wait_for(process.wait(), timeout=900)
+            return_code = await asyncio.wait_for(
+                process.wait(), timeout=settings.WORKER_EXECUTION_TIMEOUT_SECONDS
+            )
         except TimeoutError:
             process.kill()
             await process.wait()
@@ -226,7 +228,7 @@ def automation_callback(execution_id, job_id, status, summary, results, logs):
 
 
 async def send_automation_result(callback):
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=settings.WORKER_REQUEST_TIMEOUT_SECONDS) as client:
         response = await client.post(
             f"{settings.TESTING_URL}/noi-bo/kiem-thu/thuc-thi-tu-dong/ket-qua",
             headers={"X-Internal-Token": settings.SECRET_KEY},
@@ -286,7 +288,9 @@ async def run_playwright(job_id, payload, job_payload):
             env=automation_environment(directory, job_payload.get("environment")),
         )
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=900)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=settings.WORKER_EXECUTION_TIMEOUT_SECONDS
+            )
             return_code = process.returncode
         except TimeoutError:
             process.kill()

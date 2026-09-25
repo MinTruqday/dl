@@ -1,9 +1,7 @@
-from fastapi import Request, Response
-
 from src.services.session import SessionService
 
 
-def set_refresh_cookie(response: Response, request: Request, token_data: dict):
+def set_refresh_cookie(response, request, token_data):
     refresh_token = token_data.pop("_refresh_token")
     response.set_cookie(
         key="veriq_refresh_token",

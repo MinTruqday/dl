@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.services.download import DownloadService
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/tai-ve")
 async def get_download_url(
     file_id: str,
     expires_in: int = Query(3600, ge=60, le=86400),
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await DownloadService.generate_download_url(

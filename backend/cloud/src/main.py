@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.chunk import router as chunk
@@ -41,8 +42,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Veriq Cloud", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="cloud")
 app.add_route("/so-lieu", metrics_endpoint("cloud"))
-
-from fastapi.responses import JSONResponse
 
 app.add_middleware(
     CORSMiddleware,

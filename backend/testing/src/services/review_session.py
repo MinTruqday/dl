@@ -1,137 +1,113 @@
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.review_session import ReviewSessionCreate
-
-ARTIFACT_COLLECTIONS = {
-    "REQUIREMENT": "requirements",
-    "TEST_STRATEGY": "test_strategies",
-    "TEST_PLAN": "test_plans",
-    "TEST_CONDITION": "test_conditions",
-    "TEST_CASE": "test_cases",
-    "IMPACT_ANALYSIS": "impact_analyses",
-    "TEST_COMPLETION": "test_completion_reports",
-    "COMPLETION_REPORT": "test_completion_reports",
-    "STATUS_REPORT": "test_status_reports",
-}
-
-ARTIFACT_VERSION_COLLECTIONS = {
-    "REQUIREMENT": ("requirement_versions", "requirement_id"),
-    "TEST_CASE": ("test_case_versions", "test_case_id"),
-}
+from src.repositories import review_repository
+from src.services.domain_policy import domain_policy
+from src.services.review_finding import (
+    add_finding,
+    assign_finding,
+    resolve_finding,
+    verify_finding,
+)
+from src.services.review_session_export import export_review_csv
+from src.services.review_session_query import get_review, list_reviews, validate_members
 
 
-async def validate_members(db, project_id, user_ids):
-    values = list(dict.fromkeys(item for item in user_ids if item))
-    count = await db.project_members.count_documents(
-        {"project_id": project_id, "user_id": {"$in": values}, "status": "ACTIVE"}
-    )
-    if count != len(values):
-        raise HTTPException(
-            status_code=422, detail={"code": "REVIEW_PARTICIPANT_NOT_PROJECT_MEMBER"}
-        )
+REVIEW_POLICY = domain_policy("review_session")
 
 
-async def get_review(db, review_id, user, permission="reviewsession.read"):
-    value = await db.review_sessions.find_one({"_id": review_id})
-    if not value:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(value["project_id"], user, permission)
-    return value
-
-
-async def list_reviews(db, project_id, user, status, artifact_type):
-    await get_project(project_id, user, "reviewsession.read")
-    query = {"project_id": project_id}
-    if status:
-        query["status"] = status
-    if artifact_type:
-        query["artifact_type"] = artifact_type
-    items = await db.review_sessions.find(query).sort("updated_at", -1).to_list(500)
-    return {"items": items, "total": len(items)}
-
-
-async def create_review(db, project_id, payload, user):
-    await get_project(project_id, user, "reviewsession.create")
-    collection_name = ARTIFACT_COLLECTIONS.get(payload.artifact_type.upper())
+async def create_review(project_id, payload, user):
+    policy = REVIEW_POLICY
+    await get_project(project_id, user, policy["create_permission"])
+    collection_name = policy["artifact_collections"].get(payload.artifact_type.upper())
     if not collection_name:
-        raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_REVIEW_ARTIFACT"})
-    artifact = await getattr(db, collection_name).find_one(
-        {"_id": payload.artifact_id, "project_id": project_id}
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["unsupported_artifact_code"]},
+        )
+    artifact = await review_repository.find_artifact(
+        collection_name, payload.artifact_id, project_id
     )
     if not artifact:
-        raise HTTPException(status_code=422, detail={"code": "REVIEW_ARTIFACT_NOT_IN_PROJECT"})
-    version_mapping = ARTIFACT_VERSION_COLLECTIONS.get(payload.artifact_type.upper())
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["artifact_not_in_project_code"]},
+        )
+    version_mapping = policy["artifact_version_collections"].get(
+        payload.artifact_type.upper()
+    )
     if version_mapping:
         version_collection, parent_field = version_mapping
-        version = await getattr(db, version_collection).find_one(
-            {
-                "_id": payload.artifact_version_id,
-                "project_id": project_id,
-                parent_field: payload.artifact_id,
-            }
+        version = await review_repository.find_artifact(
+            version_collection,
+            payload.artifact_version_id,
+            project_id,
+            {parent_field: payload.artifact_id},
         )
         if not version:
             raise HTTPException(
-                status_code=422, detail={"code": "REVIEW_ARTIFACT_VERSION_NOT_IN_PROJECT"}
+                status_code=422,
+                detail={"code": policy["artifact_version_not_in_project_code"]},
             )
     elif payload.artifact_version_id != payload.artifact_id:
-        raise HTTPException(status_code=422, detail={"code": "REVIEW_ARTIFACT_VERSION_MISMATCH"})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["artifact_version_mismatch_code"]},
+        )
     await validate_members(
-        db,
         project_id,
         [payload.moderator_id, payload.author_id, *payload.reviewers, payload.scribe_id],
     )
     if payload.idempotency_key:
-        existing = await db.review_sessions.find_one(
-            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        existing = await review_repository.find_review_by_idempotency(
+            project_id, payload.idempotency_key
         )
         if existing:
             if (
                 existing.get("artifact_id") != payload.artifact_id
                 or existing.get("artifact_version_id") != payload.artifact_version_id
             ):
-                raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+                raise HTTPException(
+                    status_code=409,
+                    detail={"code": policy["idempotency_reused_code"]},
+                )
             return existing
     timestamp = now()
-    sequence = await db.counters.find_one_and_update(
-        {"_id": f"{project_id}:formal-review"},
-        {"$inc": {"value": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
+    sequence = await review_repository.next_sequence(
+        f"{project_id}:{policy['counter_suffix']}"
     )
     value = {
-        "_id": new_id("RVS"),
+        "_id": new_id(policy["review_id_prefix"]),
         "project_id": project_id,
         **payload.model_dump(),
-        "review_key": f"RVS-{int(sequence['value']):04d}",
+        "review_key": f"{policy['review_key_prefix']}-{int(sequence['value']):04d}",
         "checklist_version_id": payload.checklist_version,
         "reviewer_ids": payload.reviewers,
-        "status": "PLANNED",
+        "status": policy["planned_status"],
         "decision": None,
         "started_at": None,
         "decision_at": None,
         "completed_at": None,
         "metrics": {},
-        "revision": 1,
+        "revision": policy["initial_revision"],
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     try:
-        await db.review_sessions.insert_one(value)
+        await review_repository.insert_review(value)
     except DuplicateKeyError:
         if payload.idempotency_key:
-            return await db.review_sessions.find_one(
-                {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+            return await review_repository.find_review_by_idempotency(
+                project_id, payload.idempotency_key
             )
         raise
     await audit(
         user.id,
-        "formal_review_created",
-        "ReviewSession",
+        policy["created_event"],
+        policy["entity"],
         value["_id"],
         project_id,
         {"artifact_id": payload.artifact_id, "artifact_version_id": payload.artifact_version_id},
@@ -139,10 +115,14 @@ async def create_review(db, project_id, payload, user):
     return value
 
 
-async def update_review(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.update")
-    if review["status"] not in {"PLANNED", "IN_PROGRESS"}:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETED_REVIEW_IMMUTABLE"})
+async def update_review(review_id, payload, user):
+    policy = REVIEW_POLICY
+    review = await get_review(review_id, user, policy["update_permission"])
+    if review["status"] not in policy["editable_review_statuses"]:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": policy["completed_immutable_code"]},
+        )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "reviewers" in changes:
@@ -155,24 +135,26 @@ async def update_review(db, review_id, payload, user):
         changes.get("scribe_id", review.get("scribe_id")),
     ]
     if review["author_id"] in participants[2:-1] or participants[0] in participants[2:-1]:
-        raise HTTPException(status_code=422, detail={"code": "REVIEW_PARTICIPANT_ROLE_CONFLICT"})
-    await validate_members(db, review["project_id"], participants)
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["participant_role_conflict_code"]},
+        )
+    await validate_members(review["project_id"], participants)
     changes["updated_at"] = now()
-    value = await db.review_sessions.find_one_and_update(
+    value = await review_repository.update_review(
         {
             "_id": review_id,
             "revision": payload.expected_revision,
-            "status": {"$in": ["PLANNED", "IN_PROGRESS"]},
+            "status": {"$in": policy["editable_review_statuses"]},
         },
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+        changes,
     )
     if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "formal_review_updated",
-        "ReviewSession",
+        policy["updated_event"],
+        policy["entity"],
         review_id,
         review["project_id"],
         {"fields": sorted(changes)},
@@ -180,17 +162,24 @@ async def update_review(db, review_id, payload, user):
     return value
 
 
-async def assign_reviewers(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.update")
-    if review["status"] != "PLANNED":
-        raise HTTPException(status_code=409, detail={"code": "REVIEW_ASSIGNMENT_STATE_INVALID"})
+async def assign_reviewers(review_id, payload, user):
+    policy = REVIEW_POLICY
+    review = await get_review(review_id, user, policy["update_permission"])
+    if review["status"] != policy["planned_status"]:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": policy["assignment_state_invalid_code"]},
+        )
     if (
         review["author_id"] in payload.reviewer_ids
         or payload.moderator_id in payload.reviewer_ids
     ):
-        raise HTTPException(status_code=422, detail={"code": "REVIEW_PARTICIPANT_ROLE_CONFLICT"})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": policy["participant_role_conflict_code"]},
+        )
     await validate_members(
-        db, review["project_id"], [payload.moderator_id, *payload.reviewer_ids, payload.scribe_id]
+        review["project_id"], [payload.moderator_id, *payload.reviewer_ids, payload.scribe_id]
     )
     changes = {
         "moderator_id": payload.moderator_id,
@@ -199,17 +188,20 @@ async def assign_reviewers(db, review_id, payload, user):
         "scribe_id": payload.scribe_id,
         "updated_at": now(),
     }
-    value = await db.review_sessions.find_one_and_update(
-        {"_id": review_id, "revision": payload.expected_revision, "status": "PLANNED"},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+    value = await review_repository.update_review(
+        {
+            "_id": review_id,
+            "revision": payload.expected_revision,
+            "status": policy["planned_status"],
+        },
+        changes,
     )
     if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "formal_review_reviewers_assigned",
-        "ReviewSession",
+        policy["reviewers_assigned_event"],
+        policy["entity"],
         review_id,
         review["project_id"],
         {"reviewer_ids": changes["reviewer_ids"], "moderator_id": payload.moderator_id},
@@ -217,191 +209,26 @@ async def assign_reviewers(db, review_id, payload, user):
     return value
 
 
-async def add_finding(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.finding.manage")
-    if review["status"] != "IN_PROGRESS":
-        raise HTTPException(status_code=409, detail={"code": "COMPLETED_REVIEW_IMMUTABLE"})
-    await validate_members(db, review["project_id"], [payload.owner_id])
-    timestamp = now()
-    value = {
-        "_id": new_id("RVF"),
-        "review_session_id": review_id,
-        "project_id": review["project_id"],
-        **payload.model_dump(),
-        "status": "OPEN",
-        "resolution": "",
-        "revision": 1,
-        "created_by": user.id,
-        "created_at": timestamp,
-        "updated_at": timestamp,
-    }
-    await db.review_findings.insert_one(value)
-    await audit(
-        user.id,
-        "review_finding_created",
-        "ReviewFinding",
-        value["_id"],
-        review["project_id"],
-        {"review_session_id": review_id, "severity": value["severity"]},
+async def review_metrics(review):
+    policy = REVIEW_POLICY
+    findings = await review_repository.list_findings(
+        review["_id"], policy["finding_limit"]
     )
-    return value
-
-
-async def update_finding(db, finding_id, payload, user):
-    finding = await db.review_findings.find_one({"_id": finding_id})
-    if not finding:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(finding["project_id"], user, "reviewsession.finding.manage")
-    review = await db.review_sessions.find_one({"_id": finding["review_session_id"]})
-    if not review or review["status"] not in {"IN_PROGRESS", "DECISION_PENDING"}:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETED_REVIEW_IMMUTABLE"})
-    changes = {"status": payload.status, "resolution": payload.resolution, "updated_at": now()}
-    value = await db.review_findings.find_one_and_update(
-        {"_id": finding_id, "revision": payload.expected_revision},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
-    )
-    if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "formal_review_finding_updated",
-        "ReviewFinding",
-        finding_id,
-        finding["project_id"],
-        changes,
-    )
-    return value
-
-
-async def get_finding_for_update(db, finding_id, user):
-    finding = await db.review_findings.find_one({"_id": finding_id})
-    if not finding:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    await get_project(finding["project_id"], user, "reviewsession.finding.manage")
-    review = await db.review_sessions.find_one({"_id": finding["review_session_id"]})
-    if not review or review["status"] != "IN_PROGRESS":
-        raise HTTPException(status_code=409, detail={"code": "REVIEW_FINDING_STATE_INVALID"})
-    return finding, review
-
-
-async def assign_finding(db, finding_id, payload, user):
-    finding, review = await get_finding_for_update(db, finding_id, user)
-    await validate_members(db, review["project_id"], [payload.owner_id])
-    value = await db.review_findings.find_one_and_update(
-        {
-            "_id": finding_id,
-            "revision": payload.expected_revision,
-            "status": {"$in": ["OPEN", "IN_PROGRESS"]},
-        },
-        {
-            "$set": {
-                "owner_id": payload.owner_id,
-                "status": "IN_PROGRESS",
-                "assigned_by": user.id,
-                "assigned_at": now(),
-                "updated_at": now(),
-            },
-            "$inc": {"revision": 1},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "formal_review_finding_assigned",
-        "ReviewFinding",
-        finding_id,
-        finding["project_id"],
-        {"owner_id": payload.owner_id},
-    )
-    return value
-
-
-async def resolve_finding(db, finding_id, payload, user):
-    finding, _ = await get_finding_for_update(db, finding_id, user)
-    if finding.get("owner_id") != user.id:
-        membership = await db.project_members.find_one(
-            {"project_id": finding["project_id"], "user_id": user.id, "status": "ACTIVE"}
-        )
-        if (membership or {}).get("project_role") != "QA":
-            raise HTTPException(status_code=403, detail={"code": "REVIEW_FINDING_OWNER_REQUIRED"})
-    value = await db.review_findings.find_one_and_update(
-        {
-            "_id": finding_id,
-            "revision": payload.expected_revision,
-            "status": {"$in": ["OPEN", "IN_PROGRESS"]},
-        },
-        {
-            "$set": {
-                "status": "RESOLVED",
-                "resolution": payload.resolution,
-                "resolved_by": user.id,
-                "resolved_at": now(),
-                "updated_at": now(),
-            },
-            "$inc": {"revision": 1},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "formal_review_finding_resolved",
-        "ReviewFinding",
-        finding_id,
-        finding["project_id"],
-        {"resolution": payload.resolution},
-    )
-    return value
-
-
-async def verify_finding(db, finding_id, payload, user):
-    finding, review = await get_finding_for_update(db, finding_id, user)
-    reviewers = review.get("reviewer_ids", review.get("reviewers", []))
-    if user.id not in reviewers and review.get("moderator_id") != user.id:
-        raise HTTPException(status_code=403, detail={"code": "REVIEW_VERIFIER_REQUIRED"})
-    if finding.get("resolved_by") == user.id:
-        raise HTTPException(
-            status_code=409, detail={"code": "REVIEW_INDEPENDENT_VERIFICATION_REQUIRED"}
-        )
-    value = await db.review_findings.find_one_and_update(
-        {"_id": finding_id, "revision": payload.expected_revision, "status": "RESOLVED"},
-        {
-            "$set": {
-                "status": "VERIFIED",
-                "verification_note": payload.note,
-                "verified_by": user.id,
-                "verified_at": now(),
-                "updated_at": now(),
-            },
-            "$inc": {"revision": 1},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(
-        user.id,
-        "review_finding_verified",
-        "ReviewFinding",
-        finding_id,
-        finding["project_id"],
-        {"note": payload.note},
-    )
-    return value
-
-
-async def review_metrics(db, review):
-    findings = await db.review_findings.find({"review_session_id": review["_id"]}).to_list(1000)
     timestamp = now()
     return {
         "finding_count": len(findings),
-        "major_count": sum(1 for item in findings if item["severity"] == "MAJOR"),
-        "open_count": sum(1 for item in findings if item["status"] not in {"RESOLVED", "VERIFIED"}),
-        "verified_count": sum(1 for item in findings if item["status"] == "VERIFIED"),
+        "major_count": sum(
+            1 for item in findings if item["severity"] == policy["major_severity"]
+        ),
+        "open_count": sum(
+            1
+            for item in findings
+            if item["status"]
+            not in {policy["resolved_finding_status"], policy["verified_finding_status"]}
+        ),
+        "verified_count": sum(
+            1 for item in findings if item["status"] == policy["verified_finding_status"]
+        ),
         "duration_seconds": max(
             0,
             int(((review.get("completed_at") or timestamp) - review["started_at"]).total_seconds()),
@@ -411,50 +238,59 @@ async def review_metrics(db, review):
     }
 
 
-async def record_review_decision(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.complete")
+async def record_review_decision(review_id, payload, user):
+    policy = REVIEW_POLICY
+    review = await get_review(review_id, user, policy["complete_permission"])
     if review.get("moderator_id") != user.id:
-        raise HTTPException(status_code=403, detail={"code": "REVIEW_MODERATOR_REQUIRED"})
-    if review["status"] != "IN_PROGRESS":
-        raise HTTPException(status_code=409, detail={"code": "INVALID_REVIEW_TRANSITION"})
-    metrics = await review_metrics(db, review)
+        raise HTTPException(status_code=403, detail={"code": policy["moderator_required_code"]})
+    if review["status"] != policy["in_progress_status"]:
+        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    metrics = await review_metrics(review)
     if (
-        payload.decision in {"ACCEPTED", "ACCEPTED_WITH_ACTIONS"}
+        payload.decision in policy["accepted_decisions"]
         and metrics["major_count"]
         and metrics["open_count"]
     ):
-        open_major = await db.review_findings.count_documents(
+        open_major = await review_repository.count_findings(
             {
                 "review_session_id": review_id,
-                "severity": "MAJOR",
-                "status": {"$nin": ["RESOLVED", "VERIFIED"]},
+                "severity": policy["major_severity"],
+                "status": {
+                    "$nin": [
+                        policy["resolved_finding_status"],
+                        policy["verified_finding_status"],
+                    ]
+                },
             }
         )
         if open_major:
-            raise HTTPException(status_code=409, detail={"code": "OPEN_MAJOR_REVIEW_FINDINGS"})
+            raise HTTPException(
+                status_code=409,
+                detail={"code": policy["open_major_findings_code"]},
+            )
     timestamp = now()
-    value = await db.review_sessions.find_one_and_update(
-        {"_id": review_id, "revision": payload.expected_revision, "status": "IN_PROGRESS"},
+    value = await review_repository.update_review(
         {
-            "$set": {
-                "status": "DECISION_PENDING",
-                "decision": payload.decision,
-                "decision_note": payload.note,
-                "decision_by": user.id,
-                "decision_at": timestamp,
-                "metrics": metrics,
-                "updated_at": timestamp,
-            },
-            "$inc": {"revision": 1},
+            "_id": review_id,
+            "revision": payload.expected_revision,
+            "status": policy["in_progress_status"],
         },
-        return_document=ReturnDocument.AFTER,
+        {
+            "status": policy["decision_pending_status"],
+            "decision": payload.decision,
+            "decision_note": payload.note,
+            "decision_by": user.id,
+            "decision_at": timestamp,
+            "metrics": metrics,
+            "updated_at": timestamp,
+        },
     )
     if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "formal_review_decision_recorded",
-        "ReviewSession",
+        policy["decision_recorded_event"],
+        policy["entity"],
         review_id,
         review["project_id"],
         {"decision": payload.decision, "metrics": metrics},
@@ -462,37 +298,43 @@ async def record_review_decision(db, review_id, payload, user):
     return value
 
 
-async def transition_review(db, review_id, payload, user, complete=False):
+async def transition_review(review_id, payload, user, complete=False):
+    policy = REVIEW_POLICY
     review = await get_review(
-        db, review_id, user, "reviewsession.complete" if complete else "reviewsession.update"
+        review_id,
+        user,
+        policy["complete_permission"] if complete else policy["update_permission"],
     )
     if review["moderator_id"] != user.id:
-        raise HTTPException(status_code=403, detail={"code": "REVIEW_MODERATOR_REQUIRED"})
-    source, target = ("DECISION_PENDING", "COMPLETED") if complete else ("PLANNED", "IN_PROGRESS")
+        raise HTTPException(status_code=403, detail={"code": policy["moderator_required_code"]})
+    source, target = (
+        (policy["decision_pending_status"], policy["completed_status"])
+        if complete
+        else (policy["planned_status"], policy["in_progress_status"])
+    )
     if review["status"] != source:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_REVIEW_TRANSITION"})
+        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
     timestamp = now()
     changes = {"status": target, "updated_at": timestamp, "transition_note": payload.note}
     if complete:
         changes.update(
             {
                 "completed_at": timestamp,
-                "metrics": await review_metrics(db, {**review, "completed_at": timestamp}),
+                "metrics": await review_metrics({**review, "completed_at": timestamp}),
             }
         )
     else:
         changes["started_at"] = timestamp
-    value = await db.review_sessions.find_one_and_update(
+    value = await review_repository.update_review(
         {"_id": review_id, "revision": payload.expected_revision, "status": source},
-        {"$set": changes, "$inc": {"revision": 1}},
-        return_document=ReturnDocument.AFTER,
+        changes,
     )
     if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "formal_review_completed" if complete else "formal_review_started",
-        "ReviewSession",
+        policy["completed_event"] if complete else policy["started_event"],
+        policy["entity"],
         review_id,
         review["project_id"],
         {"decision": review.get("decision"), "metrics": changes.get("metrics")},
@@ -500,35 +342,38 @@ async def transition_review(db, review_id, payload, user, complete=False):
     return value
 
 
-async def transition_review_terminal(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.complete")
+async def transition_review_terminal(review_id, payload, user):
+    policy = REVIEW_POLICY
+    review = await get_review(review_id, user, policy["complete_permission"])
     if review.get("moderator_id") != user.id:
-        raise HTTPException(status_code=403, detail={"code": "REVIEW_MODERATOR_REQUIRED"})
-    expected_source = "PLANNED" if payload.target_status == "CANCELLED" else "COMPLETED"
+        raise HTTPException(status_code=403, detail={"code": policy["moderator_required_code"]})
+    expected_source = (
+        policy["planned_status"]
+        if payload.target_status == policy["cancelled_status"]
+        else policy["completed_status"]
+    )
     if review["status"] != expected_source:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_REVIEW_TRANSITION"})
+        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
     timestamp = now()
-    value = await db.review_sessions.find_one_and_update(
+    value = await review_repository.update_review(
         {"_id": review_id, "revision": payload.expected_revision, "status": expected_source},
         {
-            "$set": {
-                "status": payload.target_status,
-                "transition_note": payload.note,
-                "updated_at": timestamp,
-                "archived_at" if payload.target_status == "ARCHIVED" else "cancelled_at": timestamp,
-            },
-            "$inc": {"revision": 1},
+            "status": payload.target_status,
+            "transition_note": payload.note,
+            "updated_at": timestamp,
+            "archived_at"
+            if payload.target_status == policy["archived_status"]
+            else "cancelled_at": timestamp,
         },
-        return_document=ReturnDocument.AFTER,
     )
     if not value:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     await audit(
         user.id,
-        "formal_review_archived"
-        if payload.target_status == "ARCHIVED"
-        else "formal_review_cancelled",
-        "ReviewSession",
+        policy["archived_event"]
+        if payload.target_status == policy["archived_status"]
+        else policy["cancelled_event"],
+        policy["entity"],
         review_id,
         review["project_id"],
         {"note": payload.note},
@@ -536,12 +381,16 @@ async def transition_review_terminal(db, review_id, payload, user):
     return value
 
 
-async def create_follow_up_review(db, review_id, payload, user):
-    review = await get_review(db, review_id, user, "reviewsession.create")
-    if review["status"] != "COMPLETED":
-        raise HTTPException(status_code=409, detail={"code": "FOLLOW_UP_REQUIRES_COMPLETED_REVIEW"})
+async def create_follow_up_review(review_id, payload, user):
+    policy = REVIEW_POLICY
+    review = await get_review(review_id, user, policy["create_permission"])
+    if review["status"] != policy["completed_status"]:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": policy["follow_up_requires_completed_code"]},
+        )
     if review["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
     create_payload = ReviewSessionCreate(
         idempotency_key=payload.idempotency_key,
         review_type=review["review_type"],
@@ -549,7 +398,10 @@ async def create_follow_up_review(db, review_id, payload, user):
         artifact_id=review["artifact_id"],
         artifact_version_id=review["artifact_version_id"],
         objective=payload.objective,
-        checklist_version=review.get("checklist_version_id", review.get("checklist_version", "1")),
+        checklist_version=review.get(
+            "checklist_version_id",
+            review.get("checklist_version", policy["default_checklist_version"]),
+        ),
         moderator_id=payload.moderator_id,
         author_id=review["author_id"],
         reviewers=payload.reviewer_ids,
@@ -557,23 +409,89 @@ async def create_follow_up_review(db, review_id, payload, user):
         planned_at=payload.planned_at,
         checklist=review.get("checklist", []),
     )
-    value = await create_review(db, review["project_id"], create_payload, user)
-    updated = await db.review_sessions.find_one_and_update(
-        {"_id": value["_id"]},
+    value = await create_review(review["project_id"], create_payload, user)
+    updated = await review_repository.set_review_fields(
+        value["_id"],
         {
-            "$set": {
-                "parent_review_session_id": review_id,
-                "follow_up_number": int(review.get("follow_up_number", 0)) + 1,
-            }
+            "parent_review_session_id": review_id,
+            "follow_up_number": int(review.get("follow_up_number", 0)) + 1,
         },
-        return_document=ReturnDocument.AFTER,
     )
     await audit(
         user.id,
-        "formal_review_follow_up_created",
-        "ReviewSession",
+        policy["follow_up_created_event"],
+        policy["entity"],
         updated["_id"],
         review["project_id"],
         {"parent_review_session_id": review_id},
     )
     return updated
+
+
+class ReviewSessionService:
+    @staticmethod
+    async def list(project_id, user, status, artifact_type):
+        return await list_reviews(project_id, user, status, artifact_type)
+
+    @staticmethod
+    async def create(project_id, payload, user):
+        return await create_review(project_id, payload, user)
+
+    @staticmethod
+    async def get(review_id, user):
+        policy = REVIEW_POLICY
+        value = await get_review(review_id, user)
+        value["findings"] = await review_repository.list_findings(
+            review_id, policy["finding_limit"]
+        )
+        return value
+
+    @staticmethod
+    async def update(review_id, payload, user):
+        return await update_review(review_id, payload, user)
+
+    @staticmethod
+    async def assign_reviewers(review_id, payload, user):
+        return await assign_reviewers(review_id, payload, user)
+
+    @staticmethod
+    async def transition(review_id, payload, user, complete=False):
+        return await transition_review(review_id, payload, user, complete)
+
+    @staticmethod
+    async def add_finding(review_id, payload, user):
+        return await add_finding(review_id, payload, user)
+
+    @staticmethod
+    async def assign_finding(finding_id, payload, user):
+        return await assign_finding(finding_id, payload, user)
+
+    @staticmethod
+    async def resolve_finding(finding_id, payload, user):
+        return await resolve_finding(finding_id, payload, user)
+
+    @staticmethod
+    async def verify_finding(finding_id, payload, user):
+        return await verify_finding(finding_id, payload, user)
+
+    @staticmethod
+    async def record_decision(review_id, payload, user):
+        return await record_review_decision(review_id, payload, user)
+
+    @staticmethod
+    async def transition_terminal(review_id, payload, user):
+        return await transition_review_terminal(review_id, payload, user)
+
+    @staticmethod
+    async def metrics(review_id, user):
+        value = await get_review(review_id, user)
+        return await review_metrics(value)
+
+    @staticmethod
+    async def create_follow_up(review_id, payload, user):
+        return await create_follow_up_review(review_id, payload, user)
+
+    @staticmethod
+    async def export(review_id, user):
+        value = await ReviewSessionService.get(review_id, user)
+        return export_review_csv(value)

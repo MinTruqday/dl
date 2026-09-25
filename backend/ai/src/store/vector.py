@@ -148,7 +148,6 @@ class VectorStore:
             raise
 
     async def scroll_all(self, batch_size: int = 256) -> List[Dict]:
-        """Read the complete corpus payload for rebuilding secondary indexes."""
         documents: List[Dict] = []
         offset = None
         while True:

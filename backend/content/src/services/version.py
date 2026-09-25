@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 
 
@@ -36,8 +35,8 @@ class VersionService:
 
     @staticmethod
     async def get_versions(document_id, current_user):
-        cursor = mongo.find(
-            "document_versions", {"document_id": document_id, "creator_id": str(current_user.id)}
+        cursor = DocumentRepository.find_versions(
+            {"document_id": document_id, "creator_id": str(current_user.id)}
         ).sort("created_at", -1)
         versions = await cursor.to_list(length=None)
         for v in versions:
@@ -47,8 +46,8 @@ class VersionService:
 
     @staticmethod
     async def restore_version(version_id: str, current_user):
-        version = await mongo.find_one(
-            "document_versions", {"_id": version_id, "creator_id": str(current_user.id)}
+        version = await DocumentRepository.find_version(
+            {"_id": version_id, "creator_id": str(current_user.id)}
         )
         if not version:
             raise HTTPException(

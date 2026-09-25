@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.schemas.storage import (
     BulkActionRequest,
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/luu-tru")
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_folder(
     data: StorageItemCreate = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     data.is_folder = True
@@ -43,7 +43,7 @@ async def create_folder(
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     data.is_folder = False
@@ -66,7 +66,7 @@ async def list_items(
     is_trashed: bool = False,
     is_starred: Optional[bool] = None,
     tag: Optional[str] = None,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await StorageService.get_items_by_parent(
@@ -82,7 +82,7 @@ async def list_items(
 async def search_items(
     q: str,
     type: Optional[str] = None,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await StorageService.search_items(q, current_user.id, type)
@@ -96,7 +96,7 @@ async def search_items(
 @router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=20, le=100),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await StorageService.get_recent_items(current_user.id, limit)
@@ -109,7 +109,7 @@ async def get_recent_items(
 
 @router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     data = await StorageService.get_storage_quota(current_user.id)
@@ -124,7 +124,7 @@ async def get_storage_quota(
 async def create_shortcut(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.create_shortcut(item_id, target_parent_id, current_user.id)
@@ -140,7 +140,7 @@ async def create_shortcut(
 @router.get("/tai-xuong-zip")
 async def download_zip(
     ids: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     import io
@@ -192,7 +192,7 @@ async def download_zip(
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     if data.is_public and data.is_public is True:
@@ -222,7 +222,7 @@ async def update_item(
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     if hard_delete:
@@ -253,7 +253,7 @@ async def delete_item(
 async def copy_item(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.copy_item(item_id, current_user.id, target_parent_id)
@@ -271,7 +271,7 @@ async def add_version(
     item_id: str,
     url: str = Body(..., embed=True),
     size: int = Body(..., embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.add_version(item_id, current_user.id, url, size)
@@ -289,7 +289,7 @@ async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),
     role: str = Body("viewer", embed=True),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await StorageService.share_item(item_id, email, role, current_user.id)
@@ -314,7 +314,7 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
 @router.post("/thao-tac-hang-loat", response_model=APIResponse[Any])
 async def bulk_action(
     req: BulkActionRequest = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     result = await StorageService.bulk_action(
@@ -329,7 +329,7 @@ async def bulk_action(
 @router.post("/tap-tin/{item_id}/khoa", response_model=APIResponse[StorageItemResponse])
 async def lock_item(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.lock_item(item_id, current_user.id)
@@ -343,7 +343,7 @@ async def lock_item(
 @router.post("/tap-tin/{item_id}/mo-khoa", response_model=APIResponse[StorageItemResponse])
 async def unlock_item(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.unlock_item(item_id, current_user.id)
@@ -357,7 +357,7 @@ async def unlock_item(
 @router.get("/tap-tin/{item_id}/xem-truoc", response_model=APIResponse[Any])
 async def get_preview_url(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.get_accessible_item(item_id, current_user.id)
@@ -390,7 +390,7 @@ async def get_preview_url(
 @router.get("/tap-tin/{item_id}/nhat-ky", response_model=APIResponse[List[ItemActivityResponse]])
 async def get_item_activities(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.get_accessible_item(item_id, current_user.id)
@@ -408,7 +408,7 @@ async def get_item_activities(
 @router.get("/tap-tin/{item_id}/phien-ban", response_model=APIResponse[List[FileVersionResponse]])
 async def get_file_versions(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     versions = await StorageService.get_versions(item_id, current_user.id)
@@ -426,7 +426,7 @@ async def get_file_versions(
 async def rollback_file_version(
     item_id: str,
     version_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.rollback_version(item_id, version_id, current_user.id)
@@ -443,7 +443,7 @@ async def rollback_file_version(
 async def toggle_starred(
     item_id: str,
     req: StarredUpdateRequest = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.set_starred(item_id, req.is_starred, current_user.id)
@@ -460,7 +460,7 @@ async def toggle_starred(
 async def update_tags_and_color(
     item_id: str,
     req: TagColorUpdateRequest = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.set_tags_and_color(item_id, req.tags, req.color, current_user.id)
@@ -475,7 +475,7 @@ async def update_tags_and_color(
 
 @router.get("/thung-rac", response_model=APIResponse[List[StorageItemResponse]])
 async def get_trashed_items(
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await StorageService.get_trashed_items(current_user.id)
@@ -489,7 +489,7 @@ async def get_trashed_items(
 @router.post("/thung-rac/{item_id}/khoi-phuc", response_model=APIResponse[StorageItemResponse])
 async def restore_trash_item(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     item = await StorageService.restore_from_trash(item_id, current_user.id)
@@ -504,7 +504,7 @@ async def restore_trash_item(
 
 @router.delete("/thung-rac/don-sach", response_model=APIResponse[Any])
 async def empty_trash(
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     result = await StorageService.empty_trash(current_user.id)
@@ -513,7 +513,7 @@ async def empty_trash(
 
 @router.get("/dung-luong/phan-tich", response_model=APIResponse[QuotaAnalyticsResponse])
 async def get_quota_analytics(
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     data = await StorageService.get_quota_analytics(current_user.id)
@@ -528,7 +528,7 @@ async def get_quota_analytics(
 async def share_internal(
     item_id: str,
     req: InternalShareRequest = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await StorageService.share_internal(item_id, req.email, req.role, current_user.id)
@@ -541,7 +541,7 @@ async def share_internal(
 async def revoke_internal_share(
     item_id: str,
     target_user_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     success = await StorageService.revoke_internal_share(item_id, target_user_id, current_user.id)
@@ -552,7 +552,7 @@ async def revoke_internal_share(
 
 @router.get("/duoc-chia-se-voi-toi", response_model=APIResponse[List[StorageItemResponse]])
 async def get_shared_with_me(
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     items = await StorageService.get_shared_with_me_items(current_user.id)

@@ -3,16 +3,17 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.repositories import storage_repository
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
+from src.services.storage_analytics import get_storage_quota
+from src.services.storage_policy import object_prefixes
 
 
 class FileService:
     @staticmethod
     async def create_file_record(item: StorageItemCreate, owner_id: str) -> StorageItemInDB:
         if item.parent_id:
-            parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+            parent = await storage_repository.find_one(
                 {
                     "_id": item.parent_id,
                     "owner_id": owner_id,
@@ -23,25 +24,24 @@ class FileService:
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục cha không hợp lệ")
 
-        allowed_prefixes = (f"users/{owner_id}/", f"client/{owner_id}/")
-        if not item.url or not item.url.startswith(allowed_prefixes):
+        if not item.url or not item.url.startswith(object_prefixes(owner_id)):
             raise HTTPException(status_code=400, detail="Đường dẫn tệp không thuộc chủ sở hữu")
 
-        existing = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+        existing = await storage_repository.find_one(
             {"owner_id": owner_id, "url": item.url}, {"_id": 1}
         )
         if existing:
             raise HTTPException(status_code=409, detail="Tệp đã được đăng ký trong kho lưu trữ")
 
         db_item = StorageItemInDB(**item.model_dump(), owner_id=owner_id)
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
+        await storage_repository.insert(
             db_item.model_dump(by_alias=True)
         )
         return db_item
 
     @staticmethod
     async def get_file_by_id(file_id: str, owner_id: str) -> StorageItemInDB:
-        doc = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+        doc = await storage_repository.find_one(
             {"_id": file_id, "owner_id": owner_id}
         )
         if not doc:
@@ -54,8 +54,8 @@ class FileService:
     ) -> StorageItemInDB:
         payload = update_data.model_dump(exclude_unset=True)
         payload["updated_at"] = datetime.now(timezone.utc)
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
-            {"_id": file_id, "owner_id": owner_id}, {"$set": payload}, return_document=True
+        res = await storage_repository.find_one_and_update(
+            {"_id": file_id, "owner_id": owner_id}, {"$set": payload}
         )
         if not res:
             raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin cần cập nhật")
@@ -63,7 +63,7 @@ class FileService:
 
     @staticmethod
     async def rename_file(file_id: str, new_name: str, owner_id: str) -> dict:
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
+        res = await storage_repository.update_one(
             {"_id": file_id, "owner_id": owner_id, "is_folder": False},
             {"$set": {"name": new_name, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -74,7 +74,7 @@ class FileService:
     @staticmethod
     async def move_file(file_id: str, new_parent_id: Optional[str], owner_id: str) -> dict:
         if new_parent_id:
-            parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+            parent = await storage_repository.find_one(
                 {
                     "_id": new_parent_id,
                     "owner_id": owner_id,
@@ -84,7 +84,7 @@ class FileService:
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục đích không tồn tại")
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
+        res = await storage_repository.update_one(
             {"_id": file_id, "owner_id": owner_id, "is_folder": False},
             {"$set": {"parent_id": new_parent_id, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -94,17 +94,9 @@ class FileService:
 
     @staticmethod
     async def get_storage_quota(owner_id: str) -> dict:
-        limit = settings.DEFAULT_STORAGE_LIMIT_BYTES
-        pipeline = [
-            {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
-            {"$group": {"_id": None, "total_size": {"$sum": "$size"}}},
-        ]
-        res = (
-            await database.mongodb[settings.CLOUD_DB_NAME]
-            .storage_items.aggregate(pipeline)
-            .to_list(length=1)
-        )
-        used = res[0]["total_size"] if res else 0
+        quota = await get_storage_quota(owner_id)
+        limit = quota["limit"]
+        used = quota["used"]
         return {
             "storage_limit": limit,
             "storage_used": used,

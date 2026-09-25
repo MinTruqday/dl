@@ -22,6 +22,10 @@ class IdentityRepository:
         return await mongo.find_one("system_configs", {"type": "registration"})
 
     @staticmethod
+    async def get_system_config_by_type(config_type: str, projection: dict | None = None):
+        return await mongo.find_one("system_configs", {"type": config_type}, projection)
+
+    @staticmethod
     async def get_auth_credential_by_id(user_id: str):
         return await mongo.find_one("auth_credentials", {"_id": user_id})
 
@@ -36,6 +40,52 @@ class IdentityRepository:
     @staticmethod
     async def get_auth_credential_by_slug(slug: str):
         return await mongo.find_one("auth_credentials", {"slug": slug.lower()})
+
+    @staticmethod
+    async def find_auth_credential(query: dict, projection: dict | None = None):
+        return await mongo.find_one("auth_credentials", query, projection)
+
+    @staticmethod
+    async def find_auth_credentials(
+        query: dict, projection: dict | None = None, limit: int = 500
+    ):
+        return await mongo.find("auth_credentials", query, projection).to_list(limit)
+
+    @staticmethod
+    async def list_auth_credentials(
+        query: dict,
+        projection: dict | None = None,
+        sort=None,
+        limit: int | None = None,
+    ):
+        cursor = mongo.find("auth_credentials", query, projection, sort=sort)
+        if limit is not None:
+            cursor = cursor.limit(limit)
+        return await cursor.to_list(length=limit)
+
+    @staticmethod
+    async def update_auth_credential(query: dict, update: dict):
+        return await mongo.update_one("auth_credentials", query, update)
+
+    @staticmethod
+    async def update_auth_credentials(query: dict, update: dict):
+        return await mongo.update_many("auth_credentials", query, update)
+
+    @staticmethod
+    async def count_auth_credentials(query: dict):
+        return await mongo.count_documents("auth_credentials", query)
+
+    @staticmethod
+    async def find_and_update_auth_credential(query: dict, update: dict):
+        return await mongo.get_db()["auth_credentials"].find_one_and_update(
+            query, update, return_document=ReturnDocument.AFTER
+        )
+
+    @staticmethod
+    async def update_system_config(config_type: str, update: dict, upsert: bool = False):
+        return await mongo.update_one(
+            "system_configs", {"type": config_type}, update, upsert=upsert
+        )
 
     @staticmethod
     async def create_auth_credential(credential: dict):
@@ -114,6 +164,75 @@ class IdentityRepository:
             {"user_id": user_id, "revoked_at": None},
             {"$set": {"revoked_at": datetime.now(timezone.utc)}},
         )
+
+    @staticmethod
+    async def revoke_every_session(timestamp: datetime):
+        return await mongo.update_many(
+            "sessions", {"revoked_at": None}, {"$set": {"revoked_at": timestamp}}
+        )
+
+    @staticmethod
+    async def clear_every_session_cache():
+        async for key in redis.get_client().scan_iter(match="user_sessions:*"):
+            await redis.delete(key)
+
+    @staticmethod
+    async def revoke_other_sessions(user_id: str, session_id: str, timestamp: datetime):
+        return await mongo.update_many(
+            "sessions",
+            {"user_id": user_id, "_id": {"$ne": session_id}, "revoked_at": None},
+            {"$set": {"revoked_at": timestamp}},
+        )
+
+    @staticmethod
+    async def list_active_sessions(user_id: str):
+        return (
+            await mongo.find(
+                "sessions",
+                {
+                    "user_id": user_id,
+                    "revoked_at": None,
+                    "expires_at": {"$gt": datetime.now(timezone.utc)},
+                },
+                {"refresh_token_hash": 0},
+            )
+            .sort("created_at", -1)
+            .to_list(500)
+        )
+
+    @staticmethod
+    async def get_session(user_id: str, session_id: str, projection: dict | None = None):
+        return await mongo.find_one(
+            "sessions", {"_id": session_id, "user_id": user_id}, projection
+        )
+
+    @staticmethod
+    async def count_sessions(query: dict):
+        return await mongo.count_documents("sessions", query)
+
+    @staticmethod
+    async def list_sessions(query: dict, projection: dict | None = None):
+        return await mongo.find("sessions", query, projection).sort(
+            "created_at", -1
+        ).to_list(length=None)
+
+    @staticmethod
+    async def retain_session_cache(user_id: str, session_id: str):
+        cache_key = f"user_sessions:{user_id}"
+        await redis.delete(cache_key)
+        return await IdentityRepository.cache_session(user_id, session_id)
+
+    @staticmethod
+    async def cache_session(user_id: str, session_id: str):
+        cache_key = f"user_sessions:{user_id}"
+        await redis.sadd(cache_key, session_id)
+        return await redis.get_client().expire(
+            cache_key, settings.refresh_token_expire_seconds
+        )
+
+    @staticmethod
+    async def has_cached_session(user_id: str, session_id: str):
+        return await redis.sismember(f"user_sessions:{user_id}", session_id)
 
     @staticmethod
     async def create_password_reset_token(document: dict):
@@ -201,7 +320,9 @@ class IdentityRepository:
     @staticmethod
     async def set_redis_passkey_challenge(email: str, challenge: bytes):
         await redis.setex(
-            f"passkey_challenge:{email.lower()}", 300, base64.b64encode(challenge).decode("ascii")
+            f"passkey_challenge:{email.lower()}",
+            settings.PASSKEY_CHALLENGE_EXPIRE_SECONDS,
+            base64.b64encode(challenge).decode("ascii"),
         )
 
     @staticmethod
@@ -223,7 +344,8 @@ class IdentityRepository:
                 "$set": {
                     "challenge": challenge,
                     "created_at": now,
-                    "expires_at": now + timedelta(minutes=5),
+                    "expires_at": now
+                    + timedelta(seconds=settings.PASSKEY_CHALLENGE_EXPIRE_SECONDS),
                 }
             },
             upsert=True,

@@ -9,7 +9,8 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
-from src.schemas.auth import CurrentUser, Role, SystemRole
+from src.schemas.auth import CurrentUser, SystemRole
+from src.clients.authentication import AuthenticationClient
 
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
@@ -39,7 +40,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         logger.warning("Missing user identifier (UID) in authentication token")
         raise credentials_exception
 
-    is_valid_session = await redis.sismember(f"user_sessions:{uid}", session_id)
+    is_valid_session = await AuthenticationClient.session_is_valid(str(uid), str(session_id))
     if not is_valid_session:
         logger.warning("Attempted to use an invalidated or revoked session token")
         raise credentials_exception
@@ -47,7 +48,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     user_doc = {
         "_id": uid,
         "email": email,
-        "role": payload.get("role", "reader"),
         "system_role": payload.get("system_role", "USER"),
         "permissions": payload.get("permissions", []),
         "session_id": session_id,
@@ -75,18 +75,15 @@ async def get_current_user_token_param(token: str) -> CurrentUser:
     return await get_current_user(token)
 
 
-def require_role(required_roles: List[Role]):
-    async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
-            return current_user
-        if current_user.role not in required_roles:
-            logger.warning("Access denied due to insufficient authorization privileges")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail={"code": "insufficient_permissions"}
-            )
-        return current_user
-
-    return role_checker
+async def require_system_admin(
+    current_user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    if current_user.system_role != SystemRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "system_admin_required"},
+        )
+    return current_user
 
 
 class RateLimiting:
@@ -113,7 +110,7 @@ def require_permissions(required_permissions: List[str]):
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         user_perms = current_user.permissions or []
-        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN:
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:

@@ -10,8 +10,6 @@ from src.core.infrastructure.configuration import settings
 
 
 class ConversionService:
-    """Convert stored documents with Docling and expose structured text to KNOWLEDGE."""
-
     def __init__(self):
         self._storage_endpoint = settings.OBJECT_STORAGE_ENDPOINT.rstrip("/")
         self._storage_private_bucket = settings.OBJECT_STORAGE_PRIVATE_BUCKET
@@ -52,7 +50,7 @@ class ConversionService:
             pdf_options = PdfPipelineOptions()
             pdf_options.do_ocr = True
             pdf_options.do_table_structure = True
-            hf_home = Path(os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface")))
+            hf_home = Path(os.environ["HF_HOME"])
             rapidocr_cache = hf_home / "rapidocr"
             rapidocr_cache.mkdir(parents=True, exist_ok=True)
             pdf_options.ocr_options = RapidOcrOptions(
@@ -66,7 +64,6 @@ class ConversionService:
 
     @staticmethod
     def _extract_structure(document) -> List[Dict]:
-        """Expose Docling elements without making any chunking decisions."""
         structure = []
         for item, level in document.iterate_items():
             label = getattr(item, "label", type(item).__name__)
@@ -107,7 +104,6 @@ class ConversionService:
         return await self.parse_bytes(file_bytes, file_ext)
 
     async def parse_bytes(self, file_bytes: bytes, file_ext: str = ".pdf") -> Dict:
-        """Convert in-memory document bytes without leaking conversion into callers."""
         normalized_ext = file_ext.lower() if file_ext.startswith(".") else f".{file_ext.lower()}"
         if not normalized_ext[1:].isalnum():
             normalized_ext = ".pdf"

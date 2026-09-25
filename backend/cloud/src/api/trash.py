@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.services.trash import TrashService
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/thung-rac")
 @router.post("/{item_id}/chuyen-vao", response_model=APIResponse[Any])
 async def move_to_trash(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await TrashService.move_to_trash(item_id, current_user.id)
@@ -22,7 +22,7 @@ async def move_to_trash(
 @router.post("/{item_id}/khoi-phuc", response_model=APIResponse[Any])
 async def restore_from_trash(
     item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await TrashService.restore_from_trash(item_id, current_user.id)
@@ -31,7 +31,7 @@ async def restore_from_trash(
 
 @router.delete("/don-sach", response_model=APIResponse[Any])
 async def empty_trash(
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await TrashService.empty_trash(current_user.id)
@@ -41,7 +41,7 @@ async def empty_trash(
 @router.delete("/tu-dong-don", response_model=APIResponse[Any])
 async def auto_purge_trash(
     days: int = 30,
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     res = await TrashService.auto_purge_expired_trash(current_user.id, days=days)

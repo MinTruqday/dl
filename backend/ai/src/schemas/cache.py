@@ -4,17 +4,17 @@ from pydantic import BaseModel, Field
 
 
 class CacheGetRequest(BaseModel):
-    query_text: str = Field(description="Nội dung câu hỏi")
+    query_text: str = Field(description="Question text")
     query_vector: Optional[List[float]] = Field(
-        default=None, description="Vector truy vấn tương ứng nếu có"
+        default=None, description="Corresponding query vector when available"
     )
 
 
 class CacheSetRequest(BaseModel):
-    query_text: str = Field(description="Nội dung câu hỏi")
-    response_text: str = Field(description="Nội dung câu trả lời")
+    query_text: str = Field(description="Question text")
+    response_text: str = Field(description="Answer text")
     query_vector: Optional[List[float]] = Field(
-        default=None, description="Vector biểu diễn ngữ nghĩa câu hỏi"
+        default=None, description="Semantic vector for the question"
     )
 
 

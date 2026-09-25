@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.schemas.storage import StorageItemCreate
 from src.services.chunk import ChunkService
@@ -19,7 +19,7 @@ async def upload_chunk(
     chunk_index: int = Form(...),
     total_chunks: int = Form(...),
     filename: str = Form(...),
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ) -> Any:
     content_type = file.content_type or "application/octet-stream"

@@ -25,18 +25,18 @@ class WebhookPayload(EventRequest):
         "user_registered",
     ] = Field(
         default="webhook",
-        description="Loại sự kiện nhận vào",
+        description="Incoming event type",
     )
     source: str = Field(
         default="external",
         min_length=1,
         max_length=100,
         pattern=r"^[a-zA-Z0-9_.:-]+$",
-        description="Nguồn phát sự kiện",
+        description="Event source",
     )
     payload: Dict[str, Any] = Field(
         default_factory=dict,
-        description="Dữ liệu của sự kiện",
+        description="Event payload",
     )
 
 
@@ -44,50 +44,50 @@ class CreateScheduleRequest(EventRequest):
     name: str = Field(
         min_length=1,
         max_length=100,
-        description="Tên lịch chạy",
+        description="Schedule name",
     )
     interval_seconds: int = Field(
         ge=60,
         le=2592000,
-        description="Khoảng cách giữa các lần chạy theo giây",
+        description="Interval between runs in seconds",
     )
     event_type: Literal["system_heartbeat", "document_uploaded", "user_query", "webhook"] = Field(
         default="system_heartbeat",
-        description="Loại sự kiện định kỳ",
+        description="Scheduled event type",
     )
     payload_template: Dict[str, Any] = Field(
-        default_factory=dict, description="Mẫu dữ liệu sự kiện"
+        default_factory=dict, description="Event payload template"
     )
     enabled: bool = Field(
         default=True,
-        description="Trạng thái hoạt động của lịch",
+        description="Whether the schedule is enabled",
     )
 
 
 class ManualTriggerRequest(EventRequest):
     payload: Dict[str, Any] = Field(
         default_factory=dict,
-        description="Dữ liệu giới hạn chuyển cho bộ xử lý sự kiện",
+        description="Bounded payload passed to the event handler",
     )
 
 
 class ScheduleResponse(EventRequest):
     schedule_id: str = Field(
-        description="Mã lịch chạy"
+        description="Schedule identifier"
     )
-    name: str = Field(description="Tên lịch chạy")
+    name: str = Field(description="Schedule name")
     interval_seconds: int = Field(
-        description="Khoảng cách giữa các lần chạy theo giây"
+        description="Interval between runs in seconds"
     )
     event_type: str = Field(
-        description="Loại sự kiện định kỳ"
+        description="Scheduled event type"
     )
     enabled: bool = Field(
-        description="Trạng thái hoạt động của lịch"
+        description="Whether the schedule is enabled"
     )
     run_count: int = Field(
-        description="Tổng số lần lịch đã chạy"
+        description="Total schedule run count"
     )
     last_run_at: Optional[str] = Field(
-        default=None, description="Thời điểm chạy gần nhất"
+        default=None, description="Most recent run time"
     )

@@ -35,7 +35,7 @@ class KnowledgeService:
     async def retrieve(
         query: str,
         document_ids: Optional[List[str]] = None,
-        k: int = 5,
+        k: Optional[int] = None,
         query_vector_override: Optional[List[float]] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
@@ -55,7 +55,7 @@ class KnowledgeService:
     async def multi_query_retrieve(
         question: str,
         document_ids: Optional[List[str]] = None,
-        k: int = 5,
+        k: Optional[int] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:
@@ -73,7 +73,7 @@ class KnowledgeService:
     async def cross_document_retrieve(
         question: str,
         document_ids: List[str],
-        k: int = 5,
+        k: Optional[int] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:

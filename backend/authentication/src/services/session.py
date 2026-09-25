@@ -15,7 +15,7 @@ from src.services.email import EmailService
 class SessionService:
     @staticmethod
     def refresh_cookie_seconds():
-        return settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
+        return settings.refresh_token_expire_seconds
 
     @staticmethod
     def access_token_for_user(user_doc: dict, session_id: str):
@@ -23,10 +23,7 @@ class SessionService:
             data={
                 "sub": user_doc["email"],
                 "sid": session_id,
-                "role": user_doc.get("role", "reader"),
-                "system_role": user_doc.get(
-                    "system_role", "ADMIN" if user_doc.get("role") == "admin" else "USER"
-                ),
+                "system_role": user_doc.get("system_role", "USER"),
                 "uid": str(user_doc["_id"]),
                 "permissions": user_doc.get("permissions", []),
                 "full_name": user_doc.get("full_name", ""),
@@ -58,7 +55,6 @@ class SessionService:
             "email": user_in.email.lower(),
             "slug": user_in.slug.lower(),
             "full_name": user_in.full_name,
-            "role": "reader",
             "system_role": "USER",
             "permissions": [],
             "is_active": True,
@@ -84,7 +80,6 @@ class SessionService:
             "email": user_in.email.lower(),
             "full_name": user_in.full_name,
             "slug": user_in.slug.lower(),
-            "role": "reader",
             "system_role": "USER",
             "id": user_id,
             "created_at": created_at,
@@ -101,7 +96,8 @@ class SessionService:
                 "email": email,
                 "token": token,
                 "used": False,
-                "expires_at": timestamp + timedelta(minutes=30),
+                "expires_at": timestamp
+                + timedelta(minutes=settings.EMAIL_VERIFICATION_EXPIRE_MINUTES),
                 "created_at": timestamp,
                 "requested_ip": client_ip,
             }
@@ -199,12 +195,7 @@ class SessionService:
 
         session_id = str(uuid.uuid4())
         refresh_token = secrets.token_urlsafe(48)
-        from src.core.infrastructure.redis import redis
-
-        await redis.sadd(f"user_sessions:{user_id_str}", session_id)
-        await redis.get_client().expire(
-            f"user_sessions:{user_id_str}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
-        )
+        await IdentityRepository.cache_session(user_id_str, session_id)
         await IdentityRepository.register_session(user_id_str, session_id, client_ip, refresh_token)
         access_token = SessionService.access_token_for_user(auth_cred, session_id)
         await IdentityRepository.insert_audit_log(
@@ -245,13 +236,16 @@ class SessionService:
         except Exception:
             user = None
         if user:
-            otp_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
+            otp_code = "".join(
+                str(secrets.randbelow(10)) for _ in range(settings.PASSWORD_RESET_CODE_DIGITS)
+            )
             await IdentityRepository.create_password_reset_token(
                 {
                     "_id": secrets.token_hex(8),
                     "email": email,
                     "token": otp_code,
-                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=1),
+                    "expires_at": datetime.now(timezone.utc)
+                    + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES),
                     "used": False,
                     "created_at": datetime.now(timezone.utc),
                 }
@@ -321,12 +315,7 @@ class SessionService:
         refresh_token = secrets.token_urlsafe(48)
         user_id_str = str(user_doc["_id"])
         await IdentityRepository.register_session(user_id_str, session_id, client_ip, refresh_token)
-        from src.core.infrastructure.redis import redis
-
-        await redis.sadd(f"user_sessions:{user_id_str}", session_id)
-        await redis.get_client().expire(
-            f"user_sessions:{user_id_str}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
-        )
+        await IdentityRepository.cache_session(user_id_str, session_id)
         access_token = SessionService.access_token_for_user(user_doc, session_id)
         auth_cred = await IdentityRepository.get_auth_credential_by_id(str(user_doc["_id"]))
         has_passkey = len(auth_cred.get("passkeys", [])) > 0 if auth_cred else False
@@ -351,11 +340,8 @@ class SessionService:
         if not user_doc or not user_doc.get("is_active", True):
             await IdentityRepository.revoke_session(str(session["user_id"]), str(session["_id"]))
             raise HTTPException(status_code=401, detail="Tài khoản không còn khả dụng")
-        from src.core.infrastructure.redis import redis
-
-        await redis.sadd(f"user_sessions:{session['user_id']}", str(session["_id"]))
-        await redis.get_client().expire(
-            f"user_sessions:{session['user_id']}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
+        await IdentityRepository.cache_session(
+            str(session["user_id"]), str(session["_id"])
         )
         access_token = SessionService.access_token_for_user(user_doc, str(session["_id"]))
         await IdentityRepository.insert_audit_log(

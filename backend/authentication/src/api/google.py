@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request, Response
 
-from src.api.cookies import set_refresh_cookie
+from src.services.auth_cookie import set_refresh_cookie
 from src.core.response import APIResponse
 from src.services.google import GoogleService
 

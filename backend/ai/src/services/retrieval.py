@@ -6,6 +6,7 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.services.embedding import embedder
 from src.services.inference import decompose_retrieval, expand_retrieval
+from src.core.policies import document_policy
 from src.store.bm25 import bm25_store
 from src.store.vector import vector_store
 from src.utils.model_provider import auxiliary_client
@@ -131,8 +132,13 @@ class RetrievalService:
         )
 
     def _rrf_fuse(
-        self, dense_documents: List[Dict], sparse_documents: List[Dict], rank_constant: int = 60
+        self,
+        dense_documents: List[Dict],
+        sparse_documents: List[Dict],
+        rank_constant: Optional[int] = None,
     ) -> List[Dict]:
+        if rank_constant is None:
+            rank_constant = document_policy()["retrieval"]["reciprocal_rank_constant"]
         fused: Dict[str, Dict] = {}
         for source, documents in (("dense", dense_documents), ("bm25", sparse_documents)):
             for rank, document in enumerate(documents, start=1):
@@ -158,13 +164,18 @@ class RetrievalService:
         self,
         query: str,
         document_ids: Optional[List[str]] = None,
-        k: int = 5,
+        k: Optional[int] = None,
         query_vector_override: Optional[List[float]] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
-        fetch_limit = min(max(k * 3, k), 100)
+        policy = document_policy()["retrieval"]
+        result_count = policy["default_result_count"] if k is None else k
+        fetch_limit = min(
+            max(result_count * policy["candidate_multiplier"], result_count),
+            policy["maximum_candidate_count"],
+        )
 
         async def dense_search():
             query_vector = query_vector_override
@@ -180,7 +191,9 @@ class RetrievalService:
             )
 
         dense_result, sparse_result = await asyncio.gather(
-            asyncio.wait_for(dense_search(), timeout=1.0),
+            asyncio.wait_for(
+                dense_search(), timeout=policy["dense_search_timeout_seconds"]
+            ),
             bm25_store.search(
                 query=query,
                 document_ids=document_ids,
@@ -208,26 +221,31 @@ class RetrievalService:
             return []
 
         if not self._reranker_ready:
-            return documents[:k]
+            return documents[:result_count]
 
         try:
             pairs = [[query, doc.get("text", "")] for doc in documents]
-            scores = await asyncio.wait_for(auxiliary_client.rerank(pairs), timeout=30.0)
+            scores = await asyncio.wait_for(
+                auxiliary_client.rerank(pairs),
+                timeout=policy["reranking_timeout_seconds"],
+            )
             scored_documents = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
-            return [doc for doc, _ in scored_documents[:k]]
+            return [doc for doc, _ in scored_documents[:result_count]]
         except Exception:
             logger.exception("Search result sorting error")
-            return documents[:k]
+            return documents[:result_count]
 
     async def multi_query_retrieve(
         self,
         question: str,
         document_ids: Optional[List[str]] = None,
-        k: int = 5,
+        k: Optional[int] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
+        policy = document_policy()["retrieval"]
+        result_count = policy["default_result_count"] if k is None else k
         try:
             expansion = await expand_retrieval(question)
         except Exception:
@@ -240,7 +258,7 @@ class RetrievalService:
                 self.retrieve(
                     query,
                     document_ids,
-                    k=3,
+                    k=policy["expanded_query_result_count"],
                     requester_id=requester_id,
                     is_admin=is_admin,
                     metadata_filters=metadata_filters,
@@ -260,7 +278,7 @@ class RetrievalService:
             hypothetical_documents = await vector_store.query(
                 query_vector=hypothetical_vector,
                 document_ids=document_ids,
-                limit=3,
+                limit=policy["hypothetical_document_result_count"],
                 requester_id=requester_id,
                 is_admin=is_admin,
                 metadata_filters=metadata_filters,
@@ -279,20 +297,28 @@ class RetrievalService:
                 seen_texts.add(text)
                 unique_documents.append(document)
 
-        return unique_documents[:k]
+        return unique_documents[:result_count]
 
     async def cross_document_retrieve(
         self,
         question: str,
         document_ids: List[str],
-        k: int = 5,
+        k: Optional[int] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
+        result_count = (
+            document_policy()["retrieval"]["default_result_count"] if k is None else k
+        )
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(
-                question, document_ids, k, requester_id, is_admin, metadata_filters
+                question,
+                document_ids,
+                result_count,
+                requester_id,
+                is_admin,
+                metadata_filters,
             )
 
         sub_queries = [question] * len(document_ids)
@@ -307,7 +333,7 @@ class RetrievalService:
             self.retrieve(
                 sub_queries[index],
                 [doc_id],
-                k=k,
+                k=result_count,
                 requester_id=requester_id,
                 is_admin=is_admin,
                 metadata_filters=metadata_filters,
@@ -331,7 +357,7 @@ class RetrievalService:
                 seen.add(t)
                 unique.append(d)
 
-        return self._lost_in_the_middle_reorder(unique)[:k]
+        return self._lost_in_the_middle_reorder(unique)[:result_count]
 
     def _lost_in_the_middle_reorder(self, documents: List[Dict]) -> List[Dict]:
         if len(documents) <= 2:

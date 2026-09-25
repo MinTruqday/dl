@@ -87,8 +87,8 @@ class QueryBuilder:
         self._skip = s
         return self
 
-    def limit(self, l: int):
-        self._limit = l
+    def limit(self, limit_value: int):
+        self._limit = limit_value
         return self
 
     async def execute(self):

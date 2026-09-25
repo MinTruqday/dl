@@ -41,8 +41,12 @@ class TestStrategyRepository:
             return_document=ReturnDocument.AFTER,
         )
 
-    async def active_approved(self, project_id, exclude_id=None):
-        query = {"project_id": project_id, "status": "APPROVED", "active_approved": True}
+    async def active_approved(self, project_id, approved_status, exclude_id=None):
+        query = {
+            "project_id": project_id,
+            "status": approved_status,
+            "active_approved": True,
+        }
         if exclude_id:
             query["_id"] = {"$ne": exclude_id}
         return await self.collection.find_one(query)

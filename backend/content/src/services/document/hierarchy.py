@@ -1,13 +1,12 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-import httpx
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.mongo import mongo
+from src.clients.authentication import AuthenticationClient
 from src.repositories.document import DocumentRepository
+from src.repositories.folder import FolderRepository
 
 
 class DocumentHierarchyService:
@@ -16,7 +15,7 @@ class DocumentHierarchyService:
         query = {"creator_id": str(current_user.id)}
         if parent_id:
             query["parent_id"] = parent_id
-        cursor = mongo.query("workspace_folders").filter(query).sort("created_at", 1)
+        cursor = FolderRepository.query().filter(query).sort("created_at", 1)
         folders = await cursor
         for f in folders:
             f["_id"] = str(f["_id"])
@@ -31,20 +30,20 @@ class DocumentHierarchyService:
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        res = await mongo.insert_one(collection="workspace_folders", document=folder_doc)
+        res = await FolderRepository.insert_one(folder_doc)
         folder_doc["_id"] = str(res.inserted_id)
         return folder_doc
 
     @staticmethod
     async def delete_folder(folder_id: str, current_user) -> dict:
-        folder = await mongo.find_one(
-            "workspace_folders", {"_id": folder_id, "creator_id": str(current_user.id)}
+        folder = await FolderRepository.find_one(
+            {"_id": folder_id, "creator_id": str(current_user.id)}
         )
         if not folder:
             raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-        await mongo.delete_one("workspace_folders", {"_id": folder_id})
-        await mongo.update_many(
-            "documents", {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
+        await FolderRepository.delete_one({"_id": folder_id})
+        await DocumentRepository.update_many(
+            {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
         )
         return {"deleted": True}
 
@@ -59,8 +58,8 @@ class DocumentHierarchyService:
                 status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền di chuyển"
             )
         if folder_id:
-            folder = await mongo.find_one(
-                "workspace_folders", {"_id": folder_id, "creator_id": user_id}
+            folder = await FolderRepository.find_one(
+                {"_id": folder_id, "creator_id": user_id}
             )
             if not folder:
                 raise HTTPException(status_code=404, detail="Thư mục đích không tồn tại")
@@ -77,22 +76,15 @@ class DocumentHierarchyService:
 
     @staticmethod
     async def transfer_document(document_id: str, new_owner_id: str, current_user) -> dict:
-        doc = await mongo.find_one(
-            "documents", {"_id": document_id, "creator_id": str(current_user.id)}
+        doc = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu hoặc không có quyền truy cập"
             )
-        target = None
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(
-                    f"{settings.AUTHENTICATION_URL}/xac-thuc/noi-bo/tai-khoan/{new_owner_id}",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                if resp.status_code == 200:
-                    target = resp.json().get("data")
+            target = await AuthenticationClient.get_account(new_owner_id)
         except Exception:
             logger.exception("Failed to verify ownership transfer target")
             raise HTTPException(
@@ -100,8 +92,7 @@ class DocumentHierarchyService:
             )
         if not target:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng")
-        await mongo.update_one(
-            "documents",
+        await DocumentRepository.update_one(
             {"_id": document_id},
             {"$set": {"creator_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}},
         )

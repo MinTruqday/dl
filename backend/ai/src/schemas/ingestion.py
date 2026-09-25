@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class IngestRequest(BaseModel):
     document_id: str = Field(
-        description="Mã tài liệu cần lập chỉ mục"
+        description="Document identifier to index"
     )
     requester_id: Optional[str] = None
     is_admin: bool = False

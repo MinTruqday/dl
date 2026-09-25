@@ -8,6 +8,21 @@ from src.core.infrastructure.configuration import settings
 
 class AccountClient:
     @staticmethod
+    async def session_is_valid(user_id: str, session_id: str) -> bool:
+        try:
+            async with httpx.AsyncClient(
+                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            ) as client:
+                response = await client.get(
+                    f"{settings.AUTHENTICATION_URL}/xac-thuc/noi-bo/phien/{quote(session_id, safe='')}/nguoi-dung/{quote(user_id, safe='')}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
+                )
+            response.raise_for_status()
+            return bool(response.json().get("data", {}).get("valid"))
+        except (httpx.HTTPError, ValueError):
+            return False
+
+    @staticmethod
     async def get_by_id(user_id: str) -> Optional[dict]:
         return await AccountClient._get(f"/xac-thuc/noi-bo/tai-khoan/{quote(user_id, safe='')}")
 
@@ -20,7 +35,9 @@ class AccountClient:
     @staticmethod
     async def _get(path: str) -> Optional[dict]:
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            ) as client:
                 response = await client.get(
                     f"{settings.AUTHENTICATION_URL}{path}",
                     headers={"X-Internal-Token": settings.SECRET_KEY},

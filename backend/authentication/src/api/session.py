@@ -1,18 +1,10 @@
-from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pymongo import ReturnDocument
 
-from src.api.cookies import set_refresh_cookie
 from src.core.dependency import CurrentUser, RateLimiting, get_current_user
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.infrastructure.redis import redis
 from src.core.response import APIResponse
-from src.core.security.access import get_password_hash, verify_password
-from src.repositories.identity import IdentityRepository
 from src.schemas.identity import (
     AccountDeactivate,
     EmailChange,
@@ -27,6 +19,8 @@ from src.schemas.identity import (
     UserResponse,
     VerifyCodeRequest,
 )
+from src.services.account import AccountService
+from src.services.auth_cookie import set_refresh_cookie
 from src.services.session import SessionService
 
 router = APIRouter(prefix="/xac-thuc", tags=["Xác thực và phiên đăng nhập"])
@@ -34,32 +28,10 @@ router = APIRouter(prefix="/xac-thuc", tags=["Xác thực và phiên đăng nh�
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
-    user_doc = await IdentityRepository.get_auth_credential_by_id(str(current_user.id))
-    if not user_doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
-
-    user_data = dict(user_doc)
-    user_data["_id"] = str(user_doc["_id"])
-    user_data.pop("password_hash", None)
-    passkeys = user_doc.get("passkeys", [])
-    user_data.pop("passkeys", None)
-    user_data.update(
-        {
-            "email": user_doc.get("email", current_user.email),
-            "full_name": user_doc.get("full_name") or current_user.full_name or "Người dùng Veriq",
-            "slug": user_doc.get("slug")
-            or str(user_doc.get("email", current_user.email)).split("@", 1)[0],
-            "role": user_doc.get("role", "reader"),
-            "system_role": user_doc.get(
-                "system_role", "ADMIN" if user_doc.get("role") == "admin" else "USER"
-            ),
-            "permissions": user_doc.get("permissions") or [],
-            "created_at": user_doc.get("created_at") or datetime.now(timezone.utc),
-            "has_passkey": len(passkeys) > 0,
-        }
-    )
     return APIResponse(
-        data=user_data, message="Trích xuất thông tin cá nhân hoàn tất", status=status.HTTP_200_OK
+        data=await AccountService.profile(current_user),
+        message="Trích xuất thông tin cá nhân hoàn tất",
+        status=status.HTTP_200_OK,
     )
 
 
@@ -67,71 +39,18 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
 async def update_users_me(
     payload: ProfileUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    changes = {key: value for key, value in payload.model_dump().items() if value is not None}
-    if not changes:
-        raise HTTPException(status_code=422, detail="Không có dữ liệu cần cập nhật")
-    changes["updated_at"] = datetime.now(timezone.utc)
-    account = await database.mongodb[
-        settings.AUTHENTICATION_DB_NAME
-    ].auth_credentials.find_one_and_update(
-        {"_id": current_user.id}, {"$set": changes}, return_document=ReturnDocument.AFTER
+    return APIResponse(
+        data=await AccountService.update_profile(current_user, payload.model_dump()),
+        message="Cập nhật hồ sơ cá nhân hoàn tất",
     )
-    if not account:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_PROFILE_UPDATED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "changes": sorted(changes),
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
-    account["_id"] = str(account["_id"])
-    account.pop("password_hash", None)
-    account.pop("passkeys", None)
-    return APIResponse(data=account, message="Cập nhật hồ sơ cá nhân hoàn tất")
 
 
 @router.post("/doi-thu-dien-tu", response_model=APIResponse[Any])
 async def change_email(payload: EmailChange, current_user: CurrentUser = Depends(get_current_user)):
-    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
-    if not account or not verify_password(
-        payload.current_password, account.get("password_hash", "")
-    ):
-        raise HTTPException(status_code=403, detail="Mật khẩu hiện tại không chính xác")
-    new_email = str(payload.new_email).lower()
-    if new_email == current_user.email.lower():
-        raise HTTPException(status_code=422, detail="Email mới phải khác email hiện tại")
-    duplicate = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
-        {"email": new_email}
-    )
-    if duplicate:
-        raise HTTPException(status_code=409, detail="Email mới đã được sử dụng")
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id},
-        {
-            "$set": {
-                "email": new_email,
-                "is_verified": False,
-                "email_verified": False,
-                "updated_at": datetime.now(timezone.utc),
-            }
-        },
-    )
-    await SessionService.issue_email_verification(current_user.id, new_email, "authenticated")
-    await IdentityRepository.revoke_all_sessions(current_user.id)
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_EMAIL_CHANGED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "new_email": new_email,
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
     return APIResponse(
-        data={"email": new_email, "reauth_required": True},
+        data=await AccountService.change_email(
+            current_user, payload.current_password, str(payload.new_email)
+        ),
         message="Đổi email hoàn tất, vui lòng đăng nhập lại",
     )
 
@@ -144,16 +63,9 @@ async def change_email(payload: EmailChange, current_user: CurrentUser = Depends
 async def resend_email_verification(
     request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
-    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
-    if account.get("is_verified") or account.get("email_verified"):
-        return APIResponse(data={"verified": True}, message="Địa chỉ thư điện tử đã được xác minh")
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await SessionService.issue_email_verification(
-            current_user.id, account["email"], client_ip
-        ),
+        data=await AccountService.resend_verification(current_user, client_ip),
         message="Khởi tạo lại yêu cầu xác minh thư điện tử hoàn tất",
     )
 
@@ -173,9 +85,8 @@ async def verify_email(payload: EmailVerificationInput, request: Request):
 
 @router.get("/cai-dat", response_model=APIResponse[Any])
 async def read_settings(current_user: CurrentUser = Depends(get_current_user)):
-    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
     return APIResponse(
-        data=account.get("preferences", {}) if account else {},
+        data=await AccountService.preferences(current_user.id),
         message="Tải cài đặt cá nhân hoàn tất",
     )
 
@@ -184,159 +95,57 @@ async def read_settings(current_user: CurrentUser = Depends(get_current_user)):
 async def update_settings(
     payload: SettingsUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    values = {key: value for key, value in payload.model_dump().items() if value is not None}
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id},
-        {"$set": {f"preferences.{key}": value for key, value in values.items()}},
+    return APIResponse(
+        data=await AccountService.update_preferences(current_user, payload.model_dump()),
+        message="Cập nhật cài đặt cá nhân hoàn tất",
     )
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_PREFERENCES_UPDATED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "changes": sorted(values),
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
-    return APIResponse(data=values, message="Cập nhật cài đặt cá nhân hoàn tất")
 
 
 @router.patch("/thong-bao", response_model=APIResponse[Any])
 async def update_notifications(
     payload: NotificationSettingsUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    values = payload.model_dump()
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id},
-        {"$set": {f"notification_settings.{key}": value for key, value in values.items()}},
+    return APIResponse(
+        data=await AccountService.update_notifications(current_user, payload.model_dump()),
+        message="Cập nhật thông báo cá nhân hoàn tất",
     )
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_NOTIFICATIONS_UPDATED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "changes": sorted(values),
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
-    return APIResponse(data=values, message="Cập nhật thông báo cá nhân hoàn tất")
 
 
 @router.post("/vo-hieu-hoa", response_model=APIResponse[Any])
 async def deactivate_account(
     payload: AccountDeactivate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
-    if not account or not verify_password(
-        payload.current_password, account.get("password_hash", "")
-    ):
-        raise HTTPException(status_code=403, detail="Mật khẩu hiện tại không chính xác")
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id},
-        {
-            "$set": {
-                "is_active": False,
-                "account_status": "DISABLED",
-                "updated_at": datetime.now(timezone.utc),
-            }
-        },
+    return APIResponse(
+        data=await AccountService.deactivate(current_user, payload.current_password),
+        message="Vô hiệu hóa tài khoản hoàn tất",
     )
-    await IdentityRepository.revoke_all_sessions(current_user.id)
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_DEACTIVATED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
-    return APIResponse(data={"deactivated": True}, message="Vô hiệu hóa tài khoản hoàn tất")
 
 
 @router.post("/doi-mat-khau", response_model=APIResponse[Any])
 async def change_password(
     payload: PasswordChange, current_user: CurrentUser = Depends(get_current_user)
 ):
-    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
-    if not account or not verify_password(
-        payload.current_password, account.get("password_hash", "")
-    ):
-        raise HTTPException(status_code=403, detail="Mật khẩu hiện tại không chính xác")
-    if verify_password(payload.new_password, account.get("password_hash", "")):
-        raise HTTPException(status_code=422, detail="Mật khẩu mới phải khác mật khẩu hiện tại")
-    timestamp = datetime.now(timezone.utc)
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id},
-        {
-            "$set": {
-                "password_hash": get_password_hash(payload.new_password),
-                "last_password_change": timestamp,
-                "updated_at": timestamp,
-            }
-        },
-    )
-    await database.mongodb[settings.AUTHENTICATION_DB_NAME].sessions.update_many(
-        {"user_id": current_user.id, "_id": {"$ne": current_user.session_id}, "revoked_at": None},
-        {"$set": {"revoked_at": timestamp}},
-    )
-    await redis.delete(f"user_sessions:{current_user.id}")
-    await redis.sadd(f"user_sessions:{current_user.id}", current_user.session_id)
-    await redis.get_client().expire(
-        f"user_sessions:{current_user.id}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
-    )
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_PASSWORD_CHANGED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "timestamp": timestamp,
-        }
-    )
     return APIResponse(
-        data={"other_sessions_revoked": True},
+        data=await AccountService.change_password(
+            current_user, payload.current_password, payload.new_password
+        ),
         message="Đổi mật khẩu và thu hồi các phiên khác hoàn tất",
     )
 
 
 @router.get("/phien", response_model=APIResponse[Any])
 async def list_my_sessions(current_user: CurrentUser = Depends(get_current_user)):
-    sessions = (
-        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
-        .sessions.find(
-            {
-                "user_id": current_user.id,
-                "revoked_at": None,
-                "expires_at": {"$gt": datetime.now(timezone.utc)},
-            },
-            {"refresh_token_hash": 0},
-        )
-        .sort("created_at", -1)
-        .to_list(500)
+    return APIResponse(
+        data=await AccountService.sessions(current_user),
+        message="Tải danh sách phiên đăng nhập hoàn tất",
     )
-    for session in sessions:
-        session["is_current"] = session.get("_id") == current_user.session_id
-    return APIResponse(data=sessions, message="Tải danh sách phiên đăng nhập hoàn tất")
 
 
 @router.delete("/phien/{session_id}", response_model=APIResponse[Any])
 async def revoke_my_session(session_id: str, current_user: CurrentUser = Depends(get_current_user)):
-    session = await database.mongodb[settings.AUTHENTICATION_DB_NAME].sessions.find_one(
-        {"_id": session_id, "user_id": current_user.id}
-    )
-    if not session:
-        raise HTTPException(status_code=404, detail="Không tìm thấy phiên đăng nhập")
-    await IdentityRepository.revoke_session(current_user.id, session_id)
-    await IdentityRepository.insert_audit_log(
-        {
-            "action": "ACCOUNT_SESSION_REVOKED",
-            "actor_email": current_user.email,
-            "target_user_id": current_user.id,
-            "session_id": session_id,
-            "timestamp": datetime.now(timezone.utc),
-        }
-    )
     return APIResponse(
-        data={"revoked": True, "session_id": session_id}, message="Thu hồi phiên đăng nhập hoàn tất"
+        data=await AccountService.revoke_session(current_user, session_id),
+        message="Thu hồi phiên đăng nhập hoàn tất",
     )
 
 

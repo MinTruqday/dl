@@ -2,14 +2,13 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.repositories import storage_repository
 
 
 class TrashService:
     @staticmethod
     async def move_to_trash(item_id: str, owner_id: str) -> dict:
-        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
+        result = await storage_repository.update_one(
             {"_id": item_id, "owner_id": owner_id},
             {"$set": {"is_trashed": True, "trashed_at": datetime.now(timezone.utc)}},
         )
@@ -21,7 +20,7 @@ class TrashService:
 
     @staticmethod
     async def restore_from_trash(item_id: str, owner_id: str) -> dict:
-        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
+        result = await storage_repository.update_one(
             {"_id": item_id, "owner_id": owner_id, "is_trashed": True},
             {"$set": {"is_trashed": False, "trashed_at": None}},
         )
@@ -31,7 +30,7 @@ class TrashService:
 
     @staticmethod
     async def empty_trash(owner_id: str) -> dict:
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
+        res = await storage_repository.delete_many(
             {"owner_id": owner_id, "is_trashed": True}
         )
         return {
@@ -51,7 +50,7 @@ class TrashService:
                 {"trashed_at": None, "updated_at": {"$lte": cutoff}},
             ],
         }
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(query)
+        res = await storage_repository.delete_many(query)
         return {
             "status": "success",
             "purged_count": res.deleted_count,

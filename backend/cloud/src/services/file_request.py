@@ -4,8 +4,7 @@ from typing import Optional
 
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.repositories import file_request_repository
 from src.schemas.storage import FileRequestCreate, FileRequestResponse
 
 
@@ -28,7 +27,7 @@ class FileRequestService:
                 "created_at": datetime.now(timezone.utc),
             }
 
-            await database.mongodb[settings.CLOUD_DB_NAME].file_requests.insert_one(doc)
+            await file_request_repository.insert(doc)
 
             return FileRequestResponse(
                 token=token,
@@ -45,9 +44,7 @@ class FileRequestService:
     @staticmethod
     async def validate_request(token: str, password: Optional[str] = None) -> Optional[dict]:
         try:
-            doc = await database.mongodb[settings.CLOUD_DB_NAME].file_requests.find_one(
-                {"token": token}
-            )
+            doc = await file_request_repository.find(token)
             if not doc:
                 return None
 

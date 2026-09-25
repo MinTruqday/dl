@@ -5,10 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bell, Menu, Search, X } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
+import { testingApi } from "@/features/testing/services/testing.service";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
-import { API_URL, authenticatedFetch } from "@/shared/services/api-client";
 import { availableNavigation, navigationGroupsFor, projectIdFromPath } from "./navigation";
-const fullWidthRoutes = [];
+
 function NavigationList({ onNavigate, projectPermissions }) {
   const pathname = usePathname();
   const { user } = useAuth();
@@ -91,12 +91,9 @@ export default function AppShell({ children, requireAuth }) {
       return;
     }
     let active = true;
-    authenticatedFetch(`${API_URL}/kiem-thu/du-an/${projectId}`)
-      .then(async (response) => {
-        if (!response.ok) return [];
-        const body = await response.json();
-        return body?.data?.current_permissions || [];
-      })
+    testingApi
+      .getProject(projectId)
+      .then((project) => project?.current_permissions || [])
       .catch(() => [])
       .then((permissions) => {
         if (active) setProjectPermissions(permissions);
@@ -183,9 +180,6 @@ export default function AppShell({ children, requireAuth }) {
       </div>
     );
   }
-  const fullWidth =
-    pathname.startsWith("/soan-thao/chinh-sua") ||
-    fullWidthRoutes.some((route) => pathname.startsWith(route));
   const initials = String(user?.full_name || user?.username || "D")
     .trim()
     .charAt(0)
@@ -444,11 +438,7 @@ export default function AppShell({ children, requireAuth }) {
         id="main-content"
         className="min-h-[100dvh] min-w-0 overflow-x-hidden pt-[68px] lg:pl-[260px]"
       >
-        <div
-          className={fullWidth ? "flex min-h-[calc(100dvh-68px)] w-full flex-col" : "page-shell"}
-        >
-          {children}
-        </div>
+        <div className="page-shell">{children}</div>
       </main>
     </div>
   );

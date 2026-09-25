@@ -114,10 +114,7 @@ async def submit_test_completion_review(
         report_id,
         payload,
         user,
-        "DRAFT",
-        "IN_REVIEW",
-        "testcompletion.submit_review",
-        "test_completion_submitted",
+        "submit_review",
     )
     return envelope(value, revision=value["revision"])
 
@@ -130,10 +127,7 @@ async def request_test_completion_changes(
         report_id,
         payload,
         user,
-        "IN_REVIEW",
-        "DRAFT",
-        "testcompletion.review",
-        "test_completion_changes_requested",
+        "request_changes",
     )
     return envelope(value, revision=value["revision"])
 
@@ -165,10 +159,7 @@ async def approve_test_completion_report(
         report_id,
         payload,
         user,
-        "IN_REVIEW",
-        "APPROVED",
-        "testcompletion.approve",
-        "completion_report_approved",
+        "approve",
     )
     return envelope(value, revision=value["revision"])
 
@@ -181,10 +172,7 @@ async def close_test_completion_report(
         report_id,
         payload,
         user,
-        "APPROVED",
-        "CLOSED",
-        "testcompletion.close",
-        "completion_report_closed",
+        "close",
     )
     return envelope(value, revision=value["revision"])
 

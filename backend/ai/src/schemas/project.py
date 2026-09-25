@@ -2,26 +2,42 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-KNOWLEDGE_AUTHORITIES = {
-    "APPROVED_SOURCE",
-    "CONTROLLED_SOURCE",
-    "PROJECT_REFERENCE",
-    "SUPPLEMENTAL",
-    "DRAFT",
-    "UNVERIFIED",
-}
+from src.core.policies import document_policy
+
+PROJECT_KNOWLEDGE_POLICY = document_policy()["project_knowledge"]
+RETRIEVAL_POLICY = document_policy()["retrieval"]
+KNOWLEDGE_AUTHORITIES = frozenset(PROJECT_KNOWLEDGE_POLICY["authorities"])
 
 
 class ProjectArtifactIndexRequest(BaseModel):
-    artifact_type: str = Field(min_length=1, max_length=100)
-    artifact_id: str = Field(min_length=1, max_length=200)
-    artifact_version_id: str = Field(min_length=1, max_length=200)
-    title: str = Field(default="", max_length=500)
-    text: str = Field(min_length=1, max_length=50000)
-    status: str = Field(default="ACTIVE", max_length=50)
-    authority: str = Field(default="PROJECT_REFERENCE", max_length=100)
+    artifact_type: str = Field(
+        min_length=1, max_length=PROJECT_KNOWLEDGE_POLICY["artifact_type_maximum_characters"]
+    )
+    artifact_id: str = Field(
+        min_length=1,
+        max_length=PROJECT_KNOWLEDGE_POLICY["artifact_identifier_maximum_characters"],
+    )
+    artifact_version_id: str = Field(
+        min_length=1,
+        max_length=PROJECT_KNOWLEDGE_POLICY["artifact_identifier_maximum_characters"],
+    )
+    title: str = Field(
+        default="", max_length=PROJECT_KNOWLEDGE_POLICY["title_maximum_characters"]
+    )
+    text: str = Field(
+        min_length=1, max_length=PROJECT_KNOWLEDGE_POLICY["maximum_artifact_characters"]
+    )
+    status: str = Field(
+        default="ACTIVE", max_length=PROJECT_KNOWLEDGE_POLICY["status_maximum_characters"]
+    )
+    authority: str = Field(
+        default="PROJECT_REFERENCE",
+        max_length=PROJECT_KNOWLEDGE_POLICY["authority_maximum_characters"],
+    )
     version: Any = None
-    module: str = Field(default="", max_length=200)
+    module: str = Field(
+        default="", max_length=PROJECT_KNOWLEDGE_POLICY["module_maximum_characters"]
+    )
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("authority")
@@ -33,6 +49,15 @@ class ProjectArtifactIndexRequest(BaseModel):
 
 
 class ProjectKnowledgeSearchRequest(BaseModel):
-    query: str = Field(min_length=1, max_length=10000)
-    artifact_types: list[str] = Field(default_factory=list, max_length=20)
-    limit: int = Field(default=20, ge=1, le=100)
+    query: str = Field(
+        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+    )
+    artifact_types: list[str] = Field(
+        default_factory=list,
+        max_length=PROJECT_KNOWLEDGE_POLICY["artifact_types_maximum_count"],
+    )
+    limit: int = Field(
+        default=PROJECT_KNOWLEDGE_POLICY["default_search_result_count"],
+        ge=1,
+        le=PROJECT_KNOWLEDGE_POLICY["maximum_search_result_count"],
+    )

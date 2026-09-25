@@ -5,8 +5,9 @@ from src.services.domain_policy import domain_policy
 
 
 def semantic_candidate_score(requirement_text, test_text):
-    requirement_tokens = set(re.findall(r"[\w-]+", requirement_text.casefold()))
-    test_tokens = set(re.findall(r"[\w-]+", test_text.casefold()))
+    pattern = domain_policy("text_processing")["token_pattern"]
+    requirement_tokens = set(re.findall(pattern, requirement_text.casefold()))
+    test_tokens = set(re.findall(pattern, test_text.casefold()))
     if not requirement_tokens or not test_tokens:
         return 0.0
     return len(requirement_tokens & test_tokens) / max(1, len(requirement_tokens))
@@ -24,7 +25,9 @@ def semantic_changes(before, after):
     ratio = SequenceMatcher(None, before_text.lower(), after_text.lower()).ratio()
     return [
         {
-            "type": "MODIFIED_INPUT" if content_changed else "TEXT_ONLY",
+            "type": policy["modified_input_type"]
+            if content_changed
+            else policy["text_only_type"],
             "subject": "content" if content_changed else ",".join(changed_fields),
             "before": {
                 "text": before_text[: policy["evidence_text_limit"]],
@@ -57,7 +60,11 @@ def semantic_changes(before, after):
 
 def classify_test_impact(test_version, changes, direct_trace):
     policy = domain_policy("change_analysis")
-    classification = "POTENTIALLY_AFFECTED" if direct_trace else "STILL_VALID"
+    classification = (
+        policy["potentially_affected_classification"]
+        if direct_trace
+        else policy["still_valid_classification"]
+    )
     confidence = (
         policy["direct_trace_confidence"]
         if direct_trace

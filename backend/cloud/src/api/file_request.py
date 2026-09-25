@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
-from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
 from src.schemas.storage import FileRequestCreate, FileRequestResponse
 from src.services.file_request import FileRequestService
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/luu-tru")
 @router.post("/yeu-cau-tai-len", response_model=APIResponse[FileRequestResponse], status_code=201)
 async def create_file_request(
     req: FileRequestCreate = Body(...),
-    current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     from src.services.storage import StorageService

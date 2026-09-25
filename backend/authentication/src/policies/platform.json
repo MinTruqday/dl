@@ -1,0 +1,122 @@
+{
+  "configuration": {
+    "maximum_key_characters": 100,
+    "sensitive_key_markers": ["secret", "token", "password", "credential"]
+  },
+  "ai": {
+    "model_update_allowed_keys": [
+      "enabled",
+      "version",
+      "capabilities",
+      "model",
+      "provider_id"
+    ],
+    "default_allowed_keys": [
+      "chat_model_id",
+      "structured_model_id",
+      "fallback_model_ids",
+      "timeout_seconds",
+      "max_output_tokens",
+      "concurrency"
+    ],
+    "primary_model_reference_keys": ["chat_model_id", "structured_model_id"]
+  },
+  "operations": {
+    "platform_health_services": ["authentication", "testing", "worker", "ai", "content"],
+    "integration_health_services": ["worker", "ai", "cloud", "testing"],
+    "audit_export_maximum_records": 100000,
+    "background_job_failed_status": "failed",
+    "unavailable_status": "unavailable",
+    "ready_status": "ready",
+    "mongodb_service": "mongodb",
+    "job_actions": {
+      "retry": "thu-lai",
+      "cancel": "huy"
+    },
+    "audit_actions": {
+      "jobs_viewed": "ADMIN_OPERATIONS_JOBS_VIEWED",
+      "job_retried": "ADMIN_OPERATIONS_JOB_RETRIED",
+      "job_canceled": "ADMIN_OPERATIONS_JOB_CANCELED",
+      "dead_letter_discarded": "ADMIN_DLQ_JOB_DISCARDED",
+      "smtp_test_failed": "ADMIN_SMTP_TEST_FAILED",
+      "smtp_tested": "ADMIN_SMTP_TESTED",
+      "dead_letter_requeued": "ADMIN_DLQ_JOB_REQUEUED",
+      "platform_health_viewed": "ADMIN_PLATFORM_HEALTH_VIEWED",
+      "storage_tested": "ADMIN_STORAGE_TESTED",
+      "global_audit_exported": "ADMIN_GLOBAL_AUDIT_EXPORTED"
+    },
+    "audit_export_fields": [
+      "timestamp",
+      "action",
+      "actor_email",
+      "target_user_id",
+      "reason"
+    ]
+  },
+  "control_operations": {
+    "rag_reindex_model_version": "admin_reindex",
+    "runtime_services": ["authentication", "testing", "worker", "ai", "cloud"],
+    "inspect_cache_scopes": ["RATE_LIMITS", "PASSKEY_CHALLENGES", "PROJECT_METADATA"],
+    "cache_patterns": {
+      "RATE_LIMITS": ["rate_limit:*"],
+      "PASSKEY_CHALLENGES": ["passkey_challenge:*"],
+      "PROJECT_METADATA": ["project_metadata:*"],
+      "SAFE_ALL": ["rate_limit:*", "passkey_challenge:*", "project_metadata:*"]
+    }
+  },
+  "account": {
+    "default_full_name": "Người dùng Veriq",
+    "default_system_role": "USER",
+    "disabled_status": "DISABLED",
+    "verified_client_ip": "authenticated",
+    "audit_actions": {
+      "profile_updated": "ACCOUNT_PROFILE_UPDATED",
+      "email_changed": "ACCOUNT_EMAIL_CHANGED",
+      "preferences_updated": "ACCOUNT_PREFERENCES_UPDATED",
+      "notifications_updated": "ACCOUNT_NOTIFICATIONS_UPDATED",
+      "deactivated": "ACCOUNT_DEACTIVATED",
+      "password_changed": "ACCOUNT_PASSWORD_CHANGED",
+      "session_revoked": "ACCOUNT_SESSION_REVOKED"
+    }
+  },
+  "account_controls": {
+    "activation_delivery_status": "ACCEPTED",
+    "activation_resent_audit_action": "ADMIN_USER_ACTIVATION_RESENT",
+    "deleted_email_prefix": "deleted-",
+    "deleted_email_suffix": "@invalid.local",
+    "deleted_full_name": "Tài khoản đã xóa",
+    "deleted_status": "DELETED",
+    "default_system_role": "USER",
+    "anonymized_audit_action": "ADMIN_USER_ANONYMIZED",
+    "bulk_operation_identifier_prefix": "bulk-user-",
+    "bulk_operation_kind": "USER_BULK_ACTION",
+    "bulk_preview_status": "PREVIEW_READY",
+    "disable_action": "DISABLE",
+    "revoke_sessions_action": "REVOKE_SESSIONS",
+    "disabled_status": "DISABLED",
+    "bulk_password_reset_client_ip": "admin-bulk",
+    "completed_status": "COMPLETED",
+    "bulk_completed_audit_action": "ADMIN_USER_BULK_COMPLETED",
+    "sensitive_account_fields": [
+      "password_hash",
+      "bio",
+      "avatar_url",
+      "social_links",
+      "donation_link"
+    ]
+  },
+  "projects": {
+    "creation_config_type": "project_creation",
+    "default_creation_policy": "AUTHENTICATED",
+    "audit_actions": {
+      "metadata_viewed": "ADMIN_PROJECT_METADATA_VIEWED",
+      "status_updated": "ADMIN_PROJECT_STATUS_UPDATED",
+      "quota_updated": "ADMIN_PROJECT_QUOTA_UPDATED",
+      "policy_updated": "ADMIN_PROJECT_POLICY_UPDATED",
+      "memberships_viewed": "ADMIN_PROJECT_MEMBERSHIPS_VIEWED",
+      "hard_deleted": "ADMIN_PROJECT_HARD_DELETED",
+      "break_glass_granted": "ADMIN_BREAK_GLASS_GRANTED",
+      "break_glass_revoked": "ADMIN_BREAK_GLASS_REVOKED"
+    }
+  }
+}

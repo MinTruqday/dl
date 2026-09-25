@@ -4,7 +4,6 @@ from typing import List
 
 from fastapi import HTTPException, Query
 
-from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
 from src.services.document.base import can_read_full, is_admin, serialize_document
@@ -13,7 +12,7 @@ from src.services.document.base import can_read_full, is_admin, serialize_docume
 class DocumentMetadataService:
     @staticmethod
     async def get_document_analytics(document_id: str, current_user):
-        doc = await mongo.find_one(collection="documents", query={"_id": document_id})
+        doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
         if doc.get("creator_id") != str(current_user.id) and not is_admin(current_user):
@@ -36,7 +35,7 @@ class DocumentMetadataService:
 
     @staticmethod
     async def get_document_academic(document_id: str, current_user):
-        doc = await mongo.find_one(collection="documents", query={"_id": document_id})
+        doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
         if not await can_read_full(doc, current_user):

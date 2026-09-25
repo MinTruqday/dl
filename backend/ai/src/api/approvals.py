@@ -4,14 +4,14 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.agents.supervisor.graph import canonical_workflow
-from src.api.agents import project_access
 from src.core.dependency import get_current_user, oauth2_scheme
-from src.memory.project_memory import project_memory
+from src.memory.long_term import long_term_memory
 from src.memory.short_term import run_store
 from src.runtime.limits import limits
 from src.runtime.models import AgentTask, ApprovalDecision, VeriqRunState
 from src.schemas.auth import CurrentUser
 from src.services.agent_metrics import agentops
+from src.services.project_access import project_access
 from src.services.token_accounting import current_usage, start_accounting
 from src.tools.registry import authorize_tool, registered_tools
 
@@ -153,10 +153,9 @@ async def decide_agent_run(
     }
     await run_store.save(completed)
     if completed.status == "COMPLETED":
-        await project_memory.record_verified(completed)
+        await long_term_memory.record_verified(completed)
     agentops.record_session_end(
         completed.run_id,
         "done" if completed.status == "COMPLETED" else "failed",
     )
     return completed
-from datetime import datetime, timezone
