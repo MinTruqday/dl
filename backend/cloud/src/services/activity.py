@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from loguru import logger
 
-from src.repositories import activity_repository
+from src.repositories.storage import activity_repository
 from src.schemas.storage import ItemActivityResponse
 
 

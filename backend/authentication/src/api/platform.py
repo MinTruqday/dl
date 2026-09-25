@@ -88,43 +88,44 @@ async def update_account_profile(
     )
 
 
-async def change_account_status(
-    user_id: str, desired_status: str, payload: ActionReason, current_user: CurrentUser
-):
-    return APIResponse(
-        data=await PlatformAccountService.change_status(
-            user_id, desired_status, payload, current_user
-        ),
-        message="Cập nhật trạng thái tài khoản hoàn tất",
-    )
-
-
 @router.post("/quan-tri/tai-khoan/{user_id}/kich-hoat", response_model=APIResponse[Any])
 async def enable_account(
     user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
-    return await change_account_status(user_id, "ACTIVE", payload, current_user)
+    return APIResponse(
+        data=await PlatformAccountService.activate(user_id, payload, current_user),
+        message="Cập nhật trạng thái tài khoản hoàn tất",
+    )
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/vo-hieu-hoa", response_model=APIResponse[Any])
 async def disable_account(
     user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
-    return await change_account_status(user_id, "DISABLED", payload, current_user)
+    return APIResponse(
+        data=await PlatformAccountService.disable(user_id, payload, current_user),
+        message="Cập nhật trạng thái tài khoản hoàn tất",
+    )
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/khoa", response_model=APIResponse[Any])
 async def lock_account(
     user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
-    return await change_account_status(user_id, "LOCKED", payload, current_user)
+    return APIResponse(
+        data=await PlatformAccountService.lock(user_id, payload, current_user),
+        message="Cập nhật trạng thái tài khoản hoàn tất",
+    )
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_account(
     user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
-    return await change_account_status(user_id, "ACTIVE", payload, current_user)
+    return APIResponse(
+        data=await PlatformAccountService.unlock(user_id, payload, current_user),
+        message="Cập nhật trạng thái tài khoản hoàn tất",
+    )
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/bat-buoc-doi-mat-khau", response_model=APIResponse[Any])

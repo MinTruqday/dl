@@ -6,7 +6,7 @@ from fastapi import HTTPException, UploadFile
 from src.core.auth import CurrentUser
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
 from src.core.configuration import settings
-from src.repositories import test_design_repository
+from src.repositories.test_design import test_design_repository
 from src.core.rich_text import text_document
 from src.domain.contracts import ImportConfirm, ImportCreate, TestCaseDraftCreate
 from src.services.api_artifact_formats import create_xlsx, lexical_similarity, model_metadata, terms

@@ -7,7 +7,7 @@ from src.core.dependency import get_current_user, oauth2_scheme
 from src.memory.long_term import long_term_memory
 from src.memory.short_term import run_store
 from src.runtime.limits import limits
-from src.runtime.models import AgentRunRequest, VeriqRunState
+from src.runtime.models import AgentRunRequest, AgentRunStatus, VeriqRunState
 from src.schemas.auth import CurrentUser
 from src.services.agent_metrics import agentops
 from src.services.inference import model_metadata
@@ -54,7 +54,7 @@ async def create_agent_run(
             timeout=limits.run_timeout_seconds,
         )
     except TimeoutError:
-        run.status = "FAILED"
+        run.status = AgentRunStatus.FAILED
         run.error_code = "AGENT_LIMIT_REACHED"
         run.observations.append({"phase": "RUN", "reason_code": "AGENT_LIMIT_REACHED"})
         run.token_usage = current_usage()
@@ -64,11 +64,14 @@ async def create_agent_run(
     completed = VeriqRunState(**result["run"])
     completed.token_usage = current_usage()
     await run_store.save(completed)
-    if completed.status == "COMPLETED":
+    if completed.status == AgentRunStatus.COMPLETED:
         await long_term_memory.record_verified(completed)
     agentops.record_session_end(
         completed.run_id,
-        "done" if completed.status in {"COMPLETED", "APPROVAL_REQUIRED"} else "failed",
+        "done"
+        if completed.status
+        in {AgentRunStatus.COMPLETED, AgentRunStatus.APPROVAL_REQUIRED}
+        else "failed",
     )
     return completed
 

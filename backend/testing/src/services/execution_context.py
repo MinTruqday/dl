@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
-from src.repositories import execution_context_repository
+from src.repositories.execution_context import execution_context_repository
 from src.services.domain_policy import domain_policy
 
 

@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 
 from src.core.common import plain_text
-from src.repositories import analysis_repository
+from src.repositories.analysis import analysis_repository
 from src.services.domain_policy import domain_policy
 
 

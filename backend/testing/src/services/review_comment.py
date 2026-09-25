@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.repositories import review_repository
+from src.repositories.review import review_repository
 from src.domain.contracts import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
 from src.services.domain_policy import domain_policy
 

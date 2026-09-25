@@ -53,21 +53,23 @@ class PlatformRepository:
         return await mongo.insert_one("admin_operations", operation)
 
     @staticmethod
-    async def claim_admin_operation(query: dict, timestamp):
+    async def claim_admin_operation(query: dict, timestamp, applying_status: str):
         return await mongo.get_db()["admin_operations"].find_one_and_update(
             query,
-            {"$set": {"status": "APPLYING", "confirmed_at": timestamp}},
+            {"$set": {"status": applying_status, "confirmed_at": timestamp}},
             return_document=ReturnDocument.AFTER,
         )
 
     @staticmethod
-    async def complete_admin_operation(operation_id: str, affected: int, timestamp):
+    async def complete_admin_operation(
+        operation_id: str, affected: int, timestamp, completed_status: str
+    ):
         return await mongo.update_one(
             "admin_operations",
             {"_id": operation_id},
             {
                 "$set": {
-                    "status": "COMPLETED",
+                    "status": completed_status,
                     "affected": affected,
                     "completed_at": timestamp,
                 }
@@ -94,9 +96,9 @@ class PlatformRepository:
         return await mongo.insert_one("service_identities", value)
 
     @staticmethod
-    async def rotate_service_identity(identity_id: str, changes: dict):
+    async def rotate_service_identity(identity_id: str, changes: dict, revoked_status: str):
         return await mongo.get_db()["service_identities"].find_one_and_update(
-            {"_id": identity_id, "status": {"$ne": "REVOKED"}},
+            {"_id": identity_id, "status": {"$ne": revoked_status}},
             {"$set": changes, "$inc": {"revision": 1}},
             return_document=ReturnDocument.AFTER,
         )

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.storage import get_bucket, get_storage_client
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 
 
 class DownloadService:

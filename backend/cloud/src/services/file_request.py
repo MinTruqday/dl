@@ -4,7 +4,7 @@ from typing import Optional
 
 from loguru import logger
 
-from src.repositories import file_request_repository
+from src.repositories.storage import file_request_repository
 from src.schemas.storage import FileRequestCreate, FileRequestResponse
 
 

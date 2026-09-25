@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from src.core.storage import generate_presigned_url
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 
 
 def serialize_internal(value: Any):

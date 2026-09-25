@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.repositories import causal_analysis_repository
+from src.repositories.causal_analysis import causal_analysis_repository
 from src.services.causal_analysis_assistance import generate_hypotheses
 from src.services.causal_analysis_query import (
     get_analysis,

@@ -67,6 +67,7 @@
   "account": {
     "default_full_name": "Người dùng Veriq",
     "default_system_role": "USER",
+    "active_status": "ACTIVE",
     "disabled_status": "DISABLED",
     "verified_client_ip": "authenticated",
     "audit_actions": {
@@ -78,6 +79,10 @@
       "password_changed": "ACCOUNT_PASSWORD_CHANGED",
       "session_revoked": "ACCOUNT_SESSION_REVOKED"
     }
+  },
+  "session": {
+    "email_delivery_sent_status": "SENT",
+    "email_delivery_failed_status": "FAILED"
   },
   "account_controls": {
     "activation_delivery_status": "ACCEPTED",
@@ -93,7 +98,10 @@
     "bulk_preview_status": "PREVIEW_READY",
     "disable_action": "DISABLE",
     "revoke_sessions_action": "REVOKE_SESSIONS",
+    "active_status": "ACTIVE",
+    "locked_status": "LOCKED",
     "disabled_status": "DISABLED",
+    "applying_status": "APPLYING",
     "bulk_password_reset_client_ip": "admin-bulk",
     "completed_status": "COMPLETED",
     "bulk_completed_audit_action": "ADMIN_USER_BULK_COMPLETED",
@@ -118,5 +126,9 @@
       "break_glass_granted": "ADMIN_BREAK_GLASS_GRANTED",
       "break_glass_revoked": "ADMIN_BREAK_GLASS_REVOKED"
     }
+  },
+  "platform_security": {
+    "active_status": "ACTIVE",
+    "revoked_status": "REVOKED"
   }
 }

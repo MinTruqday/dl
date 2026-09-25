@@ -108,6 +108,7 @@ class PlatformAccountControlService:
                 "expires_at": {"$gt": now},
             },
             now,
+            ACCOUNT_CONTROL_POLICY["applying_status"],
         )
         if not operation:
             raise HTTPException(
@@ -148,7 +149,10 @@ class PlatformAccountControlService:
                 )
                 affected += 1
         await PlatformRepository.complete_admin_operation(
-            operation_id, affected, datetime.now(timezone.utc)
+            operation_id,
+            affected,
+            datetime.now(timezone.utc),
+            ACCOUNT_CONTROL_POLICY["completed_status"],
         )
         await record_audit(
             current_user,

@@ -13,7 +13,7 @@ from src.core.common import (
     optimistic_patch,
     sort_spec,
 )
-from src.repositories import test_design_repository
+from src.repositories.test_design import test_design_repository
 from src.services.design_assistance import ai_contract_metadata
 from src.services.generation import generate_requirement_drafts
 from src.services.domain_policy import domain_policy

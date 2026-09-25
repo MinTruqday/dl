@@ -2,7 +2,13 @@ import asyncio
 
 from src.prompts.agents import specialist_prompt, specialist_review_prompt
 from src.runtime.limits import limits
-from src.runtime.models import AgentResult, SpecialistName, SpecialistReview
+from src.runtime.models import (
+    AgentResult,
+    AgentTaskStatus,
+    SpecialistName,
+    SpecialistReview,
+    ToolExecutionStatus,
+)
 from src.runtime.output import normalize_narrative, normalize_narratives
 from src.services.inference import structured
 from src.tools.registry import authorize_tool, invoke_tool
@@ -16,7 +22,7 @@ class SpecialistAgent:
         if task.specialist != self.name:
             return AgentResult(
                 task_id=task.task_id,
-                status="FAILED",
+                status=AgentTaskStatus.FAILED,
                 summary="The specialist does not match the task",
                 reason_codes=["SPECIALIST_MISMATCH"],
             )
@@ -50,12 +56,15 @@ class SpecialistAgent:
                 )
             except Exception as error:
                 observation = {
-                    "status": "FAILED",
+                    "status": ToolExecutionStatus.FAILED,
                     "tool_name": tool_call.tool_name,
                     "reason_code": type(error).__name__,
                 }
             observations.append(observation)
-            if observation.get("status") in {"FAILED", "DENIED"}:
+            if observation.get("status") in {
+                ToolExecutionStatus.FAILED,
+                ToolExecutionStatus.DENIED,
+            }:
                 errors += 1
             if errors >= limits.tool_errors:
                 break
@@ -110,10 +119,18 @@ class SpecialistAgent:
             )
             result.task_id = task.task_id
         except Exception:
-            completed = [item for item in observations if item.get("status") == "COMPLETED"]
+            completed = [
+                item
+                for item in observations
+                if item.get("status") == ToolExecutionStatus.COMPLETED
+            ]
             result = AgentResult(
                 task_id=task.task_id,
-                status="COMPLETED" if completed or pending_actions else "INSUFFICIENT_EVIDENCE",
+                status=(
+                    AgentTaskStatus.COMPLETED
+                    if completed or pending_actions
+                    else AgentTaskStatus.INSUFFICIENT_EVIDENCE
+                ),
                 summary="Tool observations collected" if completed else "Insufficient evidence",
                 evidence_refs=[item.artifact_version_id or item.artifact_id for item in evidence],
                 reason_codes=[
@@ -127,10 +144,12 @@ class SpecialistAgent:
                 action for action in pending_actions if action not in result.proposals
             )
         completed_observations = [
-            item for item in observations if item.get("status") == "COMPLETED"
+            item
+            for item in observations
+            if item.get("status") == ToolExecutionStatus.COMPLETED
         ]
         if task.tool_calls and not completed_observations and not pending_actions:
-            result.status = "INSUFFICIENT_EVIDENCE"
+            result.status = AgentTaskStatus.INSUFFICIENT_EVIDENCE
             result.reason_codes = list(
                 dict.fromkeys([*result.reason_codes, "TOOL_FAILED"])
             )

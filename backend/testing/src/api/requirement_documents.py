@@ -89,12 +89,12 @@ async def list_requirement_documents(
 async def create_knowledge_source(
     project_id: str, payload: KnowledgeSourceCreate, user: CurrentUser = Depends(get_current_user)
 ):
-    document, indexed = await create_requirement_source(project_id, payload, user)
+    result = await create_requirement_source(project_id, payload, user)
     return envelope(
-        document,
-        revision=document.get("revision", 1),
-        status="SUCCESS" if indexed else "DEGRADED",
-        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+        result.data,
+        revision=result.data.get("revision", 1),
+        status=result.status,
+        degraded_mode=result.degraded_mode,
     )
 
 
@@ -121,12 +121,12 @@ async def archive_knowledge_source(
 async def reindex_knowledge_source(
     document_id: str, user: CurrentUser = Depends(get_current_user)
 ):
-    document, indexed = await reindex_requirement_source(document_id, user)
+    result = await reindex_requirement_source(document_id, user)
     return envelope(
-        document,
-        revision=document["revision"],
-        status="SUCCESS" if indexed else "DEGRADED",
-        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+        result.data,
+        revision=result.data["revision"],
+        status=result.status,
+        degraded_mode=result.degraded_mode,
     )
 
 

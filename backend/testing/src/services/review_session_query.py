@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import get_project
-from src.repositories import review_repository
+from src.repositories.review import review_repository
 from src.services.domain_policy import domain_policy
 
 

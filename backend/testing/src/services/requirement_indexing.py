@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import now
-from src.repositories import requirement_document_repository
+from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
 from src.services.domain_policy import domain_policy
 

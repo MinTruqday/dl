@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from src.core.security.guardrails import guardrails_engine, security_rules
@@ -63,7 +64,6 @@ class SecurityHarness:
         self, text: str, allow_ai_review: bool = True
     ) -> tuple[str, List[str]]:
         await self._ensure_pii_engine()
-        from langchain_core.messages import HumanMessage
 
         from src.core.registry import PromptType, registry
         from src.schemas.security import SecurityEvaluation
@@ -116,9 +116,11 @@ class SecurityHarness:
             llm = create_chat_model()
             structured_llm = llm.with_structured_output(SecurityEvaluation)
 
-            prompt = registry.get(PromptType.SECURITY_SCAN).format(text=sanitized)
+            system_prompt = registry.get(PromptType.SECURITY_SCAN)
 
-            result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
+            result = await structured_llm.ainvoke(
+                [SystemMessage(content=system_prompt), HumanMessage(content=sanitized)]
+            )
             if result.is_malicious:
                 violations.append(f"prompt_injection:{result.reason[:60]}")
             if result.has_credentials:

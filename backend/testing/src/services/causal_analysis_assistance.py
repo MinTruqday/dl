@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, new_id, now
-from src.repositories import causal_analysis_repository
+from src.repositories.causal_analysis import causal_analysis_repository
 from src.services.causal_analysis_query import get_analysis
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.domain_policy import domain_policy

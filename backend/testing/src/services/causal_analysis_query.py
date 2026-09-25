@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import get_project
-from src.repositories import causal_analysis_repository
+from src.repositories.causal_analysis import causal_analysis_repository
 from src.services.domain_policy import domain_policy
 
 

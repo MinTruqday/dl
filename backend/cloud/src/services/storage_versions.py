@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 
 from src.core.storage import get_bucket, get_storage_client, original_content_length
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 from src.schemas.storage import FileVersion, StorageItemInDB
 from src.services.activity import ActivityService
 from src.services.storage_analytics import get_storage_quota

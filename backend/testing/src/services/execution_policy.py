@@ -3,7 +3,7 @@ import hashlib
 from bson.json_util import dumps as bson_dumps
 from fastapi import HTTPException
 
-from src.repositories import execution_policy_repository
+from src.repositories.execution_policy import execution_policy_repository
 from src.services.domain_policy import domain_policy
 
 

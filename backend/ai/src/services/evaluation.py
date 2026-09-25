@@ -62,7 +62,7 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
-    from langchain_core.messages import HumanMessage
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     from src.core.registry import PromptType, registry
     from src.schemas.evaluation import JudgeScores
@@ -74,7 +74,12 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     try:
         evaluator = create_chat_model().with_structured_output(JudgeScores)
         scores = await evaluator.ainvoke(
-            [HumanMessage(content=prompt)], max_tokens=256, temperature=0.1
+            [
+                SystemMessage(content=prompt),
+                HumanMessage(content="Produce the required evaluation result"),
+            ],
+            max_tokens=256,
+            temperature=0.1,
         )
         return scores.model_dump()
     except Exception:
@@ -178,7 +183,12 @@ class EvaluationHarness:
             )
             try:
                 resp = await client.chat_completion(
-                    messages=[{"role": "user", "content": prompt}], max_tokens=512, temperature=0.1
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": "Produce the requested benchmark response"},
+                    ],
+                    max_tokens=512,
+                    temperature=0.1,
                 )
                 actual = resp.choices[0].message.content.strip()
             except Exception:

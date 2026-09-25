@@ -23,7 +23,7 @@ from src.schemas.inference import (
     TestingAssistanceRequest,
     TestingAssistanceResult,
 )
-from src.services.inference import structured
+from src.services.inference import model_metadata, structured
 
 
 SCHEMAS = {
@@ -109,8 +109,7 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
         allowed_evidence_refs,
     )
     model = {
-        "provider": "primary",
-        "model": settings.LLM_MODEL,
+        **model_metadata(),
         "prompt_version": "testing_assistance_v2_structured_few_shot",
         "tool_schema_version": "testing_assistance",
         "retrieval_version": "project_evidence",

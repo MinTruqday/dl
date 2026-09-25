@@ -11,12 +11,16 @@ from src.prompts.agents import (
 )
 from src.runtime.limits import limits
 from src.runtime.models import (
+    AgentApprovalStatus,
     AgentResult,
+    AgentRunStatus,
+    AgentTaskStatus,
     AgentTask,
     EvidenceItem,
     SupervisorPlan,
     SupervisorProposal,
     SupervisorReview,
+    ToolExecutionStatus,
     VeriqRunState,
 )
 from src.runtime.output import normalize_narrative, normalize_narratives
@@ -30,7 +34,10 @@ def state_run(state):
 
 async def load_context(state):
     run = state_run(state)
-    if run.approval_status in {"APPROVED", "REJECTED"} and state.get("tasks"):
+    if run.approval_status in {
+        AgentApprovalStatus.APPROVED,
+        AgentApprovalStatus.REJECTED,
+    } and state.get("tasks"):
         return {}
     supplied = [EvidenceItem(**item) for item in state.get("evidence", [])]
     retrieved = await hybrid_evidence(
@@ -74,9 +81,9 @@ async def load_context(state):
 
 def route_after_context(state):
     run = state_run(state)
-    if run.approval_status == "APPROVED" and state.get("tasks"):
+    if run.approval_status == AgentApprovalStatus.APPROVED and state.get("tasks"):
         return "apply"
-    if run.approval_status == "REJECTED" and state.get("tasks"):
+    if run.approval_status == AgentApprovalStatus.REJECTED and state.get("tasks"):
         return "re_evaluate"
     return "plan"
 
@@ -106,14 +113,14 @@ async def plan(state):
         )
     except Exception:
         run.intent = run.intent or "project_question"
-        run.status = "RUNNING"
+        run.status = AgentRunStatus.RUNNING
         run.current_step = 1
         run.observations.append(
             {"phase": "PLAN", "reason_code": "AI_PROVIDER_UNAVAILABLE"}
         )
         result = AgentResult(
             task_id=f"PLAN-{run.run_id}",
-            status="INSUFFICIENT_EVIDENCE",
+            status=AgentTaskStatus.INSUFFICIENT_EVIDENCE,
             summary="The AI provider is unavailable so a plan cannot be created",
             evidence_refs=evidence_refs,
             reason_codes=["AI_PROVIDER_UNAVAILABLE"],
@@ -171,7 +178,7 @@ async def plan(state):
         results.append(
             AgentResult(
                 task_id=f"PLAN-{run.run_id}",
-                status="FAILED",
+                status=AgentTaskStatus.FAILED,
                 summary="The plan contains no valid task",
                 evidence_refs=evidence_refs,
                 reason_codes=["VALIDATION_FAILED"],
@@ -179,7 +186,7 @@ async def plan(state):
             ).model_dump(mode="python")
         )
     run.supervisor_plan = [task.model_dump(mode="json") for task in tasks]
-    run.status = "RUNNING"
+    run.status = AgentRunStatus.RUNNING
     run.current_step = 1
     return {
         "run": run.model_dump(mode="python"),
@@ -355,7 +362,7 @@ async def aggregate(state):
             actions=[action for item in results for action in item.proposals],
             warnings=list(dict.fromkeys(warning for item in results for warning in item.warnings)),
             success_criteria_met=state.get("success_criteria", [])
-            if all(item.status == "COMPLETED" for item in results)
+            if all(item.status == AgentTaskStatus.COMPLETED for item in results)
             else [],
         )
     else:
@@ -384,12 +391,12 @@ async def aggregate(state):
                     dict.fromkeys(warning for item in results for warning in item.warnings)
                 ),
                 success_criteria_met=state.get("success_criteria", [])
-                if all(item.status == "COMPLETED" for item in results)
+                if all(item.status == AgentTaskStatus.COMPLETED for item in results)
                 else [],
             )
     tasks = {item["task_id"]: AgentTask(**item) for item in state.get("tasks", [])}
     pending_actions = []
-    if run.approval_status != "REJECTED":
+    if run.approval_status != AgentApprovalStatus.REJECTED:
         for result in results:
             task = tasks.get(result.task_id)
             if not task:
@@ -418,24 +425,32 @@ async def aggregate(state):
         proposal.evidence_refs = list(run.evidence_refs)
     run.proposal = proposal.model_dump(mode="json")
     run.evidence_refs = list(dict.fromkeys([*run.evidence_refs, *proposal.evidence_refs]))
-    run.status = "APPROVAL_REQUIRED" if pending_actions else "VERIFYING"
+    run.status = (
+        AgentRunStatus.APPROVAL_REQUIRED if pending_actions else AgentRunStatus.VERIFYING
+    )
     run.current_step += 1
     return {"run": run.model_dump(mode="python")}
 
 
 def route_after_aggregate(state):
-    return "end" if state_run(state).status == "APPROVAL_REQUIRED" else "verify"
+    return (
+        "end"
+        if state_run(state).status == AgentRunStatus.APPROVAL_REQUIRED
+        else "verify"
+    )
 
 
 async def apply(state):
     run = state_run(state)
     tasks = {item["task_id"]: AgentTask(**item) for item in state.get("tasks", [])}
     applied = []
-    run.status = "APPLYING"
+    run.status = AgentRunStatus.APPLYING
     for action in (run.proposal or {}).get("actions", []):
         task = tasks.get(action.get("task_id"))
         if not task:
-            applied.append({"status": "FAILED", "reason_code": "TASK_NOT_FOUND"})
+            applied.append(
+                {"status": ToolExecutionStatus.FAILED, "reason_code": "TASK_NOT_FOUND"}
+            )
             continue
         result = await invoke_tool(
             task,
@@ -443,9 +458,9 @@ async def apply(state):
             action.get("arguments", {}),
             run.permissions,
             state["token"],
-            "APPROVED",
+            AgentApprovalStatus.APPROVED,
         )
-        if result.get("status") == "COMPLETED":
+        if result.get("status") == ToolExecutionStatus.COMPLETED:
             result["verification"] = await verify_application(
                 task,
                 action.get("tool_name", ""),
@@ -455,7 +470,7 @@ async def apply(state):
             )
         applied.append(result)
     run.proposal = {**(run.proposal or {}), "applied_results": applied}
-    run.status = "VERIFYING"
+    run.status = AgentRunStatus.VERIFYING
     run.current_step += 1
     return {"run": run.model_dump(mode="python")}
 
@@ -465,11 +480,12 @@ async def verify(state):
     results = [AgentResult(**item) for item in state.get("results", [])]
     applied = (run.proposal or {}).get("applied_results", [])
     actions = (run.proposal or {}).get("actions", [])
-    rejected = run.approval_status == "REJECTED"
+    rejected = run.approval_status == AgentApprovalStatus.REJECTED
     result_ok = bool(results) and all(
-        item.status in {"COMPLETED", "INSUFFICIENT_EVIDENCE"} for item in results
+        item.status in {AgentTaskStatus.COMPLETED, AgentTaskStatus.INSUFFICIENT_EVIDENCE}
+        for item in results
     )
-    completed_claims = any(item.status == "COMPLETED" for item in results)
+    completed_claims = any(item.status == AgentTaskStatus.COMPLETED for item in results)
     proposal_refs = set((run.proposal or {}).get("evidence_refs", []))
     result_refs = {
         reference
@@ -477,7 +493,7 @@ async def verify(state):
         for reference in item.evidence_refs
     }
     claims_grounded = all(
-        item.status != "COMPLETED"
+        item.status != AgentTaskStatus.COMPLETED
         or bool(item.evidence_refs)
         and set(item.evidence_refs).issubset(set(run.evidence_refs))
         for item in results
@@ -492,14 +508,14 @@ async def verify(state):
         item.get("project_id") == run.project_id for item in run.completed_tasks
     )
     apply_ok = not applied or all(
-        item.get("status") == "COMPLETED"
-        and item.get("verification", {}).get("status") == "COMPLETED"
+        item.get("status") == ToolExecutionStatus.COMPLETED
+        and item.get("verification", {}).get("status") == ToolExecutionStatus.COMPLETED
         for item in applied
     )
     apply_count_ok = (
         not actions
         or rejected
-        or (run.approval_status == "APPROVED" and len(applied) == len(actions))
+        or (run.approval_status == AgentApprovalStatus.APPROVED and len(applied) == len(actions))
     )
     verified = result_ok and evidence_ok and project_scope_ok and apply_ok and apply_count_ok
     verification = {
@@ -519,13 +535,13 @@ async def verify(state):
         code for item in results for code in [*item.reason_codes, *item.warnings]
     }
     if "AI_PROVIDER_UNAVAILABLE" in reason_codes:
-        run.status = "FAILED"
+        run.status = AgentRunStatus.FAILED
         run.error_code = "AI_PROVIDER_UNAVAILABLE"
     elif verified:
-        run.status = "COMPLETED"
+        run.status = AgentRunStatus.COMPLETED
         run.error_code = None
     else:
-        run.status = "FAILED"
+        run.status = AgentRunStatus.FAILED
         run.error_code = (
             "VALIDATION_FAILED"
             if "VALIDATION_FAILED" in reason_codes

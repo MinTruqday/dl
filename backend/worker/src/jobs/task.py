@@ -15,6 +15,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database, record_job
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
+from src.schemas import AutomationExecutionStatus, WorkerJobStatus
 
 IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
@@ -37,14 +38,17 @@ async def handle_testing_job(payload: dict):
     job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one(
         {"_id": job_id}, {"status": 1}
     )
-    if job and job.get("status") == "canceled":
+    if job and job.get("status") == WorkerJobStatus.CANCELED:
         return
     job_payload = payload.get("payload")
     if not isinstance(job_payload, dict):
         raise PermanentTaskError("Testing job payload is required")
     await record_job(
         job_id,
-        {"status": "running", "attempt_started_at": datetime.now(timezone.utc)},
+        {
+            "status": WorkerJobStatus.RUNNING,
+            "attempt_started_at": datetime.now(timezone.utc),
+        },
         {
             "kind": payload.get("event"),
             "project_id": payload.get("project_id"),
@@ -62,7 +66,7 @@ async def handle_testing_job(payload: dict):
         await record_job(
             job_id,
             {
-                "status": "completed",
+                "status": WorkerJobStatus.COMPLETED,
                 "result": result,
                 "completed_at": completed_at,
                 "expire_at": completed_at + timedelta(days=30),
@@ -91,7 +95,7 @@ async def handle_testing_job(payload: dict):
     await record_job(
         job_id,
         {
-            "status": "completed",
+            "status": WorkerJobStatus.COMPLETED,
             "result": result,
             "completed_at": completed_at,
             "expire_at": completed_at + timedelta(days=30),
@@ -183,7 +187,11 @@ async def run_newman(job_id, payload, job_payload):
                 ],
             }
         )
-    status = "COMPLETED" if return_code == 0 else "FAILED"
+    status = (
+        AutomationExecutionStatus.COMPLETED
+        if return_code == 0
+        else AutomationExecutionStatus.FAILED
+    )
     callback = automation_callback(
         execution_id,
         job_id,
@@ -303,7 +311,11 @@ async def run_playwright(job_id, payload, job_payload):
         results = playwright_results(report)
         stats = report.get("stats") if isinstance(report.get("stats"), dict) else {}
         error_present = bool(stderr.strip())
-    status = "COMPLETED" if return_code == 0 else "FAILED"
+    status = (
+        AutomationExecutionStatus.COMPLETED
+        if return_code == 0
+        else AutomationExecutionStatus.FAILED
+    )
     callback = automation_callback(
         execution_id,
         job_id,
@@ -332,7 +344,7 @@ async def mark_failed(queue_name: str, payload: dict, error: Exception):
         await record_job(
             job_id,
             {
-                "status": "failed",
+                "status": WorkerJobStatus.FAILED,
                 "error_code": getattr(error, "code", "worker_task_failed"),
                 "error": message,
                 "completed_at": completed_at,

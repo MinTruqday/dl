@@ -15,6 +15,18 @@ class TestingJobEvent(str, Enum):
     AUTOMATION_PLAYWRIGHT = "automation.playwright.requested"
 
 
+class WorkerJobStatus(str, Enum):
+    CANCELED = "canceled"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class AutomationExecutionStatus(str, Enum):
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
 class TestingJobRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 

@@ -6,7 +6,8 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from src.repositories import share_link_repository, storage_repository
+from src.repositories.storage import share_link_repository
+from src.repositories.storage import storage_repository
 
 
 class ShareService:

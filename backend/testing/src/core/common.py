@@ -11,7 +11,7 @@ from src.core.auth import (
     CurrentUser,
     permissions_for_role,
 )
-from src.repositories import common_repository
+from src.repositories.common import common_repository
 from src.services.domain_policy import domain_policy
 
 CORE_POLICY = domain_policy("core")

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import get_project, now
-from src.repositories import analysis_repository
+from src.repositories.analysis import analysis_repository
 from src.domain.contracts import GenerateInput, RequirementCompareInput
 from src.services.change_set import create_change_set_record
 from src.services.domain_policy import domain_policy

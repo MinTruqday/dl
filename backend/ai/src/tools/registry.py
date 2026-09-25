@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.runnables import RunnableConfig
 
-from src.runtime.models import AgentTask
+from src.runtime.models import AgentApprovalStatus, AgentTask, ToolExecutionStatus
 from src.services.agent_metrics import agentops
 from src.services.token_accounting import add_tool_usage
 from src.tools.policy import ToolDecision, ToolPolicy
@@ -33,7 +33,7 @@ def authorize_tool(task, tool_name, permissions, approval_status=None):
         return ToolDecision(allowed=False, reason_code="TOOL_SPECIALIST_DENIED", policy=policy)
     if policy.permission not in permissions:
         return ToolDecision(allowed=False, reason_code="PERMISSION_DENIED", policy=policy)
-    if policy.requires_approval and approval_status != "APPROVED":
+    if policy.requires_approval and approval_status != AgentApprovalStatus.APPROVED:
         return ToolDecision(allowed=False, reason_code="APPROVAL_REQUIRED", policy=policy)
     return ToolDecision(allowed=True, reason_code="ALLOWED", policy=policy)
 
@@ -75,11 +75,14 @@ async def verify_application(task, tool_name, arguments, outcome, token):
     policy = policies().get(tool_name)
     specification = policy.verification if policy else None
     if not specification:
-        return {"status": "NOT_REQUIRED"}
+        return {"status": ToolExecutionStatus.NOT_REQUIRED}
     result = outcome.get("result") or {}
     identifier = resolved_value(specification.identifier, task, arguments, result)
     if not identifier:
-        return {"status": "FAILED", "reason_code": "POSTCONDITION_IDENTIFIER_MISSING"}
+        return {
+            "status": ToolExecutionStatus.FAILED,
+            "reason_code": "POSTCONDITION_IDENTIFIER_MISSING",
+        }
     from src.tools.testing import call, parse
 
     config = RunnableConfig(
@@ -87,7 +90,10 @@ async def verify_application(task, tool_name, arguments, outcome, token):
     )
     readback = parse(await call("GET", specification.path.format(identifier=identifier), config))
     if not readback:
-        return {"status": "FAILED", "reason_code": "POSTCONDITION_READBACK_FAILED"}
+        return {
+            "status": ToolExecutionStatus.FAILED,
+            "reason_code": "POSTCONDITION_READBACK_FAILED",
+        }
     mismatches = []
     for field, reference in specification.expected.items():
         expected = resolved_value(reference, task, arguments, result)
@@ -95,7 +101,9 @@ async def verify_application(task, tool_name, arguments, outcome, token):
         if actual != expected:
             mismatches.append(field)
     return {
-        "status": "COMPLETED" if not mismatches else "FAILED",
+        "status": ToolExecutionStatus.COMPLETED
+        if not mismatches
+        else ToolExecutionStatus.FAILED,
         "reason_code": "POSTCONDITION_VERIFIED" if not mismatches else "POSTCONDITION_MISMATCH",
         "artifact_id": str(identifier),
         "project_id": readback.get("project_id"),
@@ -116,16 +124,20 @@ async def invoke_tool(
     decision = authorize_tool(task, tool_name, permissions, approval_status)
     if not decision.allowed:
         return {
-            "status": "DENIED",
+            "status": ToolExecutionStatus.DENIED,
             "reason_code": decision.reason_code,
             "tool_name": tool_name,
         }
     tool = registered_tools().get(tool_name)
     if not tool:
-        return {"status": "FAILED", "reason_code": "TOOL_UNAVAILABLE", "tool_name": tool_name}
+        return {
+            "status": ToolExecutionStatus.FAILED,
+            "reason_code": "TOOL_UNAVAILABLE",
+            "tool_name": tool_name,
+        }
     if "project_id" in arguments and str(arguments["project_id"]) != task.project_id:
         return {
-            "status": "DENIED",
+            "status": ToolExecutionStatus.DENIED,
             "reason_code": "PROJECT_SCOPE_VIOLATION",
             "tool_name": tool_name,
         }
@@ -135,7 +147,7 @@ async def invoke_tool(
         )
     except Exception:
         return {
-            "status": "FAILED",
+            "status": ToolExecutionStatus.FAILED,
             "reason_code": "TOOL_ARGUMENT_INVALID",
             "tool_name": tool_name,
         }
@@ -168,13 +180,17 @@ async def invoke_tool(
                 or str(parsed.get("status")).upper()
             )
             outcome = {
-                "status": "FAILED",
+                "status": ToolExecutionStatus.FAILED,
                 "tool_name": tool_name,
                 "reason_code": reason_code,
                 "result": parsed,
             }
         else:
-            outcome = {"status": "COMPLETED", "tool_name": tool_name, "result": parsed}
+            outcome = {
+                "status": ToolExecutionStatus.COMPLETED,
+                "tool_name": tool_name,
+                "result": parsed,
+            }
     except Exception:
         agentops.record_tool_call(
             task.run_id,
@@ -188,7 +204,7 @@ async def invoke_tool(
         task.run_id,
         tool_name,
         duration_ms,
-        outcome["status"] == "COMPLETED",
+        outcome["status"] == ToolExecutionStatus.COMPLETED,
     )
     outcome["duration_ms"] = duration_ms
     add_tool_usage(max(1, len(json.dumps(outcome, ensure_ascii=False, default=str)) // 4))

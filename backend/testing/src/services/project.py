@@ -12,7 +12,7 @@ from src.core.common import (
     optimistic_patch,
     resolve_user_reference,
 )
-from src.repositories import project_repository
+from src.repositories.project import project_repository
 from src.services.domain_policy import domain_policy
 
 

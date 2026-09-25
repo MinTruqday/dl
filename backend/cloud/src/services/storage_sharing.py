@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 
 from src.clients.accounts import AccountClient
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 from src.schemas.storage import StorageItemInDB
 from src.services.activity import ActivityService
 from src.services.storage_policy import storage_policy

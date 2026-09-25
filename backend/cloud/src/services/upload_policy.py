@@ -6,11 +6,9 @@ from fastapi import HTTPException
 
 from src.core.infrastructure.configuration import settings
 from src.core.storage import get_bucket, get_storage_client
-from src.repositories import (
-    storage_repository,
-    temporary_file_repository,
-    upload_reservation_repository,
-)
+from src.repositories.storage import storage_repository
+from src.repositories.storage import temporary_file_repository
+from src.repositories.storage import upload_reservation_repository
 from src.schemas.storage import StorageItemCreate
 from src.services.storage import StorageService
 from src.services.storage_policy import object_prefixes, storage_policy

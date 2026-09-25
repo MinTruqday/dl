@@ -8,7 +8,7 @@ from src.core.common import (
     now,
     optimistic_patch,
 )
-from src.repositories import test_run_repository
+from src.repositories.test_run import test_run_repository
 from src.services.domain_policy import domain_policy
 from src.services.execution_context import resolve_execution_context
 from src.services.execution_policy import validate_test_versions

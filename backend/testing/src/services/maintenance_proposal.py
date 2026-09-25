@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, sort_spec
 from src.core.metrics import PROPOSAL_ACCEPTANCE_RATE
-from src.repositories import maintenance_proposal_repository
+from src.repositories.maintenance_proposal import maintenance_proposal_repository
 from src.services.domain_policy import domain_policy
 
 

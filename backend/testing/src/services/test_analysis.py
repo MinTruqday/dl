@@ -8,7 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, new_id, next_key, now, page_payload
 from src.domain.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
 from src.repositories.test_condition import test_condition_repository
-from src.repositories import test_analysis_repository
+from src.repositories.test_analysis import test_analysis_repository
 from src.services.domain_policy import domain_policy
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.test_analysis_basis import (

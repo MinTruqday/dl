@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now, optimistic_patch
-from src.repositories import project_notification_repository
+from src.repositories.project_notification import project_notification_repository
 from src.services.domain_policy import domain_policy
 
 

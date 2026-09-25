@@ -3,7 +3,7 @@ import re
 from fastapi import HTTPException
 
 from src.core.common import get_project
-from src.repositories import requirement_analysis_repository
+from src.repositories.requirement_analysis import requirement_analysis_repository
 from src.services.domain_policy import domain_policy
 from src.services.quality_policy import evaluate_rules
 

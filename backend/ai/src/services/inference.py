@@ -102,14 +102,19 @@ async def structured(
         return validate_structured_output(corrected, schema)
 
 
+def prompt_messages(prompt: str, instruction: str) -> list[dict[str, str]]:
+    return [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": instruction},
+    ]
+
+
 async def expand_retrieval(question: str) -> dict:
     hypothetical_document = await chat(
-        [
-            {
-                "role": "user",
-                "content": registry.get(PromptType.HYDE_GENERATION).format(question=question),
-            }
-        ],
+        prompt_messages(
+            registry.get(PromptType.HYDE_GENERATION).format(question=question),
+            "Produce the requested retrieval passage",
+        ),
         max_tokens=384,
         timeout_seconds=20,
     )
@@ -157,14 +162,12 @@ async def summarize_document(text: str) -> str:
     if not inspected.get("is_safe", False):
         raise ValueError("knowledge_summary_input_unsafe")
     summary = await chat(
-        [
-            {
-                "role": "user",
-                "content": registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(
-                    text=inspected.get("sanitized_text") or text
-                ),
-            }
-        ],
+        prompt_messages(
+            registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(
+                text=inspected.get("sanitized_text") or text
+            ),
+            "Produce the requested document summary",
+        ),
         max_tokens=512,
     )
     return summary.strip()

@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.review_session import ReviewSessionCreate
-from src.repositories import review_repository
+from src.repositories.review import review_repository
 from src.services.domain_policy import domain_policy
 from src.services.review_finding import (
     add_finding,

@@ -11,7 +11,7 @@ from src.core.common import (
     page_payload,
     sort_spec,
 )
-from src.repositories import test_run_repository
+from src.repositories.test_run import test_run_repository
 from src.services.domain_policy import domain_policy
 
 

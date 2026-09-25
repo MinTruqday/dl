@@ -8,7 +8,13 @@ from src.core.dependency import get_current_user, oauth2_scheme
 from src.memory.long_term import long_term_memory
 from src.memory.short_term import run_store
 from src.runtime.limits import limits
-from src.runtime.models import AgentTask, ApprovalDecision, VeriqRunState
+from src.runtime.models import (
+    AgentApprovalStatus,
+    AgentRunStatus,
+    AgentTask,
+    ApprovalDecision,
+    VeriqRunState,
+)
 from src.schemas.auth import CurrentUser
 from src.services.agent_metrics import agentops
 from src.services.project_access import project_access
@@ -29,7 +35,7 @@ async def decide_agent_run(
     run = await run_store.get(run_id)
     if not run:
         raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    if run.status != "APPROVAL_REQUIRED":
+    if run.status != AgentRunStatus.APPROVAL_REQUIRED:
         raise HTTPException(status_code=409, detail={"code": "APPROVAL_NOT_REQUIRED"})
     if run.revision != payload.expected_revision:
         raise HTTPException(
@@ -58,7 +64,12 @@ async def decide_agent_run(
             if index is None or not raw_task or not tool:
                 raise HTTPException(status_code=409, detail={"code": "PROPOSAL_ACTION_INVALID"})
             task = AgentTask(**raw_task)
-            decision = authorize_tool(task, edit.tool_name, permissions, "APPROVED")
+            decision = authorize_tool(
+                task,
+                edit.tool_name,
+                permissions,
+                AgentApprovalStatus.APPROVED,
+            )
             if not decision.allowed:
                 raise HTTPException(status_code=403, detail={"code": decision.reason_code})
             if (
@@ -99,13 +110,17 @@ async def decide_agent_run(
                 AgentTask(**raw_task),
                 action.get("tool_name", ""),
                 permissions,
-                "APPROVED",
+                AgentApprovalStatus.APPROVED,
             )
             if not decision.allowed:
                 raise HTTPException(status_code=403, detail={"code": decision.reason_code})
     elif "proposal.reject" not in permissions:
         raise HTTPException(status_code=403, detail={"code": "PERMISSION_DENIED"})
-    run.approval_status = "APPROVED" if payload.decision == "APPROVE" else "REJECTED"
+    run.approval_status = (
+        AgentApprovalStatus.APPROVED
+        if payload.decision == "APPROVE"
+        else AgentApprovalStatus.REJECTED
+    )
     run.approval_decision = {
         "decision": payload.decision,
         "note": payload.note,
@@ -133,7 +148,7 @@ async def decide_agent_run(
             timeout=limits.run_timeout_seconds,
         )
     except TimeoutError:
-        run.status = "FAILED"
+        run.status = AgentRunStatus.FAILED
         run.error_code = "AGENT_LIMIT_REACHED"
         run.observations.append({"phase": "RESUME", "reason_code": "AGENT_LIMIT_REACHED"})
         previous_usage = run.token_usage
@@ -152,10 +167,10 @@ async def decide_agent_run(
         for key in set(run.token_usage) | set(resumed_usage)
     }
     await run_store.save(completed)
-    if completed.status == "COMPLETED":
+    if completed.status == AgentRunStatus.COMPLETED:
         await long_term_memory.record_verified(completed)
     agentops.record_session_end(
         completed.run_id,
-        "done" if completed.status == "COMPLETED" else "failed",
+        "done" if completed.status == AgentRunStatus.COMPLETED else "failed",
     )
     return completed

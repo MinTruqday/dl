@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.repositories import regression_recommendation_repository
+from src.repositories.regression_recommendation import regression_recommendation_repository
 from src.services.domain_policy import domain_policy
 
 

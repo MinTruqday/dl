@@ -1,10 +1,11 @@
 import hashlib
 import re
+from dataclasses import dataclass
 
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, require_action_policy
-from src.repositories import requirement_document_repository
+from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
 from src.services.domain_policy import domain_policy
 
@@ -12,12 +13,32 @@ from src.services.domain_policy import domain_policy
 SOURCE_POLICY = domain_policy("requirement_source")
 
 
+@dataclass(frozen=True)
+class RequirementSourceResult:
+    data: dict
+    indexed: bool
+
+    @property
+    def status(self):
+        return (
+            SOURCE_POLICY["success_result_status"]
+            if self.indexed
+            else SOURCE_POLICY["degraded_result_status"]
+        )
+
+    @property
+    def degraded_mode(self):
+        return None if self.indexed else SOURCE_POLICY["vector_degraded_mode"]
+
+
 async def create_requirement_source(project_id, payload, user):
     await get_project(project_id, user, SOURCE_POLICY["manage_permission"])
     content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
     existing = await requirement_document_repository.find_by_hash(project_id, content_hash)
     if existing:
-        return existing, existing.get("index_status") == SOURCE_POLICY["indexed_status"]
+        return RequirementSourceResult(
+            existing, existing.get("index_status") == SOURCE_POLICY["indexed_status"]
+        )
     timestamp = now()
     safe_name = (
         re.sub(
@@ -103,7 +124,7 @@ async def create_requirement_source(project_id, payload, user):
         project_id,
         {"source_type": payload.source_type, "authority": payload.authority},
     )
-    return document, indexed
+    return RequirementSourceResult(document, indexed)
 
 
 async def list_requirement_sources(project_id, include_archived, user):
@@ -183,7 +204,7 @@ async def reindex_requirement_source(document_id, user):
         document["project_id"],
         {"indexed": indexed},
     )
-    return updated, indexed
+    return RequirementSourceResult(updated, indexed)
 
 
 async def archive_requirement_source(document_id, payload, user):

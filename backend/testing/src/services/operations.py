@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from src.clients.worker import WorkerClientError, worker_client
 from src.core.auth import CurrentUser
 from src.core.common import load_user_identities, now
-from src.repositories import operations_repository
+from src.repositories.operations import operations_repository
 from src.services.domain_policy import domain_policy
 
 

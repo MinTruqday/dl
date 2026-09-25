@@ -1,5 +1,5 @@
 from src.core.infrastructure.configuration import settings
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 from src.services.storage_policy import storage_policy
 
 

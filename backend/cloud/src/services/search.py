@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import HTTPException
 
-from src.repositories import storage_repository
+from src.repositories.storage import storage_repository
 
 
 class SearchService:

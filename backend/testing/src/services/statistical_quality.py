@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.repositories import statistical_quality_repository
+from src.repositories.statistical_quality import statistical_quality_repository
 from src.services.domain_policy import domain_policy
 
 

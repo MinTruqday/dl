@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
 from src.core.configuration import settings
-from src.repositories import webhook_repository
+from src.repositories.webhook import webhook_repository
 from src.services.domain_policy import domain_policy
 
 

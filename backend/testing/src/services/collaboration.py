@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
 from src.domain.contracts import CollaborationOperationInput, RequirementDraftPatch, TestCaseDraftPatch
-from src.repositories import collaboration_repository
+from src.repositories.collaboration import collaboration_repository
 from src.services.domain_policy import domain_policy
 from src.services.requirement_records import update_requirement_draft_record
 from src.services.test_case_records import update_test_case_draft_record

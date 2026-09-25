@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -6,16 +7,35 @@ from pydantic import BaseModel, Field
 
 
 SpecialistName = Literal["requirement", "test_design", "analysis", "execution", "reporting"]
-TaskStatus = Literal["COMPLETED", "INSUFFICIENT_EVIDENCE", "FAILED", "LIMIT_REACHED"]
-RunStatus = Literal[
-    "PLANNING",
-    "RUNNING",
-    "APPROVAL_REQUIRED",
-    "APPLYING",
-    "VERIFYING",
-    "COMPLETED",
-    "FAILED",
-]
+
+
+class AgentTaskStatus(str, Enum):
+    COMPLETED = "COMPLETED"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    FAILED = "FAILED"
+    LIMIT_REACHED = "LIMIT_REACHED"
+
+
+class AgentRunStatus(str, Enum):
+    PLANNING = "PLANNING"
+    RUNNING = "RUNNING"
+    APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
+    APPLYING = "APPLYING"
+    VERIFYING = "VERIFYING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class AgentApprovalStatus(str, Enum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ToolExecutionStatus(str, Enum):
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    DENIED = "DENIED"
+    NOT_REQUIRED = "NOT_REQUIRED"
 
 
 def utc_now():
@@ -67,7 +87,7 @@ class PlannedTask(BaseModel):
 
 class AgentResult(BaseModel):
     task_id: str
-    status: TaskStatus
+    status: AgentTaskStatus
     summary: str
     evidence_refs: list[str] = Field(default_factory=list)
     reason_codes: list[str] = Field(default_factory=list)
@@ -117,12 +137,12 @@ class VeriqRunState(BaseModel):
     evidence_refs: list[str] = Field(default_factory=list)
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     proposal: dict[str, Any] | None = None
-    approval_status: str | None = None
+    approval_status: AgentApprovalStatus | None = None
     approval_decision: dict[str, Any] | None = None
     model_metadata: dict[str, Any] = Field(default_factory=dict)
     token_usage: dict[str, int] = Field(default_factory=dict)
     current_step: int = 0
-    status: RunStatus = "PLANNING"
+    status: AgentRunStatus = AgentRunStatus.PLANNING
     error_code: str | None = None
     revision: int = 1
     created_at: datetime = Field(default_factory=utc_now)
