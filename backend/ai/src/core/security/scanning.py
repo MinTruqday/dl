@@ -3,7 +3,6 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
-from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from src.core.security.guardrails import guardrails_engine, security_rules
@@ -64,6 +63,7 @@ class SecurityHarness:
         self, text: str, allow_ai_review: bool = True
     ) -> tuple[str, List[str]]:
         await self._ensure_pii_engine()
+        from langchain_core.messages import HumanMessage, SystemMessage
 
         from src.core.registry import PromptType, registry
         from src.schemas.security import SecurityEvaluation
