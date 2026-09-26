@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.non_functional_test import (
+from src.schemas.non_functional_test import (
     ExternalTestEvidenceImport,
     NonFunctionalTestPlanCreate,
     NonFunctionalTestPlanPatch,

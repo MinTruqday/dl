@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import EnvironmentIncidentStatus
+from src.schemas.contracts.common import EnvironmentIncidentStatus
 
 
 class EnvironmentIncidentCreate(BaseModel):

@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, get_project_role, new_id, now, visible_defect
 from src.core.metrics import STALE, TRACE_ACCEPTANCE_RATE, UNCOVERED
-from src.modules.quality.repositories.traceability import traceability_repository
+from src.repositories.traceability import traceability_repository
 from src.services.domain_policy import domain_policy
 
 TRACE_POLICY = domain_policy("traceability")

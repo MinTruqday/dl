@@ -1,7 +1,7 @@
 from pymongo import ReturnDocument
 
 from src.core.database import database
-from src.domain.contracts.common import FAILED_OUTCOME
+from src.schemas.contracts.common import FAILED_OUTCOME
 
 
 class AnalysisRepository:

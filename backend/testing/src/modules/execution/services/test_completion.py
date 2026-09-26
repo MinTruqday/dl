@@ -2,8 +2,8 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.domain.test_completion import completion_hash, completion_snapshot
-from src.modules.execution.repositories.test_completion import (
+from src.schemas.test_completion import completion_hash, completion_snapshot
+from src.repositories.test_completion import (
     find_active_member,
     find_completion_by_idempotency_key,
     find_monitoring_snapshot,

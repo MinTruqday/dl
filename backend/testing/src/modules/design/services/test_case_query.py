@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, now, page_payload, sort_spec
-from src.domain.contracts.design import TestCaseDraftCreate
-from src.modules.design.repositories.test_design import test_design_repository
+from src.schemas.contracts.design import TestCaseDraftCreate
+from src.repositories.test_design import test_design_repository
 from src.services.domain_policy import domain_policy
 from src.modules.design.services.test_case_records import create_test_case_draft_record
 

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.modules.requirements.repositories.requirement_analysis import requirement_analysis_repository
+from src.repositories.requirement_analysis import requirement_analysis_repository
 from src.modules.quality.services.change_analysis import semantic_changes
 from src.modules.design.services.linters import requirement_duplicate_score
 from src.modules.quality.services.quality_policy import quality_policy

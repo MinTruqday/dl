@@ -5,20 +5,20 @@ from src.core.common import (
     envelope,
     get_project_entity,
 )
-from src.domain.contracts.design import (
+from src.schemas.contracts.design import (
     ScenarioCreate,
     ScenarioPatch,
     TestCaseCloneInput,
 )
-from src.domain.contracts.project import ProjectArchiveInput
-from src.domain.contracts.requirements import ReviewTransitionInput
-from src.domain.contracts.utility import (
+from src.schemas.contracts.project import ProjectArchiveInput
+from src.schemas.contracts.requirements import ReviewTransitionInput
+from src.schemas.contracts.utility import (
     GenerateInput,
     TestCaseGenerateInput,
 )
-from src.domain.contracts.design import TestCaseDraftCreate as CaseDraftCreate
-from src.domain.contracts.design import TestCaseDraftPatch as CaseDraftPatch
-from src.domain.contracts.design import TestCaseFreezeInput as CaseFreezeInput
+from src.schemas.contracts.design import TestCaseDraftCreate as CaseDraftCreate
+from src.schemas.contracts.design import TestCaseDraftPatch as CaseDraftPatch
+from src.schemas.contracts.design import TestCaseFreezeInput as CaseFreezeInput
 from src.modules.design.services.test_case_records import (
     create_test_case_draft_record,
     update_test_case_draft_record,

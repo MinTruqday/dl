@@ -2,9 +2,9 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, get_project_role, new_id, now
-from src.modules.design.repositories.test_design import test_design_repository
+from src.repositories.test_design import test_design_repository
 from src.services.domain_policy import domain_policy
-from src.domain.contracts.requirements import (
+from src.schemas.contracts.requirements import (
     AttachmentCreate,
     AttachmentModeration,
 )

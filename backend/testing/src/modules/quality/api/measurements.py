@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.measurement import (
+from src.schemas.measurement import (
     MeasurementDefinitionCreate,
     MeasurementDefinitionPatch,
     MeasurementSnapshotCreate,

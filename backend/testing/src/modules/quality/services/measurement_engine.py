@@ -2,7 +2,7 @@ import ast
 import math
 
 from src.core.common import now
-from src.modules.quality.repositories.measurement import measurement_repository
+from src.repositories.measurement import measurement_repository
 from src.services.domain_policy import domain_policy
 
 

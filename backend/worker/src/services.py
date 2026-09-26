@@ -2,9 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from pymongo import ReturnDocument
-
-from src.core.infrastructure.database import database, record_job
+from src.repositories.jobs import worker_job_repository
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
 from src.schemas import DiscardJobRequest, TestingJobRequest
@@ -18,10 +16,10 @@ class WorkerJobService:
             [payload.project_id, payload.artifact_version_id, event, payload.model_version]
         )
         job_id = f"qa-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
-        if existing := await WorkerJobService._jobs().find_one({"_id": job_id}):
+        if existing := await worker_job_repository.find_one({"_id": job_id}):
             return {"job_id": job_id, "status": existing["status"]}
         task_payload = {"job_id": job_id, **payload.model_dump(mode="json")}
-        await record_job(
+        await worker_job_repository.record(
             job_id,
             {"status": "queued"},
             {
@@ -35,14 +33,14 @@ class WorkerJobService:
             await mq.publish("qa_job_queue", task_payload)
             metrics_collector.change_queue_depth("qa_job_queue", 1)
         except Exception as error:
-            await record_job(job_id, {"status": "failed", "error": "Queue unavailable"})
+            await worker_job_repository.record(job_id, {"status": "failed", "error": "Queue unavailable"})
             raise HTTPException(status_code=503, detail="Worker queue is unavailable") from error
         return {"job_id": job_id, "status": "queued"}
 
     @staticmethod
     async def retry(job_id: str):
         WorkerJobService._validate_id(job_id)
-        job = await WorkerJobService._jobs().find_one({"_id": job_id})
+        job = await worker_job_repository.find_one({"_id": job_id})
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         if job.get("status") != "failed":
@@ -53,7 +51,7 @@ class WorkerJobService:
         retry_count = int(job.get("manual_retry_count", 0))
         if retry_count >= 9:
             raise HTTPException(status_code=409, detail="Manual retry limit reached")
-        await record_job(
+        await worker_job_repository.record(
             job_id,
             {
                 "status": "queued",
@@ -69,20 +67,20 @@ class WorkerJobService:
     @staticmethod
     async def cancel(job_id: str):
         WorkerJobService._validate_id(job_id)
-        job = await WorkerJobService._jobs().find_one({"_id": job_id})
+        job = await worker_job_repository.find_one({"_id": job_id})
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         if job.get("status") == "canceled":
             return {"job_id": job_id, "status": "canceled"}
         if job.get("status") != "queued":
             raise HTTPException(status_code=409, detail="Only queued jobs can be canceled")
-        await record_job(job_id, {"status": "canceled", "canceled_at": datetime.now(timezone.utc)})
+        await worker_job_repository.record(job_id, {"status": "canceled", "canceled_at": datetime.now(timezone.utc)})
         return {"job_id": job_id, "status": "canceled"}
 
     @staticmethod
     async def get(job_id: str):
         WorkerJobService._validate_id(job_id)
-        job = await WorkerJobService._jobs().find_one({"_id": job_id})
+        job = await worker_job_repository.find_one({"_id": job_id})
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         for field in ["created_at", "updated_at", "attempt_started_at", "expire_at"]:
@@ -99,21 +97,13 @@ class WorkerJobService:
             query["status"] = status.lower()
         if kind:
             query["kind"] = kind
-        jobs = WorkerJobService._jobs()
-        items = (
-            await jobs.find(query, {"request.internal_token": 0})
-            .sort("updated_at", -1)
-            .limit(limit)
-            .to_list(limit)
-        )
-        return {"items": items, "total": await jobs.count_documents(query)}
+        items = await worker_job_repository.list(query, limit)
+        return {"items": items, "total": await worker_job_repository.count(query)}
 
     @staticmethod
     async def overview(project_id: str):
         match = {"project_id": project_id} if project_id else {}
-        rows = await WorkerJobService._jobs().aggregate(
-            [{"$match": match}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]
-        ).to_list(100)
+        rows = await worker_job_repository.overview(match)
         return {
             "jobs_by_status": {row["_id"]: row["count"] for row in rows},
             "total": sum(row["count"] for row in rows),
@@ -122,25 +112,15 @@ class WorkerJobService:
     @staticmethod
     async def discard(job_id: str, payload: DiscardJobRequest):
         WorkerJobService._validate_id(job_id)
-        job = await WorkerJobService._jobs().find_one_and_update(
-            {"_id": job_id, "status": "failed"},
-            {
-                "$set": {
-                    "status": "discarded",
-                    "discard_reason": payload.reason,
-                    "discarded_by": payload.actor_id,
-                    "discarded_at": datetime.now(timezone.utc),
-                }
-            },
-            return_document=ReturnDocument.AFTER,
-        )
+        job = await worker_job_repository.discard(job_id, {
+            "status": "discarded",
+            "discard_reason": payload.reason,
+            "discarded_by": payload.actor_id,
+            "discarded_at": datetime.now(timezone.utc),
+        })
         if not job:
             raise HTTPException(status_code=409, detail="Only failed jobs can be discarded")
         return job
-
-    @staticmethod
-    def _jobs():
-        return database.mongodb[settings.WORKER_DB_NAME].worker_jobs
 
     @staticmethod
     def _validate_id(job_id: str):

@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import ControlActionStatus
+from src.schemas.contracts.common import ControlActionStatus
 
 
 class MonitoringSnapshotCreate(BaseModel):

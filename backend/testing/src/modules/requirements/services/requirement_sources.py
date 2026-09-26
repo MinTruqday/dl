@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, require_action_policy
-from src.modules.requirements.repositories.requirement_document import requirement_document_repository
+from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
 from src.services.domain_policy import domain_policy
 

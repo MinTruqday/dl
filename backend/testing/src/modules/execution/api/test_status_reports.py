@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_status_report import (
+from src.schemas.test_status_report import (
     TestStatusReportAiDraft,
     TestStatusReportEvidence,
     TestStatusReportGenerate,

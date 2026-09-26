@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.domain.contracts.common import WebhookDeliveryStatus
+from src.schemas.contracts.common import WebhookDeliveryStatus
 
 class ReleaseCreate(BaseModel):
     key: str = Field(min_length=2, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]+$")

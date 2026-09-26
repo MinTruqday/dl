@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, plain_text, validate_doc
-from src.modules.requirements.repositories.requirement_ai import requirement_ai_repository
+from src.repositories.requirement_ai import requirement_ai_repository
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.modules.design.services.linters import requirement_findings
 from src.modules.requirements.services.requirement_records import persist_acceptance_criteria

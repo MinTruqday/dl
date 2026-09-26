@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import empty_doc
+from src.schemas.contracts.common import empty_doc
 
 class DefectCreate(BaseModel):
     project_id: str

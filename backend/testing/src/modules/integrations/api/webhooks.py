@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts.environment import (
+from src.schemas.contracts.environment import (
     WebhookDeliveryRecordInput,
     WebhookReplayInput,
     WebhookSubscriptionCreate,

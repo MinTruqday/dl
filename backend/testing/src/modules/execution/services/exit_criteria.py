@@ -1,4 +1,4 @@
-from src.domain.test_monitoring import ExitCriterionDefinition
+from src.schemas.test_monitoring import ExitCriterionDefinition
 from src.services.domain_policy import domain_policy
 
 EXIT_POLICY = domain_policy("exit_criteria")

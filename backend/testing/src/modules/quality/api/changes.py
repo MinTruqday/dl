@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
-from src.domain.contracts.design import (
+from src.schemas.contracts.design import (
     ChangeSetReviewInput,
     ImpactRerunInput,
     ImpactReviewInput,
@@ -10,7 +10,7 @@ from src.domain.contracts.design import (
     ProposalRegenerateInput,
     RegressionApprovalInput,
 )
-from src.domain.contracts.requirements import RequirementCompareInput
+from src.schemas.contracts.requirements import RequirementCompareInput
 from src.modules.quality.services.change_set import (
     create_change_set_record,
     get_change_set_record,

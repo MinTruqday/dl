@@ -12,7 +12,7 @@ import httpx
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database, record_job
+from src.repositories.jobs import worker_job_repository
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
 from src.schemas import AutomationExecutionStatus, WorkerJobStatus
@@ -35,7 +35,7 @@ async def handle_testing_job(payload: dict):
     requester_email = str(payload.get("requester_email") or "")
     validate_identifier(job_id, "job identifier")
     validate_identifier(requester_id, "requester identifier")
-    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one(
+    job = await worker_job_repository.find_one(
         {"_id": job_id}, {"status": 1}
     )
     if job and job.get("status") == WorkerJobStatus.CANCELED:
@@ -43,7 +43,7 @@ async def handle_testing_job(payload: dict):
     job_payload = payload.get("payload")
     if not isinstance(job_payload, dict):
         raise PermanentTaskError("Testing job payload is required")
-    await record_job(
+    await worker_job_repository.record(
         job_id,
         {
             "status": WorkerJobStatus.RUNNING,
@@ -63,7 +63,7 @@ async def handle_testing_job(payload: dict):
             else await run_playwright(job_id, payload, job_payload)
         )
         completed_at = datetime.now(timezone.utc)
-        await record_job(
+        await worker_job_repository.record(
             job_id,
             {
                 "status": WorkerJobStatus.COMPLETED,
@@ -92,7 +92,7 @@ async def handle_testing_job(payload: dict):
     response.raise_for_status()
     result = response.json()
     completed_at = datetime.now(timezone.utc)
-    await record_job(
+    await worker_job_repository.record(
         job_id,
         {
             "status": WorkerJobStatus.COMPLETED,
@@ -341,7 +341,7 @@ async def mark_failed(queue_name: str, payload: dict, error: Exception):
     job_id = str(payload.get("job_id") or "")
     if IDENTIFIER_PATTERN.fullmatch(job_id):
         completed_at = datetime.now(timezone.utc)
-        await record_job(
+        await worker_job_repository.record(
             job_id,
             {
                 "status": WorkerJobStatus.FAILED,

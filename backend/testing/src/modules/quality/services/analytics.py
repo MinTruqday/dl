@@ -1,8 +1,8 @@
 import re
 
 from src.core.common import get_project, load_user_identities, now
-from src.domain.contracts.utility import SearchInput
-from src.modules.quality.repositories.analytics import analytics_repository
+from src.schemas.contracts.utility import SearchInput
+from src.repositories.analytics import analytics_repository
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.services.domain_policy import domain_policy
 from src.clients.project_knowledge import search_project_with_status

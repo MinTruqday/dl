@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import (
+from src.schemas.contracts.common import (
     CompletionRecommendation,
     ImprovementActionStatus,
     ResidualRiskStatus,

@@ -3,14 +3,14 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import permissions_for_role
 from src.core.common import audit, get_project, new_id, now
-from src.domain.test_monitoring import (
+from src.schemas.test_monitoring import (
     ControlActionCreate,
     ControlActionPatch,
     ExitCriterionOverride,
     MonitoringSnapshotCreate,
     source_fingerprint,
 )
-from src.modules.execution.repositories.test_monitoring import test_monitoring_repository
+from src.repositories.test_monitoring import test_monitoring_repository
 from src.services.domain_policy import domain_policy
 from src.modules.execution.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
 from src.modules.quality.services.quality_gate import (

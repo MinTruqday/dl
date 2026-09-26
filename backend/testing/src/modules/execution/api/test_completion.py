@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_completion import (
+from src.schemas.test_completion import (
     CompletionSignOff,
     CompletionTransition,
     LessonLearnedCreate,

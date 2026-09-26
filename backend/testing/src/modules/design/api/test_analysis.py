@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_analysis import (
+from src.schemas.test_analysis import (
     AnalysisFindingAssignment,
     AnalysisFindingCreate,
     AnalysisFindingTransition,

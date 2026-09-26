@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.domain.contracts.common import AutomationExecutionStatus
+from src.schemas.contracts.common import AutomationExecutionStatus
 
 class AutomationScriptGenerateInput(BaseModel):
     framework: Literal["playwright", "cypress", "selenium"]

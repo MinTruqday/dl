@@ -5,10 +5,10 @@ from fastapi import HTTPException, UploadFile
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
-from src.modules.design.repositories.test_design import test_design_repository
+from src.repositories.test_design import test_design_repository
 from src.core.rich_text import text_document
-from src.domain.contracts.design import TestCaseDraftCreate
-from src.domain.contracts.requirements import (
+from src.schemas.contracts.design import TestCaseDraftCreate
+from src.schemas.contracts.requirements import (
     ImportConfirm,
     ImportCreate,
 )

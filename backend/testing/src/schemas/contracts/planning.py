@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import TestPlanRiskStatus
+from src.schemas.contracts.common import TestPlanRiskStatus
 
 class TestPlanEstimation(BaseModel):
     method: Literal["expert_judgment", "three_point", "historical", "custom"] = "expert_judgment"

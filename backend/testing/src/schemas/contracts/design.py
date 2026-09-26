@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.domain.contracts.common import empty_doc
+from src.schemas.contracts.common import empty_doc
 
 class ScenarioCreate(BaseModel):
     scenario_key: str | None = Field(default=None, max_length=80)

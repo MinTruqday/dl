@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, new_id, now
-from src.modules.execution.repositories.test_completion import update_completion
+from src.repositories.test_completion import update_completion
 from src.modules.execution.services.test_completion_query import get_completion_for_user, validate_people
 from src.services.domain_policy import domain_policy
 

@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.core.configuration import settings
-from src.modules.integrations.repositories.cicd import cicd_repository
+from src.repositories.cicd import cicd_repository
 from src.services.domain_policy import domain_policy
 from src.core.sensitive_data import redact_sensitive_data
 

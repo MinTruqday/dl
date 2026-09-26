@@ -13,7 +13,7 @@ from src.core.common import (
     sort_spec,
     validate_doc,
 )
-from src.modules.requirements.repositories.requirement import requirement_repository
+from src.repositories.requirement import requirement_repository
 from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_indexing import (
     index_requirement_version,

@@ -4,14 +4,14 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now, page_payload
-from src.domain.test_strategy import (
+from src.schemas.test_strategy import (
     TestStrategyFields,
     compare_strategy_snapshots,
     strategy_completeness,
     strategy_hash,
     strategy_snapshot,
 )
-from src.modules.design.repositories.test_strategy import test_strategy_repository
+from src.repositories.test_strategy import test_strategy_repository
 from src.services.domain_policy import domain_policy
 
 

@@ -6,9 +6,9 @@ from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, next_key, now, page_payload
-from src.domain.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
-from src.modules.design.repositories.test_condition import test_condition_repository
-from src.modules.design.repositories.test_analysis import test_analysis_repository
+from src.schemas.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
+from src.repositories.test_condition import test_condition_repository
+from src.repositories.test_analysis import test_analysis_repository
 from src.services.domain_policy import domain_policy
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.modules.design.services.test_analysis_basis import (

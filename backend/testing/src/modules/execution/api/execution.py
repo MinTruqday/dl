@@ -3,14 +3,14 @@ from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project
-from src.domain.contracts.defects import (
+from src.schemas.contracts.defects import (
     BugTraceSuggestionInput,
     DefectCreate,
     DefectRetestInput,
     DefectTraceUpdateInput,
     DefectTransition,
 )
-from src.domain.contracts.execution import (
+from src.schemas.contracts.execution import (
     TestExecutionPatch,
     TestPlanPatch,
     TestResultCorrectionInput,
@@ -22,9 +22,9 @@ from src.domain.contracts.execution import (
     TestSuiteCreate,
     TestSuitePatch,
 )
-from src.domain.contracts.planning import TestPlanCreate
-from src.domain.contracts.project import ProjectArchiveInput
-from src.domain.contracts.requirements import ReviewTransitionInput
+from src.schemas.contracts.planning import TestPlanCreate
+from src.schemas.contracts.project import ProjectArchiveInput
+from src.schemas.contracts.requirements import ReviewTransitionInput
 from src.modules.quality.services.defect_analysis import find_duplicate_defect_pairs
 from src.modules.quality.services.defect_records import (
     build_defect_export,

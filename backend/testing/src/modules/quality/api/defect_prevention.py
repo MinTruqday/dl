@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.causal_analysis import (
+from src.schemas.causal_analysis import (
     CausalAiRequest,
     CausalAnalysisCreate,
     CausalAnalysisPatch,

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts.automation import (
+from src.schemas.contracts.automation import (
     CiCdBindingCreate,
     CiCdBindingPatch,
     CiCdResultInput,

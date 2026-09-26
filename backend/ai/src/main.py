@@ -166,23 +166,20 @@ async def agent_metrics():
 
 @app.get("/danh-gia/trang-thai", dependencies=[Depends(require_system_admin)])
 async def agent_status():
-    db = database.mongodb[settings.AI_DB_NAME]
+    from src.repositories.memory import memory_repository
+
     return {
         "orchestration": {
-            "active_runs": await db.agent_runs.count_documents(
-                {
-                    "status": {
-                        "$in": [
-                            AgentRunStatus.PLANNING,
-                            AgentRunStatus.RUNNING,
-                            AgentRunStatus.APPLYING,
-                            AgentRunStatus.VERIFYING,
-                        ]
-                    }
-                }
+            "active_runs": await memory_repository.count_runs(
+                [
+                    AgentRunStatus.PLANNING,
+                    AgentRunStatus.RUNNING,
+                    AgentRunStatus.APPLYING,
+                    AgentRunStatus.VERIFYING,
+                ]
             ),
-            "approval_required": await db.agent_runs.count_documents(
-                {"status": AgentRunStatus.APPROVAL_REQUIRED}
+            "approval_required": await memory_repository.count_runs(
+                [AgentRunStatus.APPROVAL_REQUIRED]
             ),
         },
         "evaluation": evaluation.get_dashboard_metrics(),

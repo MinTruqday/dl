@@ -1,5 +1,5 @@
 from src.core.common import audit, get_project, get_project_entity
-from src.modules.quality.repositories.analysis import analysis_repository
+from src.repositories.analysis import analysis_repository
 from src.core.ai_assistance import ai_contract_metadata
 from src.services.domain_policy import domain_policy
 from src.modules.design.services.generation import generate_requirement_drafts

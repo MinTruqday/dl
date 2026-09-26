@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
 from src.core.internal import require_internal_token
-from src.domain.internal_admin import (
+from src.schemas.internal_admin import (
     BreakGlassGrant,
     BreakGlassRevoke,
     ProjectDelete,

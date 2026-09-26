@@ -2,8 +2,8 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
-from src.modules.quality.repositories.analysis import analysis_repository
-from src.domain.contracts.design import (
+from src.repositories.analysis import analysis_repository
+from src.schemas.contracts.design import (
     RiskRankingApproval,
     RiskRankingGenerate,
     RiskRankingPatch,

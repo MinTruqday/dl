@@ -5,8 +5,8 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.domain.measurement import validate_threshold_order
-from src.modules.quality.repositories.measurement import measurement_repository
+from src.schemas.measurement import validate_threshold_order
+from src.repositories.measurement import measurement_repository
 from src.services.domain_policy import domain_policy
 from src.modules.quality.services.measurement_engine import (
     compute_custom_metric,

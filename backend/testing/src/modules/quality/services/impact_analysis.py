@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.modules.quality.repositories.impact_analysis import impact_analysis_repository
+from src.repositories.impact_analysis import impact_analysis_repository
 from src.modules.quality.services.change_analysis import classify_test_impact, semantic_candidate_score
 from src.services.domain_policy import domain_policy
 from src.modules.quality.services.impact_assistance import (

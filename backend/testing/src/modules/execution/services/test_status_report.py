@@ -4,8 +4,8 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.domain.test_status_report import status_report_hash, status_report_snapshot
-from src.modules.execution.repositories.test_status_report import (
+from src.schemas.test_status_report import status_report_hash, status_report_snapshot
+from src.repositories.test_status_report import (
     find_ai_result,
     find_build,
     find_monitoring_snapshot,

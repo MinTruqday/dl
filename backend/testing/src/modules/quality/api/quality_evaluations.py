@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.quality_evaluation import (
+from src.schemas.quality_evaluation import (
     QualityEvaluationCreate,
     QualityEvaluationPatch,
     QualityEvaluationReview,

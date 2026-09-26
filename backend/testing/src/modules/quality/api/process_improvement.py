@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.process_improvement import (
+from src.schemas.process_improvement import (
     ProcessImprovementCreate,
     ProcessImprovementEvaluation,
     ProcessImprovementLink,

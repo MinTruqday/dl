@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project_entity, new_id, now, optimistic_patch
-from src.modules.quality.repositories.defect import defect_repository
+from src.repositories.defect import defect_repository
 from src.modules.quality.services.defect_analysis import build_defect_trace_candidates
 from src.services.domain_policy import domain_policy
 

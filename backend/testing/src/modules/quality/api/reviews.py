@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts.requirements import (
+from src.schemas.contracts.requirements import (
     ReviewCommentAction,
     ReviewCommentCreate,
     ReviewCommentPatch,

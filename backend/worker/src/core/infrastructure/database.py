@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from src.core.infrastructure.configuration import settings
 
 
@@ -27,13 +25,3 @@ async def close_db():
     if database.mongodb:
         database.mongodb.close()
         database.mongodb = None
-
-
-async def record_job(job_id: str, values: dict, insert: dict | None = None):
-    now = datetime.now(timezone.utc)
-    update = {"$set": {**values, "updated_at": now}}
-    if insert is not None:
-        update["$setOnInsert"] = {"_id": job_id, "created_at": now, **insert}
-    await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.update_one(
-        {"_id": job_id}, update, upsert=insert is not None
-    )

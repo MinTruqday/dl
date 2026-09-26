@@ -2,8 +2,8 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.modules.quality.repositories.review import review_repository
-from src.domain.contracts.requirements import (
+from src.repositories.review import review_repository
+from src.schemas.contracts.requirements import (
     ReviewCommentAction,
     ReviewCommentCreate,
     ReviewCommentPatch,

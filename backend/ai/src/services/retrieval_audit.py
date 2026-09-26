@@ -4,14 +4,14 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.mongo import mongo
+from src.repositories.retrieval_audit import retrieval_audit_repository
 
 
 class RetrievalAuditService:
     @staticmethod
     async def record(operation: str, query: str, requester_id: str | None, is_admin: bool, docs):
         metadata = [doc.get("metadata") or {} for doc in docs]
-        await mongo.get_db().retrieval_audit.insert_one(
+        await retrieval_audit_repository.insert(
             {
                 "_id": f"KNOWLEDGE-AUD-{uuid4().hex}",
                 "operation": operation,
@@ -45,10 +45,4 @@ class RetrievalAuditService:
             query["project_ids"] = project_id
         if document_id:
             query["document_ids"] = document_id
-        return (
-            await mongo.get_db()
-            .retrieval_audit.find(query)
-            .sort("created_at", -1)
-            .limit(limit)
-            .to_list(limit)
-        )
+        return await retrieval_audit_repository.list(query, limit)

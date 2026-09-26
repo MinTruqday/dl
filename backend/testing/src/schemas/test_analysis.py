@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from src.domain.contracts.common import AnalysisFindingStatus, TestabilityStatus
+from src.schemas.contracts.common import AnalysisFindingStatus, TestabilityStatus
 
 
 def normalize_testability_status(value):

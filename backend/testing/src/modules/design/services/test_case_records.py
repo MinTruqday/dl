@@ -10,7 +10,7 @@ from src.core.common import (
     optimistic_patch,
     plain_text,
 )
-from src.modules.design.repositories.test_design import test_design_repository
+from src.repositories.test_design import test_design_repository
 from src.services.domain_policy import domain_policy
 
 

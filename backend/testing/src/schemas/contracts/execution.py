@@ -2,13 +2,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.domain.contracts.common import (
+from src.schemas.contracts.common import (
     NOT_APPLICABLE_OUTCOME,
     TestExecutionStatus,
     TestOutcome,
     empty_doc,
 )
-from src.domain.contracts.planning import (
+from src.schemas.contracts.planning import (
     TestPlanCommunication,
     TestPlanEstimation,
     TestPlanMilestone,

@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from src.modules.operations.repositories.internal_admin import internal_admin_repository
+from src.repositories.internal_admin import internal_admin_repository
 from src.services.domain_policy import domain_policy
 
 ADMIN_POLICY = domain_policy("internal_admin")
