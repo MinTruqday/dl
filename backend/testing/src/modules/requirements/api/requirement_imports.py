@@ -10,11 +10,11 @@ from src.domain.contracts.requirements import (
     RequirementCandidateSplitInput,
     RequirementImportReview,
 )
-from src.services.requirement_import import (
+from src.modules.requirements.services.requirement_import import (
     extract_file_content,
     supported_requirement_formats,
 )
-from src.services.requirement_import_workflow import (
+from src.modules.requirements.services.requirement_import_workflow import (
     confirm_requirement_import_job,
     create_requirement_import_job,
     merge_requirement_import_candidates,

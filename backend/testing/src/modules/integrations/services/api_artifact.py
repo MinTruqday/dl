@@ -14,7 +14,7 @@ from src.domain.contracts.requirements import (
     APIArtifactReview,
     ImportCreate,
 )
-from src.services.api_artifact_formats import (
+from src.modules.integrations.services.api_artifact_formats import (
     api_case_blueprints,
     model_metadata,
     operation_fingerprint,
@@ -24,10 +24,10 @@ from src.services.api_artifact_formats import (
     public_api_import,
     sanitize_postman,
 )
-from src.repositories.api_artifact import api_artifact_repository
+from src.modules.integrations.repositories.api_artifact import api_artifact_repository
 from src.services.domain_policy import domain_policy
-from src.services.test_case_records import create_test_case_draft_record
-from src.services.test_case_transfer import (
+from src.modules.design.services.test_case_records import create_test_case_draft_record
+from src.modules.design.services.test_case_transfer import (
     confirm_test_import,
     export_test_cases,
     preview_test_import,

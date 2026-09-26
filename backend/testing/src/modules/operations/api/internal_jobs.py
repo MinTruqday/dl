@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 
 from src.core.common import envelope
 from src.core.internal import require_internal_token
-from src.services.job_execution import process_delegated_job
+from src.modules.operations.services.job_execution import process_delegated_job
 
 router = APIRouter(prefix="/kiem-thu/noi-bo/tac-vu", tags=["Tác vụ nội bộ kiểm thử"])
 

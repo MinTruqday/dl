@@ -13,13 +13,13 @@ from src.core.common import (
     plain_text,
     validate_doc,
 )
-from src.repositories.requirement import requirement_repository
+from src.modules.requirements.repositories.requirement import requirement_repository
 from src.services.domain_policy import domain_policy
-from src.services.requirement_indexing import (
+from src.modules.requirements.services.requirement_indexing import (
     index_requirement_version,
     validate_requirement_sources,
 )
-from src.services.requirement_workflow import serialized_content
+from src.modules.requirements.services.requirement_workflow import serialized_content
 
 TRANSFORMATION_POLICY = domain_policy("requirement_transformations")
 

@@ -9,7 +9,7 @@ from src.domain.internal_admin import (
     ProjectStatusChange,
     ReindexCandidates,
 )
-from src.services.internal_admin import InternalAdminService
+from src.modules.operations.services.internal_admin import InternalAdminService
 
 router = APIRouter(
     prefix="/kiem-thu/noi-bo/quan-tri",

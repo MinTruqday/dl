@@ -4,10 +4,10 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.repositories.test_design import test_design_repository
-from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.modules.design.repositories.test_design import test_design_repository
+from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.domain_policy import domain_policy
-from src.services.generation import PerformanceScenario, SecurityCandidate, validated_suggestions
+from src.modules.design.services.generation import PerformanceScenario, SecurityCandidate, validated_suggestions
 
 
 async def requirement_evidence(project_id, requirement_version_ids):

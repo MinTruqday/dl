@@ -8,7 +8,7 @@ from src.domain.contracts.automation import (
     AutomationScriptGenerateInput,
     AutomationScriptPatch,
 )
-from src.services.automation_script import AutomationScriptService
+from src.modules.integrations.services.automation_script import AutomationScriptService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kịch bản tự động hóa"])
 

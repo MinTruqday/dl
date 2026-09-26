@@ -7,7 +7,7 @@ from src.domain.contracts.environment import (
     ProjectNotificationPreferencePatch,
     ProjectNotificationRulePatch,
 )
-from src.services.project_notification import ProjectNotificationService
+from src.modules.projects.services.project_notification import ProjectNotificationService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thông báo dự án"])
 

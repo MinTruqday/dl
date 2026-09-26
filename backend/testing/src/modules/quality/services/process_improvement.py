@@ -2,9 +2,9 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.repositories.process_improvement import process_improvement_repository
+from src.modules.quality.repositories.process_improvement import process_improvement_repository
 from src.services.domain_policy import domain_policy
-from src.services.statistical_quality import (
+from src.modules.quality.services.statistical_quality import (
     annotate_special_cause,
     compare_statistical_analyses,
     create_statistical_baseline,

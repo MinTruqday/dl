@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.test_status_report import status_report_hash, status_report_snapshot
-from src.repositories.test_status_report import (
+from src.modules.execution.repositories.test_status_report import (
     find_ai_result,
     find_build,
     find_monitoring_snapshot,
@@ -20,8 +20,8 @@ from src.repositories.test_status_report import (
     update_report,
 )
 from src.services.domain_policy import domain_policy
-from src.services.design_assistance import ai_contract_metadata, request_design_assistance
-from src.services.test_monitoring import effective_snapshot
+from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.modules.execution.services.test_monitoring import effective_snapshot
 
 
 STATUS_REPORT_POLICY = domain_policy("test_status_report")

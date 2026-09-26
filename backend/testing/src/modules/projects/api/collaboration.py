@@ -7,7 +7,7 @@ from src.domain.contracts.automation import (
     CollaborationOperationInput,
     CollaborationPresenceInput,
 )
-from src.services.collaboration import CollaborationService
+from src.modules.projects.services.collaboration import CollaborationService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Cộng tác thời gian thực"])
 

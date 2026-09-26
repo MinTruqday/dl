@@ -2,14 +2,14 @@ from fastapi import HTTPException
 
 from src.core.common import audit, get_project_entity, new_id, now
 from src.domain.contracts.design import TestCaseDraftCreate
-from src.repositories.proposal_application import proposal_application_repository
+from src.modules.quality.repositories.proposal_application import proposal_application_repository
 from src.services.domain_policy import domain_policy
-from src.services.maintenance_proposal import (
+from src.modules.quality.services.maintenance_proposal import (
     require_pending_revision,
     update_proposal_acceptance_rate,
 )
 from src.clients.project_knowledge import index_artifact
-from src.services.test_case_records import create_test_case_draft_record, project_test_text
+from src.modules.design.services.test_case_records import create_test_case_draft_record, project_test_text
 
 
 async def approve_maintenance_proposal(

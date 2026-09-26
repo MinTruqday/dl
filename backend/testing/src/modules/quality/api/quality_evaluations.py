@@ -10,7 +10,7 @@ from src.domain.quality_evaluation import (
     QualityWaiverCreate,
     QualityWaiverDecision,
 )
-from src.services.quality_evaluation import QualityEvaluationService
+from src.modules.quality.services.quality_evaluation import QualityEvaluationService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Đánh giá chất lượng sản phẩm"])
 

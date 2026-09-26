@@ -9,7 +9,7 @@ from src.domain.contracts.automation import (
     ProjectConnectorPatch,
     ProjectConnectorUnbind,
 )
-from src.services.project_connector import ProjectConnectorService
+from src.modules.integrations.services.project_connector import ProjectConnectorService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kết nối dự án"])
 

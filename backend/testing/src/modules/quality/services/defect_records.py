@@ -16,9 +16,9 @@ from src.core.common import (
     sort_spec,
     visible_defect,
 )
-from src.repositories.defect import defect_repository
+from src.modules.quality.repositories.defect import defect_repository
 from src.services.domain_policy import domain_policy
-from src.services.execution_context import resolve_execution_context
+from src.modules.execution.services.execution_context import resolve_execution_context
 from src.clients.project_knowledge import index_artifact
 
 

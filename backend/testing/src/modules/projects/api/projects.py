@@ -9,7 +9,7 @@ from src.domain.contracts.project import (
     ProjectMemberPatch,
     ProjectPatch,
 )
-from src.services.project import ProjectService
+from src.modules.projects.services.project import ProjectService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Dự án kiểm thử"])
 

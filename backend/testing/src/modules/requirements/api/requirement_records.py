@@ -12,15 +12,15 @@ from src.domain.contracts.requirements import (
     RequirementVersionCreate,
     ReviewTransitionInput,
 )
-from src.services.requirement_dependencies import add_dependency, remove_dependency
-from src.services.requirement_lifecycle import (
+from src.modules.requirements.services.requirement_dependencies import add_dependency, remove_dependency
+from src.modules.requirements.services.requirement_lifecycle import (
     baseline_requirement,
     make_requirement_obsolete,
     restore_obsolete_requirement,
     return_requirement_for_changes,
     submit_requirement_for_review,
 )
-from src.services.requirement_records import (
+from src.modules.requirements.services.requirement_records import (
     create_requirement_record,
     create_requirement_version_record,
     get_requirement_record,

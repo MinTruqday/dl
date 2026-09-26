@@ -13,11 +13,11 @@ from src.core.common import (
     optimistic_patch,
     sort_spec,
 )
-from src.repositories.test_design import test_design_repository
-from src.services.design_assistance import ai_contract_metadata
-from src.services.generation import generate_requirement_drafts
+from src.modules.design.repositories.test_design import test_design_repository
+from src.modules.design.services.design_assistance import ai_contract_metadata
+from src.modules.design.services.generation import generate_requirement_drafts
 from src.services.domain_policy import domain_policy
-from src.services.test_case_records import validate_design_sources
+from src.modules.design.services.test_case_records import validate_design_sources
 
 
 TEST_DESIGN_POLICY = domain_policy("test_design")

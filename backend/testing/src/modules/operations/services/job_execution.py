@@ -2,15 +2,15 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import get_project, now
-from src.repositories.analysis import analysis_repository
+from src.modules.quality.repositories.analysis import analysis_repository
 from src.domain.contracts.requirements import RequirementCompareInput
 from src.domain.contracts.utility import GenerateInput
-from src.services.change_set import create_change_set_record
+from src.modules.quality.services.change_set import create_change_set_record
 from src.services.domain_policy import domain_policy
-from src.services.impact_analysis import create_impact_analysis_record
-from src.services.job_policy import ALLOWED_JOB_EVENTS, JOB_EVENT_PERMISSIONS
+from src.modules.quality.services.impact_analysis import create_impact_analysis_record
+from src.modules.operations.services.job_policy import ALLOWED_JOB_EVENTS, JOB_EVENT_PERMISSIONS
 from src.clients.project_knowledge import index_artifact
-from src.services.test_case_assistance import (
+from src.modules.design.services.test_case_assistance import (
     find_duplicate_test_case_records,
     generate_test_case_draft_records,
 )

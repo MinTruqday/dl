@@ -10,7 +10,7 @@ from src.domain.contracts.requirements import (
     ImportConfirm,
     ImportCreate,
 )
-from src.services import api_artifact
+from src.modules.integrations.services import api_artifact
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kiểm thử API và khôi phục"])
 

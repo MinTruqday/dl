@@ -6,7 +6,7 @@ from src.domain.contracts.requirements import (
     AttachmentCreate,
     AttachmentModeration,
 )
-from src.services.attachment import AttachmentService
+from src.modules.projects.services.attachment import AttachmentService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tệp đính kèm kiểm thử"])
 

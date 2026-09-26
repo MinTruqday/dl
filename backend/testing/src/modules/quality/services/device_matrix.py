@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
-from src.repositories.test_design import test_design_repository
+from src.modules.design.repositories.test_design import test_design_repository
 from src.domain.contracts.environment import (
     DeviceMatrixArchive,
     DeviceMatrixAssignment,

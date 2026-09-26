@@ -2,7 +2,7 @@ import re
 from difflib import SequenceMatcher
 
 from src.core.common import plain_text
-from src.services.quality_policy import evaluate_rules, quality_policy
+from src.modules.quality.services.quality_policy import evaluate_rules, quality_policy
 
 
 def requirement_findings(version, acceptance_criteria=None):

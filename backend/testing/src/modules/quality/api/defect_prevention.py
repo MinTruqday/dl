@@ -16,7 +16,7 @@ from src.domain.causal_analysis import (
     PreventionActionCreate,
     PreventionActionPatch,
 )
-from src.services.causal_analysis import CausalAnalysisService
+from src.modules.quality.services.causal_analysis import CausalAnalysisService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phòng ngừa lỗi"])
 

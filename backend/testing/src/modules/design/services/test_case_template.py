@@ -13,7 +13,7 @@ from src.core.common import (
     now,
     require_action_policy,
 )
-from src.repositories.test_design import test_design_repository
+from src.modules.design.repositories.test_design import test_design_repository
 from src.domain.test_case_template import (
     TemplateType,
     TestCaseTemplateArchive,

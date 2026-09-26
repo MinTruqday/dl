@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.services.delegated_jobs import DelegatedJobService
+from src.modules.operations.services.delegated_jobs import DelegatedJobService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử bất đồng bộ"])
 

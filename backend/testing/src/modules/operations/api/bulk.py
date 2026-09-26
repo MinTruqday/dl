@@ -10,7 +10,7 @@ from src.domain.contracts.utility import (
     BulkSuiteInput,
     BulkTagInput,
 )
-from src.services.bulk_operation import BulkOperationService
+from src.modules.operations.services.bulk_operation import BulkOperationService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử hàng loạt"])
 

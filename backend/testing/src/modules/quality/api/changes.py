@@ -11,13 +11,13 @@ from src.domain.contracts.design import (
     RegressionApprovalInput,
 )
 from src.domain.contracts.requirements import RequirementCompareInput
-from src.services.change_set import (
+from src.modules.quality.services.change_set import (
     create_change_set_record,
     get_change_set_record,
     list_change_set_records,
     review_change_set_record,
 )
-from src.services.impact_analysis import (
+from src.modules.quality.services.impact_analysis import (
     add_impact_review_perspective_record,
     create_impact_analysis_record,
     get_change_set_impact_record,
@@ -25,7 +25,7 @@ from src.services.impact_analysis import (
     rerun_impact_analysis_record,
     review_impact_analysis_record,
 )
-from src.services.maintenance_proposal import (
+from src.modules.quality.services.maintenance_proposal import (
     create_maintenance_proposal_records,
     get_maintenance_proposal_record,
     list_maintenance_proposal_records,
@@ -33,8 +33,8 @@ from src.services.maintenance_proposal import (
     reject_maintenance_proposal_record,
     review_maintenance_proposal_record,
 )
-from src.services.proposal_application import approve_maintenance_proposal
-from src.services.regression_recommendation import (
+from src.modules.quality.services.proposal_application import approve_maintenance_proposal
+from src.modules.quality.services.regression_recommendation import (
     approve_regression_recommendation_record,
     create_regression_recommendation_record,
     edit_regression_recommendation_record,

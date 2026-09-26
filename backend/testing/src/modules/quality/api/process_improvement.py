@@ -13,7 +13,7 @@ from src.domain.process_improvement import (
     StatisticalComparison,
     StatisticalSpecialCause,
 )
-from src.services.process_improvement import ProcessImprovementService
+from src.modules.quality.services.process_improvement import ProcessImprovementService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Cải tiến quy trình và kiểm soát thống kê"])
 

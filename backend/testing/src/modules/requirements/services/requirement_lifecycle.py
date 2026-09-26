@@ -4,10 +4,10 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project_entity, now
-from src.repositories.requirement import requirement_repository
+from src.modules.requirements.repositories.requirement import requirement_repository
 from src.services.domain_policy import domain_policy
-from src.services.linters import requirement_findings
-from src.services.requirement_indexing import index_requirement_version
+from src.modules.design.services.linters import requirement_findings
+from src.modules.requirements.services.requirement_indexing import index_requirement_version
 
 LIFECYCLE_POLICY = domain_policy("requirement_lifecycle")
 

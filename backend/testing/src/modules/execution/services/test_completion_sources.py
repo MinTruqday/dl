@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from src.repositories.test_completion import (
+from src.modules.execution.repositories.test_completion import (
     find_build,
     find_release,
     find_strategy,

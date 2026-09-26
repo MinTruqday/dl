@@ -11,7 +11,7 @@ from src.domain.contracts.requirements import (
     RequirementExtractionInput,
     RequirementParseRetry,
 )
-from src.services.requirement_documents import (
+from src.modules.requirements.services.requirement_documents import (
     archive_requirement_document_record,
     create_requirement_document_record,
     get_requirement_document_record,
@@ -23,12 +23,12 @@ from src.services.requirement_documents import (
     update_requirement_document_record,
     upload_requirement_document_record,
 )
-from src.services.requirement_import_workflow import extract_requirement_candidates
-from src.services.requirement_import import (
+from src.modules.requirements.services.requirement_import_workflow import extract_requirement_candidates
+from src.modules.requirements.services.requirement_import import (
     safe_requirement_filename,
     supported_requirement_formats,
 )
-from src.services.requirement_sources import (
+from src.modules.requirements.services.requirement_sources import (
     archive_requirement_source,
     create_requirement_source,
     list_requirement_sources,

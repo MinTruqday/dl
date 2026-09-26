@@ -9,7 +9,7 @@ from src.domain.contracts.design import (
     DataSetPreview,
     DataSetVersionCreate,
 )
-from src.services.data_set import DataSetService
+from src.modules.design.services.data_set import DataSetService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Dữ liệu kiểm thử"])
 

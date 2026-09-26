@@ -8,7 +8,7 @@ from src.domain.non_functional_test import (
     NonFunctionalTestPlanPatch,
     NonFunctionalTransition,
 )
-from src.services.non_functional_test import NonFunctionalTestService
+from src.modules.quality.services.non_functional_test import NonFunctionalTestService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kiểm thử phi chức năng"])
 

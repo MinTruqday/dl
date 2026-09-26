@@ -9,7 +9,7 @@ from src.domain.test_strategy import (
     TestStrategyCreate,
     TestStrategyPatch,
 )
-from src.services.test_strategy import (
+from src.modules.design.services.test_strategy import (
     approve_strategy,
     archive_strategy,
     clone_strategy,

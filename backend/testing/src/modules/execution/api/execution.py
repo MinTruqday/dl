@@ -25,24 +25,24 @@ from src.domain.contracts.execution import (
 from src.domain.contracts.planning import TestPlanCreate
 from src.domain.contracts.project import ProjectArchiveInput
 from src.domain.contracts.requirements import ReviewTransitionInput
-from src.services.defect_analysis import find_duplicate_defect_pairs
-from src.services.defect_records import (
+from src.modules.quality.services.defect_analysis import find_duplicate_defect_pairs
+from src.modules.quality.services.defect_records import (
     build_defect_export,
     create_defect_record,
     get_defect_record,
     list_defect_records,
 )
-from src.services.defect_lifecycle import (
+from src.modules.quality.services.defect_lifecycle import (
     retest_defect_record,
     transition_defect_record,
     update_defect_record,
 )
-from src.services.defect_trace import (
+from src.modules.quality.services.defect_trace import (
     list_defect_trace_candidates,
     suggest_defect_trace_record,
     update_defect_trace_record,
 )
-from src.services.test_plan import (
+from src.modules.execution.services.test_plan import (
     approve_test_plan_record,
     archive_test_plan_record,
     clone_test_plan_record,
@@ -53,7 +53,7 @@ from src.services.test_plan import (
     update_test_plan_record,
     validate_test_plan_record,
 )
-from src.services.test_suite import (
+from src.modules.execution.services.test_suite import (
     archive_test_suite_record,
     clone_test_suite_record,
     create_test_suite_record,
@@ -61,7 +61,7 @@ from src.services.test_suite import (
     list_test_suite_records,
     update_test_suite_record,
 )
-from src.services.test_run import (
+from src.modules.execution.services.test_run import (
     abort_test_run_record,
     assign_test_run_record,
     build_test_run_report,

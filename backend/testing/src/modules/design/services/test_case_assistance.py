@@ -1,10 +1,10 @@
 from src.core.common import audit, get_project, get_project_entity
-from src.repositories.analysis import analysis_repository
-from src.services.design_assistance import ai_contract_metadata
+from src.modules.quality.repositories.analysis import analysis_repository
+from src.modules.design.services.design_assistance import ai_contract_metadata
 from src.services.domain_policy import domain_policy
-from src.services.generation import generate_requirement_drafts
-from src.services.linters import duplicate_score
-from src.services.test_case_records import create_test_case_draft_record
+from src.modules.design.services.generation import generate_requirement_drafts
+from src.modules.design.services.linters import duplicate_score
+from src.modules.design.services.test_case_records import create_test_case_draft_record
 
 
 async def generate_test_case_draft_records(version_id, payload, user):

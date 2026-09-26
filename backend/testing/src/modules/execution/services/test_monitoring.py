@@ -10,16 +10,16 @@ from src.domain.test_monitoring import (
     MonitoringSnapshotCreate,
     source_fingerprint,
 )
-from src.repositories.test_monitoring import test_monitoring_repository
+from src.modules.execution.repositories.test_monitoring import test_monitoring_repository
 from src.services.domain_policy import domain_policy
-from src.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
-from src.services.quality_gate import (
+from src.modules.execution.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
+from src.modules.quality.services.quality_gate import (
     create_quality_decision,
     export_quality_gate,
     get_quality_gate,
     list_quality_decisions,
 )
-from src.services.test_monitoring_snapshot import (
+from src.modules.execution.services.test_monitoring_snapshot import (
     OPEN_DEFECT_STATUSES,
     build_deviations,
     build_metrics,

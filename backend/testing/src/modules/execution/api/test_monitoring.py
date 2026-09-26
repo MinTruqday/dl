@@ -9,7 +9,7 @@ from src.domain.test_monitoring import (
     MonitoringSnapshotCreate,
     QualityDecisionCreate,
 )
-from src.services.test_monitoring import (
+from src.modules.execution.services.test_monitoring import (
     create_control_action,
     create_monitoring_snapshot,
     create_quality_decision,

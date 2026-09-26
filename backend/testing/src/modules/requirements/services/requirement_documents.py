@@ -7,13 +7,13 @@ from pymongo.errors import DuplicateKeyError
 
 from src.clients.storage import storage_client
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.repositories.requirement_document import requirement_document_repository
+from src.modules.requirements.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
-from src.services.requirement_import import (
+from src.modules.requirements.services.requirement_import import (
     extract_file_content,
     supported_requirement_formats,
 )
-from src.services.requirement_workflow import serialized_content
+from src.modules.requirements.services.requirement_workflow import serialized_content
 from src.services.domain_policy import domain_policy
 
 

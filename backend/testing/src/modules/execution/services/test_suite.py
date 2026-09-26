@@ -11,9 +11,9 @@ from src.core.common import (
     optimistic_patch,
     sort_spec,
 )
-from src.repositories.test_design import test_design_repository
+from src.modules.design.repositories.test_design import test_design_repository
 from src.services.domain_policy import domain_policy
-from src.services.execution_policy import validate_test_versions
+from src.modules.execution.services.execution_policy import validate_test_versions
 
 
 TEST_DESIGN_POLICY = domain_policy("test_design")

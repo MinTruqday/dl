@@ -10,10 +10,10 @@ from src.core.common import (
     optimistic_patch,
     require_action_policy,
 )
-from src.repositories.defect import defect_repository
+from src.modules.quality.repositories.defect import defect_repository
 from src.services.domain_policy import domain_policy
-from src.services.execution_context import resolve_execution_context
-from src.services.execution_policy import DEFECT_TRANSITIONS
+from src.modules.execution.services.execution_context import resolve_execution_context
+from src.modules.execution.services.execution_policy import DEFECT_TRANSITIONS
 
 
 DEFECT_POLICY = domain_policy("defect")

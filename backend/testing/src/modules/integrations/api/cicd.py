@@ -9,7 +9,7 @@ from src.domain.contracts.automation import (
     CiCdRetryInput,
     CiCdTriggerInput,
 )
-from src.services.cicd import CiCdService
+from src.modules.integrations.services.cicd import CiCdService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tích hợp triển khai liên tục"])
 internal_router = APIRouter(

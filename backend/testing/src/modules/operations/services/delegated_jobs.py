@@ -4,7 +4,7 @@ from src.clients.worker import WorkerClientError, worker_client
 from src.core.auth import CurrentUser
 from src.core.common import get_project
 from src.services.domain_policy import domain_policy
-from src.services.job_policy import JOB_EVENT_PERMISSIONS
+from src.modules.operations.services.job_policy import JOB_EVENT_PERMISSIONS
 
 
 class DelegatedJobService:

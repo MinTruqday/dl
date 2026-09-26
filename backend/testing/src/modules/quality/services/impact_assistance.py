@@ -1,4 +1,4 @@
-from src.services.design_assistance import request_design_assistance
+from src.modules.design.services.design_assistance import request_design_assistance
 from src.services.domain_policy import domain_policy
 
 

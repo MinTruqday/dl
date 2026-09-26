@@ -3,9 +3,9 @@ import re
 from fastapi import HTTPException
 
 from src.core.common import get_project
-from src.repositories.requirement_analysis import requirement_analysis_repository
+from src.modules.requirements.repositories.requirement_analysis import requirement_analysis_repository
 from src.services.domain_policy import domain_policy
-from src.services.quality_policy import evaluate_rules
+from src.modules.quality.services.quality_policy import evaluate_rules
 
 
 BASIS_POLICY = domain_policy("test_analysis_basis")

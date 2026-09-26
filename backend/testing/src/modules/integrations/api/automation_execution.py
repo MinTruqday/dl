@@ -7,7 +7,7 @@ from src.domain.contracts.automation import (
     AutomationExecutionCreate,
     AutomationExecutionResultInput,
 )
-from src.services.automation_execution import AutomationExecutionService
+from src.modules.integrations.services.automation_execution import AutomationExecutionService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi tự động"])
 internal_router = APIRouter(

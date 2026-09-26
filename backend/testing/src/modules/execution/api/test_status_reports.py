@@ -10,7 +10,7 @@ from src.domain.test_status_report import (
     TestStatusReportPatch,
     TestStatusReportTransition,
 )
-from src.services.test_status_report import (
+from src.modules.execution.services.test_status_report import (
     attach_status_report_evidence,
     compare_status_reports,
     generate_status_report,
@@ -20,7 +20,7 @@ from src.services.test_status_report import (
     transition_status_report,
     update_status_report,
 )
-from src.services.test_status_report_export import export_status_report
+from src.modules.execution.services.test_status_report_export import export_status_report
 
 router = APIRouter(prefix="/kiem-thu", tags=["Báo cáo trạng thái kiểm thử"])
 

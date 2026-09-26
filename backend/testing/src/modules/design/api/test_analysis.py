@@ -14,7 +14,7 @@ from src.domain.test_analysis import (
     TestConditionPatch,
     TestConditionTransition,
 )
-from src.services.test_analysis import (
+from src.modules.design.services.test_analysis import (
     assign_analysis_finding,
     bulk_prioritize_conditions,
     condition_coverage,

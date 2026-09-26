@@ -6,9 +6,9 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.core.configuration import settings
-from src.repositories.cicd import cicd_repository
+from src.modules.integrations.repositories.cicd import cicd_repository
 from src.services.domain_policy import domain_policy
-from src.services.sensitive_data import redact_sensitive_data
+from src.core.sensitive_data import redact_sensitive_data
 
 
 def verify_signature(value, signature):

@@ -10,15 +10,15 @@ from src.domain.contracts.requirements import (
     RequirementMergeInput,
     RequirementSplitInput,
 )
-from src.services.requirement_ai import (
+from src.modules.requirements.services.requirement_ai import (
     analyze_requirement_quality,
     apply_requirement_quality_suggestion,
 )
-from src.services.requirement_analysis import (
+from src.modules.requirements.services.requirement_analysis import (
     compare_requirement_versions,
     find_requirement_duplicates,
 )
-from src.services.requirement_transformations import (
+from src.modules.requirements.services.requirement_transformations import (
     claim_requirement_transformation,
     execute_requirement_transformation,
     find_requirement_transformation,
@@ -174,5 +174,4 @@ async def find_duplicate_requirements(
     user: CurrentUser = Depends(get_current_user),
 ):
     return envelope(await find_requirement_duplicates(project_id, payload, user))
-
 

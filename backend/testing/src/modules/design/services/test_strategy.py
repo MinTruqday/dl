@@ -11,7 +11,7 @@ from src.domain.test_strategy import (
     strategy_hash,
     strategy_snapshot,
 )
-from src.repositories.test_strategy import test_strategy_repository
+from src.modules.design.repositories.test_strategy import test_strategy_repository
 from src.services.domain_policy import domain_policy
 
 

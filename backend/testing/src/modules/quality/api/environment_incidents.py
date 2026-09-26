@@ -7,7 +7,7 @@ from src.domain.environment_incident import (
     EnvironmentIncidentPatch,
     EnvironmentIncidentTransition,
 )
-from src.services.environment_incident import EnvironmentIncidentService
+from src.modules.quality.services.environment_incident import EnvironmentIncidentService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Incident môi trường"])
 

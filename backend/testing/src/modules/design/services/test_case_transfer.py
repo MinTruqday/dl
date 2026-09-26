@@ -5,17 +5,17 @@ from fastapi import HTTPException, UploadFile
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
-from src.repositories.test_design import test_design_repository
+from src.modules.design.repositories.test_design import test_design_repository
 from src.core.rich_text import text_document
 from src.domain.contracts.design import TestCaseDraftCreate
 from src.domain.contracts.requirements import (
     ImportConfirm,
     ImportCreate,
 )
-from src.services.api_artifact_formats import create_xlsx, lexical_similarity, model_metadata, terms
+from src.modules.integrations.services.api_artifact_formats import create_xlsx, lexical_similarity, model_metadata, terms
 from src.services.domain_policy import domain_policy
-from src.services.requirement_import import extract_xlsx_csv
-from src.services.test_case_records import create_test_case_draft_record
+from src.modules.requirements.services.requirement_import import extract_xlsx_csv
+from src.modules.design.services.test_case_records import create_test_case_draft_record
 
 
 async def recover_trace_links(project_id: str, user: CurrentUser):

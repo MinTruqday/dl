@@ -19,11 +19,11 @@ from src.domain.contracts.utility import (
 from src.domain.contracts.design import TestCaseDraftCreate as CaseDraftCreate
 from src.domain.contracts.design import TestCaseDraftPatch as CaseDraftPatch
 from src.domain.contracts.design import TestCaseFreezeInput as CaseFreezeInput
-from src.services.test_case_records import (
+from src.modules.design.services.test_case_records import (
     create_test_case_draft_record,
     update_test_case_draft_record,
 )
-from src.services.test_case_query import (
+from src.modules.design.services.test_case_query import (
     clone_test_case_record,
     create_test_case_version_draft_record,
     diff_test_case_version_records,
@@ -34,17 +34,17 @@ from src.services.test_case_query import (
     restore_test_case_record,
     set_test_case_obsolete,
 )
-from src.services.test_case_lifecycle import (
+from src.modules.design.services.test_case_lifecycle import (
     approve_test_case_draft_record,
     lint_test_case_draft_record,
     request_test_case_changes_record,
     submit_test_case_review_record,
 )
-from src.services.test_case_assistance import (
+from src.modules.design.services.test_case_assistance import (
     find_duplicate_test_case_records,
     generate_test_case_draft_records,
 )
-from src.services.test_scenario import (
+from src.modules.design.services.test_scenario import (
     archive_test_scenario_record,
     clone_test_scenario_record,
     create_test_scenario_record,

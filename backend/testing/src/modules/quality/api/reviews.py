@@ -7,7 +7,7 @@ from src.domain.contracts.requirements import (
     ReviewCommentCreate,
     ReviewCommentPatch,
 )
-from src.services.review_comment import ReviewCommentService
+from src.modules.quality.services.review_comment import ReviewCommentService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Rà soát kiểm thử"])
 

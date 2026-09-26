@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 
-from src.repositories.test_completion import find_project_settings, list_monitoring_overrides
+from src.modules.execution.repositories.test_completion import find_project_settings, list_monitoring_overrides
 from src.services.domain_policy import domain_policy
-from src.services.exit_criteria import evaluate_exit_criteria
+from src.modules.execution.services.exit_criteria import evaluate_exit_criteria
 
 
 COMPLETION_POLICY = domain_policy("completion")

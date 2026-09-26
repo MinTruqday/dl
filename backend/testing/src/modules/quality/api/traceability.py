@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.contracts.design import TraceLinkCreate
-from src.services.traceability import TraceabilityService
+from src.modules.quality.services.traceability import TraceabilityService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Truy vết kiểm thử"])
 

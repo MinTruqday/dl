@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.test_completion import completion_hash, completion_snapshot
-from src.repositories.test_completion import (
+from src.modules.execution.repositories.test_completion import (
     find_active_member,
     find_completion_by_idempotency_key,
     find_monitoring_snapshot,
@@ -13,21 +13,21 @@ from src.repositories.test_completion import (
     next_completion_sequence,
     update_completion,
 )
-from src.services.exit_criteria import quality_gate_status
+from src.modules.execution.services.exit_criteria import quality_gate_status
 from src.services.domain_policy import domain_policy
-from src.services.test_completion_assistance import completion_ai_result
-from src.services.test_completion_policy import (
+from src.modules.execution.services.test_completion_assistance import completion_ai_result
+from src.modules.execution.services.test_completion_policy import (
     default_completion_recommendation,
     reevaluate_completion_exit_criteria,
     validate_completion_readiness,
 )
-from src.services.test_completion_query import (
+from src.modules.execution.services.test_completion_query import (
     get_completion_for_user,
     list_completion_reports,
     validate_people,
 )
-from src.services.test_completion_sources import completion_sources, handover_records
-from src.services.test_completion_updates import (
+from src.modules.execution.services.test_completion_sources import completion_sources, handover_records
+from src.modules.execution.services.test_completion_updates import (
     add_completion_lesson,
     add_completion_residual_risk,
     manage_completion_handover,

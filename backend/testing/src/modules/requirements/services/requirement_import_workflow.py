@@ -3,13 +3,13 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, validate_doc
 from src.domain.contracts.requirements import RequirementCreate
-from src.repositories.requirement_import import requirement_import_repository
+from src.modules.requirements.repositories.requirement_import import requirement_import_repository
 from src.services.domain_policy import domain_policy
-from src.services.requirement_import import atomic_requirement_candidates, parse_requirement_import
-from src.services.requirement_indexing import validate_requirement_sources
-from src.services.requirement_records import create_requirement_record
-from src.services.requirement_transformations import unique_source_refs
-from src.services.requirement_workflow import (
+from src.modules.requirements.services.requirement_import import atomic_requirement_candidates, parse_requirement_import
+from src.modules.requirements.services.requirement_indexing import validate_requirement_sources
+from src.modules.requirements.services.requirement_records import create_requirement_record
+from src.modules.requirements.services.requirement_transformations import unique_source_refs
+from src.modules.requirements.services.requirement_workflow import (
     candidate_fingerprint,
     prepare_requirement_candidates,
 )

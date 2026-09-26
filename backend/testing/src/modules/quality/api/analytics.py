@@ -6,7 +6,7 @@ from src.domain.contracts.utility import (
     ProjectQuestionInput,
     SearchInput,
 )
-from src.services.analytics import AnalyticsService
+from src.modules.quality.services.analytics import AnalyticsService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])
 

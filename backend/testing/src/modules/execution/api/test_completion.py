@@ -14,7 +14,7 @@ from src.domain.test_completion import (
     TestCompletionPatch,
     TestwareHandoverManage,
 )
-from src.services.test_completion import (
+from src.modules.execution.services.test_completion import (
     add_completion_lesson,
     add_completion_residual_risk,
     cluster_completion_lessons,
@@ -28,7 +28,7 @@ from src.services.test_completion import (
     transition_completion,
     update_completion_report,
 )
-from src.services.test_completion_export import export_completion_report
+from src.modules.execution.services.test_completion_export import export_completion_report
 
 router = APIRouter(prefix="/kiem-thu", tags=["Hoàn tất kiểm thử"])
 

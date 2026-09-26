@@ -7,10 +7,10 @@ from src.core.common import audit, envelope, get_project, get_project_entity, ne
 from src.domain.contracts.automation import CollaborationOperationInput
 from src.domain.contracts.design import TestCaseDraftPatch
 from src.domain.contracts.requirements import RequirementDraftPatch
-from src.repositories.collaboration import collaboration_repository
+from src.modules.projects.repositories.collaboration import collaboration_repository
 from src.services.domain_policy import domain_policy
-from src.services.requirement_records import update_requirement_draft_record
-from src.services.test_case_records import update_test_case_draft_record
+from src.modules.requirements.services.requirement_records import update_requirement_draft_record
+from src.modules.design.services.test_case_records import update_test_case_draft_record
 
 
 async def artifact_context(project_id, artifact_type, artifact_id, user, edit=False):

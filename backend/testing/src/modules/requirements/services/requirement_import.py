@@ -9,7 +9,7 @@ from defusedxml import ElementTree
 from pypdf import PdfReader
 
 from src.services.domain_policy import domain_policy
-from src.services.requirement_workflow import text_doc
+from src.modules.requirements.services.requirement_workflow import text_doc
 
 
 def requirement_import_policy():

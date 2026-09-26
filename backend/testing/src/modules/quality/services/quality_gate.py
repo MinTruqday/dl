@@ -2,8 +2,8 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.repositories.quality import quality_repository
-from src.repositories.test_monitoring import test_monitoring_repository
+from src.modules.quality.repositories.quality import quality_repository
+from src.modules.execution.repositories.test_monitoring import test_monitoring_repository
 from src.domain.test_monitoring import QualityDecisionCreate
 from src.services.domain_policy import domain_policy
 

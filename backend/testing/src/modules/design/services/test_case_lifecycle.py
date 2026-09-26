@@ -1,11 +1,11 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, require_action_policy
-from src.repositories.test_design import test_design_repository
-from src.services.linters import lint_test_case
+from src.modules.design.repositories.test_design import test_design_repository
+from src.modules.design.services.linters import lint_test_case
 from src.services.domain_policy import domain_policy
 from src.clients.project_knowledge import index_artifact
-from src.services.test_case_records import project_test_text
+from src.modules.design.services.test_case_records import project_test_text
 
 LIFECYCLE_POLICY = domain_policy("test_case_lifecycle")
 

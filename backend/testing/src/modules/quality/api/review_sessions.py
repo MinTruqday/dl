@@ -16,7 +16,7 @@ from src.domain.review_session import (
     ReviewTerminalTransition,
     ReviewTransition,
 )
-from src.services.review_session import ReviewSessionService
+from src.modules.quality.services.review_session import ReviewSessionService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Rà soát chính thức"])
 

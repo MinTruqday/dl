@@ -11,7 +11,7 @@ from src.domain.measurement import (
     MeasurementVersionCreate,
     MetricDashboardPin,
 )
-from src.services.measurement import MeasurementService
+from src.modules.quality.services.measurement import MeasurementService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Đo lường kiểm thử"])
 

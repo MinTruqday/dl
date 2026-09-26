@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import get_project
-from src.repositories.test_completion import (
+from src.modules.execution.repositories.test_completion import (
     count_active_members,
     find_completion,
     list_completions,

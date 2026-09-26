@@ -9,7 +9,7 @@ from src.domain.test_case_template import (
     TestCaseTemplateCreate,
     TestCaseTemplatePatch,
 )
-from src.services.test_case_template import TestCaseTemplateService
+from src.modules.design.services.test_case_template import TestCaseTemplateService
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Mẫu ca kiểm thử"])

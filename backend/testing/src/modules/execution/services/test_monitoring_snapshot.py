@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from src.repositories.test_monitoring import test_monitoring_repository
+from src.modules.execution.repositories.test_monitoring import test_monitoring_repository
 from src.services.domain_policy import domain_policy
 
 MONITORING_POLICY = domain_policy("test_monitoring")

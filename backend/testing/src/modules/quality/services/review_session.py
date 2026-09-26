@@ -3,16 +3,16 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.review_session import ReviewSessionCreate
-from src.repositories.review import review_repository
+from src.modules.quality.repositories.review import review_repository
 from src.services.domain_policy import domain_policy
-from src.services.review_finding import (
+from src.modules.quality.services.review_finding import (
     add_finding,
     assign_finding,
     resolve_finding,
     verify_finding,
 )
-from src.services.review_session_export import export_review_csv
-from src.services.review_session_query import get_review, list_reviews, validate_members
+from src.modules.quality.services.review_session_export import export_review_csv
+from src.modules.quality.services.review_session_query import get_review, list_reviews, validate_members
 
 
 REVIEW_POLICY = domain_policy("review_session")

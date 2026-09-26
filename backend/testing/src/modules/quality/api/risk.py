@@ -7,7 +7,7 @@ from src.domain.contracts.design import (
     RiskRankingGenerate,
     RiskRankingPatch,
 )
-from src.services.risk_ranking import RiskRankingService
+from src.modules.quality.services.risk_ranking import RiskRankingService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ưu tiên rủi ro"])
 

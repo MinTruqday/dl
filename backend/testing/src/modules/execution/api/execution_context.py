@@ -12,7 +12,7 @@ from src.domain.contracts.environment import (
     ReleasePatch,
     ReleaseTransition,
 )
-from src.services.execution_context import ExecutionContextService
+from src.modules.execution.services.execution_context import ExecutionContextService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ngữ cảnh thực thi kiểm thử"])
 

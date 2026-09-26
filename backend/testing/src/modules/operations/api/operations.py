@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.services.operations import OperationsService
+from src.modules.operations.services.operations import OperationsService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Vận hành kiểm thử"])
 

@@ -8,7 +8,7 @@ from src.domain.contracts.environment import (
     WebhookSubscriptionCreate,
     WebhookSubscriptionPatch,
 )
-from src.services.webhook import WebhookService
+from src.modules.integrations.services.webhook import WebhookService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Móc gọi dự án"])
 internal_router = APIRouter(prefix="/noi-bo/kiem-thu/moc-goi", tags=["Móc gọi nội bộ"])

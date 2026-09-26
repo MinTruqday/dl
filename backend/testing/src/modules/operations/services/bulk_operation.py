@@ -3,10 +3,10 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.domain.contracts.design import ProposalAction
-from src.repositories.bulk_operation import bulk_operation_repository
+from src.modules.operations.repositories.bulk_operation import bulk_operation_repository
 from src.services.domain_policy import domain_policy
-from src.services.maintenance_proposal import create_maintenance_proposal_records
-from src.services.proposal_application import apply_maintenance_proposal
+from src.modules.quality.services.maintenance_proposal import create_maintenance_proposal_records
+from src.modules.quality.services.proposal_application import apply_maintenance_proposal
 
 
 def operation_key(payload):

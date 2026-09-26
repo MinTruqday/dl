@@ -8,7 +8,7 @@ from src.domain.contracts.environment import (
     DeviceMatrixCreate,
     DeviceMatrixPatch,
 )
-from src.services.device_matrix import DeviceMatrixService
+from src.modules.quality.services.device_matrix import DeviceMatrixService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ma trận thiết bị"])
 
