@@ -44,7 +44,7 @@ async def internal_request(
     payload: dict | None = None,
     timeout: float | None = None,
 ) -> httpx.Response:
-    request_timeout = timeout or settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+    request_timeout = timeout or 20
     async with httpx.AsyncClient(timeout=request_timeout) as client:
         return await client.request(
             method,

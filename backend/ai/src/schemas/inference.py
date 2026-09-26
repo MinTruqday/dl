@@ -14,12 +14,6 @@ class TestingAssistanceDegradedMode(str, Enum):
     PROVIDER = "DEGRADED_AI"
 
 
-class RetrievalExpansionRequest(BaseModel):
-    question: str = Field(
-        min_length=1, max_length=10000, description="Question to expand for semantic retrieval"
-    )
-
-
 class CrossDocumentExpansionRequest(BaseModel):
     question: str = Field(
         min_length=1, max_length=10000, description="Question to decompose across documents"

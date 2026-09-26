@@ -38,12 +38,12 @@ class PlatformAiService:
         if not providers:
             providers = [
                 {
-                    "_id": settings.AI_PROVIDER,
+                    "_id": "huggingface",
                     "enabled": True,
                     "model": settings.LLM_MODEL,
-                    "timeout_seconds": settings.MODEL_TIMEOUT_SECONDS,
-                    "max_output_tokens": settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS,
-                    "secret_reference": settings.AI_PROVIDER_CONFIGURED,
+                    "timeout_seconds": 1800,
+                    "max_output_tokens": 4096,
+                    "secret_reference": True,
                     "requires_restart": False,
                 }
             ]

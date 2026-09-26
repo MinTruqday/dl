@@ -19,7 +19,7 @@ def get_client() -> httpx.AsyncClient:
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.AsyncClient(
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-            timeout=httpx.Timeout(settings.INTERNAL_REQUEST_TIMEOUT_SECONDS),
+            timeout=httpx.Timeout(20),
         )
     return _http_client
 
@@ -31,7 +31,7 @@ async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
             headers["Idempotency-Key"] = str(uuid.uuid4())
         kwargs["headers"] = headers
 
-    max_retries = max(1, settings.AGENT_MAX_RETRIES + 1) if method.upper() == "GET" else 1
+    max_retries = 3 if method.upper() == "GET" else 1
     client = get_client()
     parsed_url = urlsplit(url)
     target = f"{parsed_url.hostname or 'unknown'}{parsed_url.path}"

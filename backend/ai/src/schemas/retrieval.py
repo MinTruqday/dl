@@ -39,21 +39,6 @@ class RetrieveRequest(BaseModel):
     metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
 
 
-class MultiQueryRetrieveRequest(BaseModel):
-    question: str = Field(
-        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
-    )
-    document_ids: Optional[List[str]] = None
-    k: int = Field(
-        default=RETRIEVAL_POLICY["default_result_count"],
-        ge=1,
-        le=RETRIEVAL_POLICY["maximum_candidate_count"],
-    )
-    requester_id: Optional[str] = None
-    is_admin: bool = False
-    metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
-
-
 class CrossDocRetrieveRequest(BaseModel):
     question: str = Field(
         min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]

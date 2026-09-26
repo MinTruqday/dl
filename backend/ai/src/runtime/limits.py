@@ -1,8 +1,5 @@
 from dataclasses import dataclass
 
-from src.core.infrastructure.configuration import settings
-
-
 @dataclass(frozen=True)
 class RuntimeLimits:
     supervisor_steps: int
@@ -16,12 +13,12 @@ class RuntimeLimits:
 
 
 limits = RuntimeLimits(
-    supervisor_steps=settings.AGENT_MAX_SUPERVISOR_STEPS,
-    specialist_steps=settings.AGENT_MAX_SPECIALIST_STEPS,
-    tool_calls_per_task=settings.AGENT_MAX_TOOL_CALLS_PER_TASK,
-    tool_errors=settings.AGENT_MAX_TOOL_ERRORS,
-    retries=settings.AGENT_MAX_RETRIES,
-    run_timeout_seconds=settings.AGENT_EXECUTION_TIMEOUT_SECONDS,
-    task_timeout_seconds=settings.AGENT_TASK_TIMEOUT_SECONDS,
-    evidence_items=settings.AGENT_MAX_EVIDENCE_ITEMS,
+    supervisor_steps=12,
+    specialist_steps=8,
+    tool_calls_per_task=6,
+    tool_errors=2,
+    retries=2,
+    run_timeout_seconds=900,
+    task_timeout_seconds=300,
+    evidence_items=100,
 )

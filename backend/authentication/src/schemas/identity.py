@@ -5,9 +5,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from src.core.infrastructure.configuration import settings
-
-
 class KYC(str, Enum):
     NONE = "NONE"
     PENDING = "PENDING"
@@ -47,8 +44,8 @@ class UserBase(BaseModel):
     creator_status: Creator = Creator.NONE
     is_verified: bool = False
     storage_limit: int = Field(
-        default=settings.DEFAULT_STORAGE_LIMIT_BYTES,
-        le=settings.MAX_STORAGE_LIMIT_BYTES,
+        default=21474836480,
+        le=107374182400,
     )
 
     @field_validator("kyc_status", "creator_status", mode="before")

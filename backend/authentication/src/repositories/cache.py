@@ -1,4 +1,3 @@
-from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
 
 
@@ -7,7 +6,7 @@ class CacheRepository:
     async def store_google_oauth_state(state: str):
         return await redis.setex(
             f"google_oauth_state:{state}",
-            settings.GOOGLE_OAUTH_STATE_EXPIRE_SECONDS,
+            600,
             "valid",
         )
 

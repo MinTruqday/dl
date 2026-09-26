@@ -5,7 +5,6 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from src.core.dependency import CurrentUser
-from src.core.infrastructure.configuration import settings
 from src.core.policies import platform_policy
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
@@ -91,7 +90,7 @@ class PlatformAccountControlService:
             "status": ACCOUNT_CONTROL_POLICY["bulk_preview_status"],
             "created_by": current_user.id,
             "created_at": now,
-            "expires_at": now + timedelta(minutes=settings.ADMIN_OPERATION_EXPIRE_MINUTES),
+            "expires_at": now + timedelta(minutes=15),
         }
         await PlatformRepository.insert_admin_operation(operation)
         return {**operation, "accounts": accounts}

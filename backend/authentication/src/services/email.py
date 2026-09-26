@@ -28,7 +28,7 @@ def smtp_configuration():
 
 def dispatch(message):
     host, port, user, password, _, _ = smtp_configuration()
-    with smtplib.SMTP(host, port, timeout=settings.SMTP_TIMEOUT_SECONDS) as server:
+    with smtplib.SMTP(host, port, timeout=10) as server:
         server.starttls()
         server.login(user, password)
         server.send_message(message)
@@ -42,7 +42,7 @@ def reset_password_body(email: str, token: str):
         .replace("{{token}}", escape(token))
         .replace(
             "{{expiry_minutes}}",
-            str(settings.PASSWORD_RESET_EXPIRE_MINUTES),
+            "1",
         )
     )
 

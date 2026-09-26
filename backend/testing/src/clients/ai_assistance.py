@@ -12,7 +12,7 @@ class AIAssistanceClient:
         payload: dict,
         stream_sink: Callable[[str], Awaitable[None]] | None = None,
     ) -> dict:
-        async with httpx.AsyncClient(timeout=settings.AI_REQUEST_TIMEOUT_SECONDS) as client:
+        async with httpx.AsyncClient(timeout=1800) as client:
             if not stream_sink:
                 response = await client.post(
                     f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",

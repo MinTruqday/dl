@@ -52,24 +52,6 @@ class KnowledgeService:
         )
 
     @staticmethod
-    async def multi_query_retrieve(
-        question: str,
-        document_ids: Optional[List[str]] = None,
-        k: Optional[int] = None,
-        requester_id: Optional[str] = None,
-        is_admin: bool = False,
-    ) -> List[Dict]:
-        from src.services.retrieval import retriever
-
-        return await retriever.multi_query_retrieve(
-            question=question,
-            document_ids=document_ids,
-            k=k,
-            requester_id=requester_id,
-            is_admin=is_admin,
-        )
-
-    @staticmethod
     async def cross_document_retrieve(
         question: str,
         document_ids: List[str],

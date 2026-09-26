@@ -8,7 +8,7 @@ class AuthenticationClient:
     async def session_is_valid(user_id: str, session_id: str) -> bool:
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 response = await client.get(
                     f"{settings.AUTHENTICATION_URL}/xac-thuc/noi-bo/phien/{session_id}/nguoi-dung/{user_id}",

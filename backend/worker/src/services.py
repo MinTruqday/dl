@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from pymongo import ReturnDocument
 
-from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database, record_job
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
@@ -52,7 +51,7 @@ class WorkerJobService:
         if not isinstance(request, dict):
             raise HTTPException(status_code=422, detail="Job payload is unavailable for retry")
         retry_count = int(job.get("manual_retry_count", 0))
-        if retry_count >= settings.WORKER_MAX_RETRIES * 3:
+        if retry_count >= 9:
             raise HTTPException(status_code=409, detail="Manual retry limit reached")
         await record_job(
             job_id,

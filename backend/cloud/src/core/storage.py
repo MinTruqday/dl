@@ -27,7 +27,7 @@ def should_brotli_compress(
         "application/ld+json",
         "application/xml",
     }
-    return content_length >= settings.OBJECT_STORAGE_COMPRESSION_MIN_BYTES and (
+    return content_length >= 1024 and (
         requested or text_type or extension in TEXT_EXTENSIONS
     )
 
@@ -91,7 +91,7 @@ async def initialize_bucket():
                     "ID": "expire-temporary-chat-files",
                     "Status": "Enabled",
                     "Filter": {"Prefix": "temp/"},
-                    "Expiration": {"Days": settings.OBJECT_STORAGE_TEMP_RETENTION_DAYS},
+                    "Expiration": {"Days": 14},
                 }
             ]
         },
@@ -111,10 +111,9 @@ async def upload_file(
         compressed = await asyncio.to_thread(
             brotli.compress,
             file_content,
-            quality=settings.OBJECT_STORAGE_COMPRESSION_QUALITY,
+            quality=5,
         )
-        threshold = settings.OBJECT_STORAGE_COMPRESSION_RATIO_THRESHOLD
-        if len(compressed) < len(file_content) * threshold:
+        if len(compressed) < len(file_content) * 0.95:
             file_content = compressed
             kwargs["ContentEncoding"] = "br"
             kwargs["Metadata"] = {"original-size": str(original_size)}

@@ -122,7 +122,7 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
             prompt,
             SCHEMAS[req.capability],
             max_tokens=capability_token_budget(req.capability),
-            timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
+            timeout_seconds=1800,
             provider_schema=req.capability != "test_condition_generation",
         )
         generated_data = normalize_narrative_payload(generated.model_dump())

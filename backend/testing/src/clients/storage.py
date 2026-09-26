@@ -13,7 +13,7 @@ class StorageClient:
         data: bytes,
     ) -> dict:
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS
+            timeout=60
         ) as client:
             response = await client.post(
                 f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/kiem-thu/nguon-yeu-cau",
@@ -37,7 +37,7 @@ class StorageClient:
         object_key: str,
     ) -> bytes:
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS
+            timeout=60
         ) as client:
             response = await client.get(
                 f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/kiem-thu/nguon-yeu-cau",

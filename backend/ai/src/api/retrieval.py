@@ -6,7 +6,6 @@ from src.schemas.response import APIResponse
 from src.schemas.retrieval import (
     CitationItem,
     CrossDocRetrieveRequest,
-    MultiQueryRetrieveRequest,
     RetrievedDocument,
     RetrieveRequest,
     RetrieveResponse,
@@ -79,58 +78,6 @@ async def retrieve_documents(
             conflicts=retriever.detect_source_conflicts(docs),
         ),
         message="Truy xuất tài liệu thành công",
-    )
-
-
-@router.post(
-    "/truy-xuat-da-truy-van",
-    response_model=APIResponse[RetrieveResponse],
-    description="Truy xuất knowledge bằng mở rộng truy vấn",
-)
-async def multi_query_retrieve(
-    req: MultiQueryRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
-):
-    requester_id = str(user.id) if user else req.requester_id
-    is_admin = user.is_admin() if user else req.is_admin
-    try:
-        docs = await retriever.multi_query_retrieve(
-            question=req.question,
-            document_ids=req.document_ids,
-            k=req.k,
-            requester_id=requester_id,
-            is_admin=is_admin,
-            metadata_filters=req.metadata_filters.model_dump(exclude_none=True),
-        )
-    except RetrievalUnavailableError as error:
-        raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await RetrievalAuditService.record(
-        "multi_query_retrieve", req.question, requester_id, is_admin, docs
-    )
-    metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
-    citations_data = retriever.get_citations(docs)
-    retrieved_docs = [
-        RetrievedDocument(
-            text=d.get("text", ""), metadata=d.get("metadata", {}), score=float(d.get("score", 0.0))
-        )
-        for d in docs
-    ]
-    citations = [
-        CitationItem(
-            chunk_id=c.get("chunk_id", ""),
-            document_id=c.get("document_id", ""),
-            title=c.get("title", ""),
-            chunk_index=c.get("chunk_index", ""),
-            label=c.get("label", ""),
-        )
-        for c in citations_data
-    ]
-    return APIResponse(
-        data=RetrieveResponse(
-            documents=retrieved_docs,
-            citations=citations,
-            conflicts=retriever.detect_source_conflicts(docs),
-        ),
-        message="Truy xuất đa chiều thành công",
     )
 
 

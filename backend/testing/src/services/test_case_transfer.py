@@ -5,7 +5,6 @@ from fastapi import HTTPException, UploadFile
 
 from src.core.auth import CurrentUser
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
-from src.core.configuration import settings
 from src.repositories.test_design import test_design_repository
 from src.core.rich_text import text_document
 from src.domain.contracts.design import TestCaseDraftCreate
@@ -141,7 +140,7 @@ async def upload_test_import(
     if format not in policy["supported_formats"]:
         raise HTTPException(status_code=422, detail={"code": policy["unsupported_format_code"]})
     data = await file.read()
-    if len(data) > settings.MAX_API_ARTIFACT_UPLOAD_SIZE_BYTES:
+    if len(data) > 20971520:
         raise HTTPException(status_code=413, detail={"code": policy["import_too_large_code"]})
     content = (
         extract_xlsx_csv(data)

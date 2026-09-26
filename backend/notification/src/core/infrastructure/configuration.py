@@ -8,9 +8,6 @@ class Settings(BaseModel):
     VERSION: str = os.environ["VERSION"]
     SECRET_KEY: str = os.environ["SECRET_KEY"]
     CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
-    INTERNAL_REQUEST_TIMEOUT_SECONDS: float = float(
-        os.environ["INTERNAL_REQUEST_TIMEOUT_SECONDS"]
-    )
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]

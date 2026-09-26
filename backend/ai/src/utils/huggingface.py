@@ -73,7 +73,7 @@ class HFInferenceChat(BaseChatModel):
         return asyncio.run(self._agenerate(messages, stop, run_manager, **kwargs))
 
     @retry(
-        stop=stop_after_attempt(max(1, settings.AGENT_MAX_RETRIES + 1)),
+        stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
@@ -103,7 +103,7 @@ class HFInferenceChat(BaseChatModel):
         chat_kwargs = {
             "model": effective_model,
             "messages": hf_messages,
-            "max_tokens": kwargs.get("max_tokens", settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS),
+            "max_tokens": kwargs.get("max_tokens", 4096),
             "temperature": kwargs.get("temperature", 0.1),
         }
         from src.utils.model_provider import model_client
@@ -132,7 +132,7 @@ class HFInferenceChat(BaseChatModel):
         )
 
     @retry(
-        stop=stop_after_attempt(max(1, settings.AGENT_MAX_RETRIES + 1)),
+        stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
@@ -165,7 +165,7 @@ class HFInferenceChat(BaseChatModel):
         stream = await client.chat_completion(
             model=effective_model,
             messages=hf_messages,
-            max_tokens=kwargs.get("max_tokens", settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS),
+            max_tokens=kwargs.get("max_tokens", 4096),
             temperature=kwargs.get("temperature", 0.1),
             stream=True,
         )
@@ -196,7 +196,7 @@ class HFInferenceChat(BaseChatModel):
             )
             sys_msg = SystemMessage(content=schema_instruction(schema_json))
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            maximum_attempts = 3
             for attempt in range(maximum_attempts):
                 res = await self.ainvoke(msgs, **kwargs_inner)
                 try:
@@ -225,7 +225,7 @@ class HFInferenceChat(BaseChatModel):
             )
             sys_msg = SystemMessage(content=schema_instruction(schema_json))
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            maximum_attempts = 3
             for attempt in range(maximum_attempts):
                 res = self.invoke(msgs, **kwargs_inner)
                 try:
@@ -319,7 +319,7 @@ class HFInferenceChat(BaseChatModel):
         async def _ainvoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
-            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            maximum_attempts = 3
             for attempt in range(maximum_attempts):
                 result = await self.ainvoke(corrective_messages, **kwargs_inner)
                 try:
@@ -345,7 +345,7 @@ class HFInferenceChat(BaseChatModel):
         def _invoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
-            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            maximum_attempts = 3
             for attempt in range(maximum_attempts):
                 result = self.invoke(corrective_messages, **kwargs_inner)
                 try:

@@ -18,9 +18,7 @@
     "maximum_candidate_count": 100,
     "reciprocal_rank_constant": 60,
     "dense_search_timeout_seconds": 1.0,
-    "reranking_timeout_seconds": 30.0,
-    "expanded_query_result_count": 3,
-    "hypothetical_document_result_count": 3
+    "reranking_timeout_seconds": 30.0
   },
   "semantic_cache": {
     "similarity_minimum": 0.9,

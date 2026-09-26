@@ -16,7 +16,7 @@ class GoogleClient:
     async def load_user(code: str) -> dict:
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 token_response = await client.post(
                     settings.GOOGLE_TOKEN_URL,

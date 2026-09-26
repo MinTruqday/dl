@@ -8,7 +8,7 @@ from src.core.registry import PromptType, registry
 from src.core.security.guardrails import guardrails_engine
 from src.core.security.scanning import security
 from src.prompts.structured import correction_instruction, schema_instruction
-from src.schemas.routing import CrossDocumentQueries, MultiQueryOutput
+from src.schemas.routing import CrossDocumentQueries
 from src.utils.model_provider import model_client
 from src.utils.structured_output import validate_structured_output
 
@@ -74,7 +74,7 @@ async def structured(
         {"role": "user", "content": "Produce the required output"},
     ]
     messages = base_messages
-    maximum_attempts = max(2, settings.AGENT_MAX_RETRIES)
+    maximum_attempts = 2
     for attempt in range(maximum_attempts):
         raw = await chat(
             messages,
@@ -102,27 +102,6 @@ def prompt_messages(prompt: str, instruction: str) -> list[dict[str, str]]:
         {"role": "system", "content": prompt},
         {"role": "user", "content": instruction},
     ]
-
-
-async def expand_retrieval(question: str) -> dict:
-    hypothetical_document = await chat(
-        prompt_messages(
-            registry.get(PromptType.HYDE_GENERATION).format(question=question),
-            "Produce the requested retrieval passage",
-        ),
-        max_tokens=384,
-        timeout_seconds=20,
-    )
-    result = await structured(
-        registry.get(PromptType.MULTI_QUERY).format(question=question),
-        MultiQueryOutput,
-        max_tokens=192,
-        timeout_seconds=20,
-    )
-    return {
-        "hypothetical_document": hypothetical_document.strip() or question,
-        "queries": [value.strip() for value in result.queries if value.strip()][:5],
-    }
 
 
 async def decompose_retrieval(question: str, document_ids: list[str]) -> list[str]:

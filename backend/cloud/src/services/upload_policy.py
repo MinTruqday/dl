@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 
-from src.core.infrastructure.configuration import settings
 from src.core.storage import get_bucket, get_storage_client
 from src.repositories.storage import storage_repository
 from src.repositories.storage import temporary_file_repository
@@ -18,7 +17,7 @@ class UploadPolicyService:
     @staticmethod
     async def validate_svg(file):
         if file.filename and file.filename.lower().endswith(".svg"):
-            content = await file.read(settings.MAX_UPLOAD_SIZE_BYTES + 1)
+            content = await file.read(104857601)
             text = content.decode("utf-8", errors="ignore")
             if re.search("<!ENTITY", text, re.IGNORECASE) or re.search(
                 "<!DOCTYPE", text, re.IGNORECASE
@@ -37,9 +36,9 @@ class UploadPolicyService:
 
     @staticmethod
     def validate_size(size: int):
-        if size < settings.MIN_FILE_SIZE_BYTES:
+        if size < 5000:
             raise HTTPException(status_code=400, detail="Tệp tải lên không được để trống")
-        if size > settings.MAX_UPLOAD_SIZE_BYTES:
+        if size > 104857600:
             raise HTTPException(status_code=413, detail="Tệp tải lên vượt quá kích thước cho phép")
 
     @staticmethod

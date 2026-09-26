@@ -9,7 +9,6 @@ from loguru import logger
 
 from src.clients.knowledge import knowledge_client
 from src.clients.notification import notification_client
-from src.core.infrastructure.configuration import settings
 from src.repositories.cache import DocumentCacheRepository
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
@@ -362,7 +361,7 @@ class DocumentCrudService:
                     "is_password_protected": True,
                 }
             attempts = await DocumentCacheRepository.password_attempts(document_id, user_id)
-            if attempts >= settings.DOCUMENT_PASSWORD_MAX_ATTEMPTS:
+            if attempts >= 5:
                 raise HTTPException(
                     status_code=429,
                     detail="Truy cập bị tạm khóa do vi phạm giới hạn thử mật khẩu tài liệu",
@@ -379,10 +378,10 @@ class DocumentCrudService:
         if not can_view_full_content and document.get("status") == DocumentStatus.PUBLISHED:
             preview_limit = max(
                 0,
-                int(document.get("preview_pages", settings.DOCUMENT_PREVIEW_DEFAULT_PAGES) or 0),
+                int(document.get("preview_pages", 5) or 0),
             )
             document["content"] = (document.get("content") or "")[
-                : preview_limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+                : preview_limit * 1000
             ]
 
         serialized = serialize_document(document)
@@ -519,23 +518,23 @@ class DocumentCrudService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
-        limit = doc.get("preview_pages", settings.DOCUMENT_PREVIEW_DEFAULT_PAGES)
+        limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
         preview_content = ""
         try:
             parsed = json.loads(raw_content)
             if "blocks" in parsed:
                 parsed["blocks"] = parsed["blocks"][
-                    : limit * settings.DOCUMENT_PREVIEW_BLOCKS_PER_PAGE
+                    : limit * 5
                 ]
                 preview_content = json.dumps(parsed)
             else:
                 preview_content = raw_content[
-                    : limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+                    : limit * 1000
                 ]
         except (TypeError, ValueError, json.JSONDecodeError):
             preview_content = raw_content[
-                : limit * settings.DOCUMENT_PREVIEW_CHARACTERS_PER_PAGE
+                : limit * 1000
             ]
 
         return {

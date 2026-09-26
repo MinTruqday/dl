@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
 from src.core.policies import platform_policy
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository as IdentityRepository
@@ -20,7 +19,7 @@ SESSION_POLICY = platform_policy()["session"]
 class SessionService:
     @staticmethod
     def refresh_cookie_seconds():
-        return settings.refresh_token_expire_seconds
+        return 7 * 24 * 60 * 60
 
     @staticmethod
     def access_token_for_user(user_doc: dict, session_id: str):
@@ -102,7 +101,7 @@ class SessionService:
                 "token": token,
                 "used": False,
                 "expires_at": timestamp
-                + timedelta(minutes=settings.EMAIL_VERIFICATION_EXPIRE_MINUTES),
+                + timedelta(minutes=30),
                 "created_at": timestamp,
                 "requested_ip": client_ip,
             }
@@ -258,7 +257,7 @@ class SessionService:
             user = None
         if user:
             otp_code = "".join(
-                str(secrets.randbelow(10)) for _ in range(settings.PASSWORD_RESET_CODE_DIGITS)
+                str(secrets.randbelow(10)) for _ in range(6)
             )
             await IdentityRepository.create_password_reset_token(
                 {
@@ -266,7 +265,7 @@ class SessionService:
                     "email": email,
                     "token": otp_code,
                     "expires_at": datetime.now(timezone.utc)
-                    + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES),
+                    + timedelta(minutes=1),
                     "used": False,
                     "created_at": datetime.now(timezone.utc),
                 }

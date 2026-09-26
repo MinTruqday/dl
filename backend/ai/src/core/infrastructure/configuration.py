@@ -1,26 +1,13 @@
 import os
-import tempfile
 from typing import Optional
 
 from pydantic import BaseModel
-
-
-def get_runtime_path(*parts: str) -> str:
-    return os.path.join(tempfile.gettempdir(), *parts)
-
-
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
     INTERNAL_API_URL: str = os.environ["INTERNAL_API_URL"]
     SECRET_KEY: str = os.environ["SECRET_KEY"]
     CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
-    INTERNAL_REQUEST_TIMEOUT_SECONDS: float = float(
-        os.environ["INTERNAL_REQUEST_TIMEOUT_SECONDS"]
-    )
-    INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS: float = float(
-        os.environ["INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS"]
-    )
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     REDIS_URI: str = os.environ["REDIS_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
@@ -37,42 +24,17 @@ class Settings(BaseModel):
     OBJECT_STORAGE_PUBLIC_BUCKET: str = os.environ["OBJECT_STORAGE_PUBLIC_BUCKET"]
     OBJECT_STORAGE_REGION: str = os.environ["OBJECT_STORAGE_REGION"]
     OBJECT_STORAGE_PUBLIC_URL: Optional[str] = os.environ["OBJECT_STORAGE_PUBLIC_URL"]
-    MIN_FILE_SIZE_BYTES: int = int(os.environ["MIN_FILE_SIZE_BYTES"])
     HF_TOKEN: str = os.environ["HF_TOKEN"]
     HF_INFERENCE_URL: str = os.environ["HF_INFERENCE_URL"]
     PRIMARY_MODEL_URL: str = os.environ["PRIMARY_MODEL_URL"]
     PRIMARY_MODEL_HEALTH_URL: str = os.environ["PRIMARY_MODEL_HEALTH_URL"]
     LLM_MODEL: str = os.environ["LLM_MODEL"]
-    MODEL_TIMEOUT_SECONDS: float = float(os.environ["MODEL_TIMEOUT_SECONDS"])
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     AI_DB_NAME: str = os.environ["AI_DB_NAME"]
     AUTHENTICATION_URL: str = os.environ["AUTHENTICATION_URL"]
     CONTENT_URL: str = os.environ["CONTENT_URL"]
-    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.environ["AI_REQUEST_TIMEOUT_SECONDS"])
-    AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.environ["AGENT_SLOW_DURATION_MS_THRESHOLD"])
-    AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.environ["AGENT_ROUTE_CONFIDENCE_THRESHOLD"])
-    AGENT_EXECUTION_TIMEOUT_SECONDS: int = int(os.environ["AGENT_EXECUTION_TIMEOUT_SECONDS"])
-    AGENT_RECURSION_LIMIT: int = int(os.environ["AGENT_RECURSION_LIMIT"])
-    AGENT_MAX_CONTEXT_TOKENS: int = int(os.environ["AGENT_MAX_CONTEXT_TOKENS"])
-    AGENT_HISTORY_MAX_TURNS: int = int(os.environ["AGENT_HISTORY_MAX_TURNS"])
-    AGENT_DEFAULT_MAX_OUTPUT_TOKENS: int = int(os.environ["AGENT_DEFAULT_MAX_OUTPUT_TOKENS"])
-    AGENT_MAX_SUPERVISOR_STEPS: int = int(os.environ["AGENT_MAX_SUPERVISOR_STEPS"])
-    AGENT_MAX_SPECIALIST_STEPS: int = int(os.environ["AGENT_MAX_SPECIALIST_STEPS"])
-    AGENT_MAX_TOOL_CALLS_PER_TASK: int = int(os.environ["AGENT_MAX_TOOL_CALLS_PER_TASK"])
-    AGENT_MAX_TOOL_ERRORS: int = int(os.environ["AGENT_MAX_TOOL_ERRORS"])
-    AGENT_MAX_RETRIES: int = int(os.environ["AGENT_MAX_RETRIES"])
-    AGENT_TASK_TIMEOUT_SECONDS: int = int(os.environ["AGENT_TASK_TIMEOUT_SECONDS"])
-    AGENT_MAX_EVIDENCE_ITEMS: int = int(os.environ["AGENT_MAX_EVIDENCE_ITEMS"])
-    AGENT_FILE_ROOT: str = os.environ["AGENT_FILE_ROOT"]
-    AGENT_ARCHIVE_MAX_FILES: int = int(os.environ["AGENT_ARCHIVE_MAX_FILES"])
-    AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: int = int(
-        os.environ["AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES"]
-    )
-    AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: float = float(
-        os.environ["AGENT_ARCHIVE_MAX_COMPRESSION_RATIO"]
-    )
 
 
 settings = Settings()

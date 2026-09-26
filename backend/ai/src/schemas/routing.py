@@ -47,12 +47,6 @@ class RouteDecision(StructuredRouting):
     )
 
 
-class MultiQueryOutput(StructuredRouting):
-    queries: List[str] = Field(
-        description="Exactly three meaningfully different query formulations"
-    )
-
-
 class CrossDocumentQueries(StructuredRouting):
     queries: List[str] = Field(
         min_length=2,

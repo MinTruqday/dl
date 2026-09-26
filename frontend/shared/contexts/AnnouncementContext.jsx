@@ -8,7 +8,7 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "./ToastContext";
 const AnnouncementContext = createContext(undefined);
 export function AnnouncementProvider({ children }) {
-  const notificationEnabled = process.env.NEXT_PUBLIC_NOTIFICATION_ENABLED === "true";
+  const notificationEnabled = true;
   const { user } = useAuth();
   const { showToast } = useToast();
   const [announcements, setAnnouncements] = useState([]);

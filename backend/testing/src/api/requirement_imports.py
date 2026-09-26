@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
-from src.core.configuration import settings
 from src.domain.contracts.requirements import (
     ImportConfirm,
     ImportCreate,
@@ -43,10 +42,10 @@ async def upload_requirement_import(
 ):
     if format not in supported_requirement_formats():
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_IMPORT_FORMAT"})
-    data = await file.read(settings.MAX_REQUIREMENT_UPLOAD_SIZE_BYTES + 1)
+    data = await file.read(26214401)
     if not data:
         raise HTTPException(status_code=422, detail={"code": "EMPTY_IMPORT"})
-    if len(data) > settings.MAX_REQUIREMENT_UPLOAD_SIZE_BYTES:
+    if len(data) > 26214400:
         raise HTTPException(status_code=413, detail={"code": "IMPORT_TOO_LARGE"})
     content = extract_file_content(data, format)
     return await create_requirement_import(

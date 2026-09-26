@@ -14,7 +14,7 @@ class WorkerClient:
     async def request(method: str, path: str, payload: dict | None = None):
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 response = await client.request(
                     method,

@@ -3,7 +3,6 @@ from fastapi.responses import Response
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
-from src.core.configuration import settings
 from src.domain.contracts.project import ProjectArchiveInput
 from src.domain.contracts.requirements import (
     ImportCreate,
@@ -55,7 +54,7 @@ async def upload_requirement_document(
 ):
     if format not in supported_requirement_formats():
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_IMPORT_FORMAT"})
-    data = await file.read(settings.MAX_REQUIREMENT_UPLOAD_SIZE_BYTES + 1)
+    data = await file.read(26214401)
     result = await upload_requirement_document_record(
         project_id,
         format,

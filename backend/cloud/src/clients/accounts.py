@@ -11,7 +11,7 @@ class AccountClient:
     async def session_is_valid(user_id: str, session_id: str) -> bool:
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 response = await client.get(
                     f"{settings.AUTHENTICATION_URL}/xac-thuc/noi-bo/phien/{quote(session_id, safe='')}/nguoi-dung/{quote(user_id, safe='')}",
@@ -36,7 +36,7 @@ class AccountClient:
     async def _get(path: str) -> Optional[dict]:
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 response = await client.get(
                     f"{settings.AUTHENTICATION_URL}{path}",

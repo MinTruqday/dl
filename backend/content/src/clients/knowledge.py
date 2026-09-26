@@ -15,7 +15,7 @@ class KnowledgeClient:
         if superseded_document_id:
             params["superseded_document_id"] = superseded_document_id
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            timeout=20
         ) as client:
             response = await client.post(
                 f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
@@ -28,7 +28,7 @@ class KnowledgeClient:
     async def delete_document(self, document_id: str, requester_id: str, is_admin: bool = False):
         try:
             async with httpx.AsyncClient(
-                timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+                timeout=20
             ) as client:
                 response = await client.delete(
                     f"{settings.AI_URL}/tri-thuc/tai-lieu/{document_id}",

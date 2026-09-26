@@ -12,7 +12,7 @@ async def request_authentication(
 ) -> httpx.Response:
     try:
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            timeout=20
         ) as client:
             return await client.request(
                 method,

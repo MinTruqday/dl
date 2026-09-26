@@ -7,7 +7,6 @@ from pymongo.errors import DuplicateKeyError
 
 from src.clients.storage import storage_client
 from src.core.common import audit, get_project, get_project_entity, new_id, now
-from src.core.configuration import settings
 from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
 from src.services.requirement_import import (
@@ -35,7 +34,7 @@ async def create_requirement_document_record(project_id, payload, user):
     codes = policy["error_codes"]
     await get_project(project_id, user, policy["permissions"]["upload"])
     content = serialized_content(payload.content)
-    if len(content.encode("utf-8")) > settings.MAX_REQUIREMENT_UPLOAD_SIZE_BYTES:
+    if len(content.encode("utf-8")) > 26214400:
         raise HTTPException(status_code=413, detail={"code": codes["import_too_large"]})
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
     existing = await requirement_document_repository.find_by_hash(project_id, content_hash)
@@ -185,7 +184,7 @@ async def upload_requirement_document_record(
         raise HTTPException(status_code=422, detail={"code": codes["unsupported_format"]})
     if not data:
         raise HTTPException(status_code=422, detail={"code": codes["empty_import"]})
-    if len(data) > settings.MAX_REQUIREMENT_UPLOAD_SIZE_BYTES:
+    if len(data) > 26214400:
         raise HTTPException(status_code=413, detail={"code": codes["import_too_large"]})
     await get_project(project_id, user, policy["permissions"]["upload"])
     resolved_filename = filename or f"{policy['default_filename_prefix']}.{format}"

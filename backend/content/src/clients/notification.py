@@ -14,7 +14,7 @@ class NotificationClient:
         if not settings.NOTIFICATION_URL:
             return None
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            timeout=20
         ) as client:
             response = await client.post(
                 f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",

@@ -7,7 +7,7 @@ class ContentClient:
     @staticmethod
     async def exchange(action: str, **values):
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            timeout=20
         ) as client:
             response = await client.post(
                 f"{settings.CONTENT_URL}/tai-lieu/noi-bo/trao-doi",

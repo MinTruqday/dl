@@ -73,7 +73,7 @@ async def handle_testing_job(payload: dict):
             },
         )
         return result
-    async with httpx.AsyncClient(timeout=settings.WORKER_REQUEST_TIMEOUT_SECONDS) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{settings.TESTING_URL}/kiem-thu/noi-bo/tac-vu/{payload.get('event')}",
             headers={
@@ -151,7 +151,7 @@ async def run_newman(job_id, payload, job_payload):
         )
         try:
             return_code = await asyncio.wait_for(
-                process.wait(), timeout=settings.WORKER_EXECUTION_TIMEOUT_SECONDS
+                process.wait(), timeout=900
             )
         except TimeoutError:
             process.kill()
@@ -236,7 +236,7 @@ def automation_callback(execution_id, job_id, status, summary, results, logs):
 
 
 async def send_automation_result(callback):
-    async with httpx.AsyncClient(timeout=settings.WORKER_REQUEST_TIMEOUT_SECONDS) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{settings.TESTING_URL}/noi-bo/kiem-thu/thuc-thi-tu-dong/ket-qua",
             headers={"X-Internal-Token": settings.SECRET_KEY},
@@ -297,7 +297,7 @@ async def run_playwright(job_id, payload, job_payload):
         )
         try:
             stdout, stderr = await asyncio.wait_for(
-                process.communicate(), timeout=settings.WORKER_EXECUTION_TIMEOUT_SECONDS
+                process.communicate(), timeout=900
             )
             return_code = process.returncode
         except TimeoutError:
@@ -375,7 +375,7 @@ class WorkerRunner:
                                 await message.reject(requeue=False)
                                 continue
                             failure = None
-                            for attempt in range(settings.WORKER_MAX_RETRIES):
+                            for attempt in range(3):
                                 try:
                                     await handler(payload)
                                     failure = None
@@ -386,7 +386,7 @@ class WorkerRunner:
                                 except Exception as error:
                                     failure = error
                                     logger.exception("Worker task attempt failed")
-                                    if attempt + 1 < settings.WORKER_MAX_RETRIES:
+                                    if attempt + 1 < 3:
                                         await asyncio.sleep(2**attempt)
                             if failure is None:
                                 await message.ack()

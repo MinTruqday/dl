@@ -1,4 +1,3 @@
-from src.core.infrastructure.configuration import settings
 from src.repositories.storage import storage_repository
 from src.services.storage_policy import storage_policy
 
@@ -34,7 +33,7 @@ async def get_storage_quota(owner_id: str) -> dict:
     ]
     result = await storage_repository.aggregate(pipeline)
     used = (result[0].get("total_used") or 0) if result else 0
-    return {"used": used, "limit": settings.DEFAULT_STORAGE_LIMIT_BYTES}
+    return {"used": used, "limit": 21474836480}
 
 
 async def get_quota_analytics(owner_id: str) -> dict:

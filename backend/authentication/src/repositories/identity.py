@@ -123,7 +123,7 @@ class IdentityRepository:
                 "refresh_token_hash": IdentityRepository._token_hash(refresh_token),
                 "created_at": now,
                 "last_refreshed_at": now,
-                "expires_at": now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+                "expires_at": now + timedelta(days=7),
                 "revoked_at": None,
             },
         )
@@ -321,7 +321,7 @@ class IdentityRepository:
     async def set_redis_passkey_challenge(email: str, challenge: bytes):
         await redis.setex(
             f"passkey_challenge:{email.lower()}",
-            settings.PASSKEY_CHALLENGE_EXPIRE_SECONDS,
+            300,
             base64.b64encode(challenge).decode("ascii"),
         )
 
@@ -345,7 +345,7 @@ class IdentityRepository:
                     "challenge": challenge,
                     "created_at": now,
                     "expires_at": now
-                    + timedelta(seconds=settings.PASSKEY_CHALLENGE_EXPIRE_SECONDS),
+                    + timedelta(seconds=300),
                 }
             },
             upsert=True,

@@ -35,7 +35,7 @@ async def index_artifact(
     )
     try:
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_LONG_REQUEST_TIMEOUT_SECONDS
+            timeout=60
         ) as client:
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/doi-tuong",
@@ -51,7 +51,7 @@ async def index_artifact(
 async def search_project_with_status(project_id, query, artifact_types, limit) -> dict:
     try:
         async with httpx.AsyncClient(
-            timeout=settings.INTERNAL_REQUEST_TIMEOUT_SECONDS
+            timeout=20
         ) as client:
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/tim-kiem",

@@ -71,10 +71,10 @@ class HostedModelClient:
         response_schema: dict[str, Any] | None = None,
     ):
         payload = self._payload(model, messages, max_tokens, temperature, response_schema)
-        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
+                async with httpx.AsyncClient(timeout=1800) as client:
                     response = await client.post(
                         settings.PRIMARY_MODEL_URL, headers=self._headers(), json=payload
                     )
@@ -157,10 +157,10 @@ class HostedModelClient:
         emitted = False
         prompt_tokens = 0
         completion_tokens = 0
-        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
+                async with httpx.AsyncClient(timeout=1800) as client:
                     async with client.stream(
                         "POST", settings.PRIMARY_MODEL_URL, headers=self._headers(), json=payload
                     ) as response:
@@ -258,10 +258,10 @@ class HostedAuxiliaryClient:
         return False
 
     async def _post(self, model: str, payload: dict[str, Any]) -> Any:
-        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
+                async with httpx.AsyncClient(timeout=1800) as client:
                     response = await client.post(
                         self._endpoint(model), headers=self._headers(), json=payload
                     )

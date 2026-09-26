@@ -1,4 +1,3 @@
-from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
 
 
@@ -22,7 +21,7 @@ class DocumentCacheRepository:
     async def record_password_failure(document_id: str, user_id: str | None):
         key = DocumentCacheRepository._unlock_key(document_id, user_id)
         await redis.incr(key)
-        return await redis.expire(key, settings.DOCUMENT_PASSWORD_RATE_LIMIT_SECONDS)
+        return await redis.expire(key, 900)
 
     @staticmethod
     async def clear_password_failures(document_id: str, user_id: str | None):

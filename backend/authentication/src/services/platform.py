@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from fastapi import Depends, HTTPException
 
 from src.core.dependency import CurrentUser, SystemRole, get_current_user
-from src.core.infrastructure.configuration import settings
 from src.core.policies import platform_policy
 from src.core.response import APIResponse
 from src.repositories.identity import IdentityRepository
@@ -32,8 +31,7 @@ def account_view(credential):
             "system_role": credential.get("system_role", "USER"),
             "permissions": credential.get("permissions") or [],
             "is_active": credential.get("is_active", True),
-            "storage_limit": credential.get("storage_limit")
-            or settings.DEFAULT_STORAGE_LIMIT_BYTES,
+            "storage_limit": credential.get("storage_limit") or 21474836480,
         }
     )
     return account

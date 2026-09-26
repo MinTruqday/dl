@@ -10,13 +10,11 @@ from src.schemas.inference import (
     CrossDocumentExpansionRequest,
     KnowledgeChunkSafetyRequest,
     KnowledgeDocumentSummaryRequest,
-    RetrievalExpansionRequest,
     TestingAssistanceRequest,
     TestingAssistanceResult,
 )
 from src.services.inference import (
     decompose_retrieval,
-    expand_retrieval,
     inspect_chunks,
     stream_sink,
     summarize_document,
@@ -24,15 +22,6 @@ from src.services.inference import (
 from src.services.testing_assistance import generate_testing_assistance
 
 router = APIRouter(prefix="/suy-luan")
-
-
-@router.post(
-    "/noi-bo/mo-rong-truy-van",
-    dependencies=[Depends(verify_internal_token)],
-    description="Mở rộng truy vấn thành giả thuyết và các truy vấn con phục vụ knowledge",
-)
-async def expand_retrieval_query(req: RetrievalExpansionRequest):
-    return await expand_retrieval(req.question)
 
 
 @router.post(

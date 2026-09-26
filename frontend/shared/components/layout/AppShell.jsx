@@ -58,7 +58,7 @@ export default function AppShell({ children, requireAuth }) {
   const projectId = projectIdFromPath(pathname);
   const { user, isLoading, logoutState } = useAuth();
   const { unreadCount } = useAnnouncements();
-  const notificationEnabled = process.env.NEXT_PUBLIC_NOTIFICATION_ENABLED === "true";
+  const notificationEnabled = true;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(routeQuery);

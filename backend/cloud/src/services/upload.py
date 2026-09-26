@@ -4,7 +4,6 @@ import uuid
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
 from src.core.storage import generate_presigned_url, upload_file
 
 
@@ -64,10 +63,10 @@ class UploadService:
 
     @staticmethod
     async def read_limited(file) -> bytes:
-        content = await file.read(settings.MAX_UPLOAD_SIZE_BYTES + 1)
+        content = await file.read(104857601)
         if not content:
             raise HTTPException(status_code=400, detail="Tệp tải lên không được để trống")
-        if len(content) > settings.MAX_UPLOAD_SIZE_BYTES:
+        if len(content) > 104857600:
             raise HTTPException(status_code=413, detail="Tệp tải lên vượt quá kích thước cho phép")
         return content
 

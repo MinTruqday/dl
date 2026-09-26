@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.services.embedding import embedder
-from src.services.inference import decompose_retrieval, expand_retrieval
+from src.services.inference import decompose_retrieval
 from src.core.policies import document_policy
 from src.store.bm25 import bm25_store
 from src.store.vector import vector_store
@@ -235,70 +235,6 @@ class RetrievalService:
             logger.exception("Search result sorting error")
             return documents[:result_count]
 
-    async def multi_query_retrieve(
-        self,
-        question: str,
-        document_ids: Optional[List[str]] = None,
-        k: Optional[int] = None,
-        requester_id: Optional[str] = None,
-        is_admin: bool = False,
-        metadata_filters: Optional[Dict] = None,
-    ) -> List[Dict]:
-        policy = document_policy()["retrieval"]
-        result_count = policy["default_result_count"] if k is None else k
-        try:
-            expansion = await expand_retrieval(question)
-        except Exception:
-            logger.exception("Retrieval query expansion failed")
-            expansion = {"hypothetical_document": question, "queries": []}
-
-        queries = list(dict.fromkeys([*expansion.get("queries", []), question]))
-        result_groups = await asyncio.gather(
-            *[
-                self.retrieve(
-                    query,
-                    document_ids,
-                    k=policy["expanded_query_result_count"],
-                    requester_id=requester_id,
-                    is_admin=is_admin,
-                    metadata_filters=metadata_filters,
-                )
-                for query in queries
-            ],
-            return_exceptions=True,
-        )
-        all_documents = []
-        for group in result_groups:
-            if isinstance(group, list):
-                all_documents.extend(group)
-
-        hypothetical_document = str(expansion.get("hypothetical_document") or question)
-        try:
-            hypothetical_vector = await embedder.embed_query(hypothetical_document)
-            hypothetical_documents = await vector_store.query(
-                query_vector=hypothetical_vector,
-                document_ids=document_ids,
-                limit=policy["hypothetical_document_result_count"],
-                requester_id=requester_id,
-                is_admin=is_admin,
-                metadata_filters=metadata_filters,
-            )
-            all_documents.extend(hypothetical_documents)
-        except Exception as error:
-            if not all_documents:
-                raise RetrievalUnavailableError("multi_query_retrieval_unavailable") from error
-            logger.error("Hypothetical retrieval failed: {}", type(error).__name__)
-
-        unique_documents = []
-        seen_texts = set()
-        for document in all_documents:
-            text = document.get("text", "")
-            if text and text not in seen_texts:
-                seen_texts.add(text)
-                unique_documents.append(document)
-
-        return unique_documents[:result_count]
-
     async def cross_document_retrieve(
         self,
         question: str,
@@ -312,13 +248,13 @@ class RetrievalService:
             document_policy()["retrieval"]["default_result_count"] if k is None else k
         )
         if not document_ids or len(document_ids) < 2:
-            return await self.multi_query_retrieve(
-                question,
-                document_ids,
-                result_count,
-                requester_id,
-                is_admin,
-                metadata_filters,
+            return await self.retrieve(
+                query=question,
+                document_ids=document_ids,
+                k=result_count,
+                requester_id=requester_id,
+                is_admin=is_admin,
+                metadata_filters=metadata_filters,
             )
 
         sub_queries = [question] * len(document_ids)
