@@ -6,13 +6,13 @@ from fastapi import HTTPException
 from src.core.auth import CurrentUser
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
 from src.core.rich_text import text_document
-from src.domain.contracts import (
+from src.domain.contracts.design import TestCaseDraftCreate
+from src.domain.contracts.requirements import (
     APIArtifactArchive,
     APIArtifactConfirm,
     APIArtifactImpact,
     APIArtifactReview,
     ImportCreate,
-    TestCaseDraftCreate,
 )
 from src.services.api_artifact_formats import (
     api_case_blueprints,

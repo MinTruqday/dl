@@ -10,13 +10,13 @@ import AutomationScriptsPanel from "../../components/AutomationScriptsPanel";
 import CollaborationPanel from "../../components/CollaborationPanel";
 import {
   ErrorState,
-  Pagination,
   Panel,
   ProjectCrumb,
   WorkspacePage,
   StatusPill,
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { testingApi } from "../../services/testing.service";
 import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import DocumentEditor from "../../editor/DocumentEditor";

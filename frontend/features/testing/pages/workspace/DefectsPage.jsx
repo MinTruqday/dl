@@ -5,13 +5,13 @@ import DataTable from "../../components/DataTable";
 import CausalAnalysisPanel from "../../components/CausalAnalysisPanel";
 import {
   ErrorState,
-  Pagination,
   Panel,
   ProjectCrumb,
   WorkspacePage,
   StatusPill,
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { testingApi } from "../../services/testing.service";
 import { messageOf, textDoc, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";

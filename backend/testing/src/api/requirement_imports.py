@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
 from src.core.configuration import settings
-from src.domain.contracts import (
+from src.domain.contracts.requirements import (
     ImportConfirm,
     ImportCreate,
     RequirementCandidateMergeInput,

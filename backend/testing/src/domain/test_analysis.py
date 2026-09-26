@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-TestabilityStatus = Literal["TESTABLE", "TESTABLE_WITH_RISK", "NOT_TESTABLE", "NEEDS_CLARIFICATION"]
+from src.domain.contracts.common import AnalysisFindingStatus, TestabilityStatus
 
 
 def normalize_testability_status(value):
@@ -48,7 +48,7 @@ class AnalysisFinding(BaseModel):
     source_ref: TestBasisRef
     description: str = Field(min_length=2, max_length=5000)
     suggestion: str = Field(default="", max_length=5000)
-    status: Literal["OPEN", "RESOLVED", "ACCEPTED_RISK"] = "OPEN"
+    status: AnalysisFindingStatus = AnalysisFindingStatus.OPEN
     resolved_by: str | None = Field(default=None, max_length=200)
     resolution_ref: str | None = Field(default=None, max_length=500)
 
@@ -65,7 +65,7 @@ class TestConditionCreate(BaseModel):
     risk: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
     priority: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
     technique_candidates: list[str] = Field(default_factory=list, max_length=100)
-    testability_status: TestabilityStatus = "TESTABLE"
+    testability_status: TestabilityStatus = TestabilityStatus.TESTABLE
     analysis_findings: list[AnalysisFinding] = Field(default_factory=list, max_length=200)
     origin: Literal["MANUAL", "AI_CANDIDATE_CONFIRMED"] = "MANUAL"
     ai_result_id: str | None = Field(default=None, max_length=200)
@@ -111,7 +111,7 @@ class TestConditionTransition(BaseModel):
 
 class FindingResolutionInput(BaseModel):
     expected_revision: int = Field(ge=1)
-    status: Literal["RESOLVED", "ACCEPTED_RISK"]
+    status: AnalysisFindingStatus
     resolution_ref: str = Field(min_length=2, max_length=500)
     note: str = Field(min_length=2, max_length=5000)
 

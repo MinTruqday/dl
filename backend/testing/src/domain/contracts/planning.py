@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.domain.contracts.common import TestPlanRiskStatus
+
 class TestPlanEstimation(BaseModel):
     method: Literal["expert_judgment", "three_point", "historical", "custom"] = "expert_judgment"
     planned_effort_hours: float = Field(default=0, ge=0)
@@ -39,7 +41,7 @@ class TestPlanRisk(BaseModel):
     exposure: float = Field(ge=0)
     response: str = Field(default="", max_length=5000)
     owner_id: str | None = Field(default=None, max_length=200)
-    status: Literal["OPEN", "MITIGATING", "ACCEPTED", "CLOSED"] = "OPEN"
+    status: TestPlanRiskStatus = TestPlanRiskStatus.OPEN
     due_at: str | None = Field(default=None, max_length=80)
 
 
@@ -93,4 +95,3 @@ class TestPlanCreate(BaseModel):
         if bool(self.suspension_criteria) != bool(self.resumption_criteria):
             raise ValueError("Tiêu chí đình chỉ và tiếp tục phải được khai báo cùng nhau")
         return self
-

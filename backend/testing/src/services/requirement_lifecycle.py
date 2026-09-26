@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
@@ -8,6 +10,24 @@ from src.services.linters import requirement_findings
 from src.services.requirement_indexing import index_requirement_version
 
 LIFECYCLE_POLICY = domain_policy("requirement_lifecycle")
+
+
+@dataclass(frozen=True)
+class RequirementBaselineResult:
+    version: dict
+    indexed: bool
+
+    @property
+    def status(self):
+        return (
+            LIFECYCLE_POLICY["success_status"]
+            if self.indexed
+            else LIFECYCLE_POLICY["degraded_status"]
+        )
+
+    @property
+    def degraded_mode(self):
+        return None if self.indexed else LIFECYCLE_POLICY["vector_degraded_mode"]
 
 
 async def submit_requirement_for_review(
@@ -176,7 +196,7 @@ async def baseline_requirement(
         LIFECYCLE_POLICY["approve_permission"],
     )
     if version["status"] == LIFECYCLE_POLICY["baselined_status"]:
-        return version, True
+        return RequirementBaselineResult(version, True)
     if version["status"] != LIFECYCLE_POLICY["review_status"]:
         raise HTTPException(
             status_code=409,
@@ -222,7 +242,7 @@ async def baseline_requirement(
     if not version:
         current = await requirement_repository.find_version(version_id)
         if current and current.get("status") == LIFECYCLE_POLICY["baselined_status"]:
-            return current, True
+            return RequirementBaselineResult(current, True)
         raise HTTPException(
             status_code=409,
             detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
@@ -249,7 +269,7 @@ async def baseline_requirement(
         version_id,
         version["project_id"],
     )
-    return version, indexed
+    return RequirementBaselineResult(version, indexed)
 
 
 async def make_requirement_obsolete(

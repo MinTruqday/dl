@@ -6,11 +6,11 @@ import {
   ErrorState,
   LoadingState,
   Metric,
-  Pagination,
   Panel,
   StatusPill,
   useActionDialog,
 } from "./WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 const configGroups = [

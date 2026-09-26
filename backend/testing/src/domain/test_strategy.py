@@ -2,12 +2,9 @@ import ast
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
-
-StrategyStatus = Literal["DRAFT", "IN_REVIEW", "APPROVED", "SUPERSEDED", "ARCHIVED"]
-
 
 class RiskModel(BaseModel):
     probability_scale: list[dict[str, Any]] = Field(min_length=1, max_length=20)

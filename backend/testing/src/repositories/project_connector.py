@@ -32,13 +32,15 @@ class ProjectConnectorRepository:
             return_document=ReturnDocument.AFTER,
         )
 
-    async def unbind_connector(self, connector_id, project_id, revision, changes):
+    async def unbind_connector(
+        self, connector_id, project_id, revision, bound_status, changes
+    ):
         return await self.connectors.find_one_and_update(
             {
                 "_id": connector_id,
                 "project_id": project_id,
                 "revision": revision,
-                "status": "BOUND",
+                "status": bound_status,
             },
             {"$set": changes, "$inc": {"revision": 1}},
             return_document=ReturnDocument.AFTER,
@@ -63,13 +65,15 @@ class ProjectConnectorRepository:
             "created_at", -1
         ).to_list(limit)
 
-    async def resolve_conflict(self, conflict_id, project_id, revision, changes):
+    async def resolve_conflict(
+        self, conflict_id, project_id, revision, open_status, changes
+    ):
         return await self.conflicts.find_one_and_update(
             {
                 "_id": conflict_id,
                 "project_id": project_id,
                 "revision": revision,
-                "status": "OPEN",
+                "status": open_status,
             },
             {"$set": changes, "$inc": {"revision": 1}},
             return_document=ReturnDocument.AFTER,

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, validate_doc
-from src.domain.contracts import RequirementCreate
+from src.domain.contracts.requirements import RequirementCreate
 from src.repositories.requirement_import import requirement_import_repository
 from src.services.domain_policy import domain_policy
 from src.services.requirement_import import atomic_requirement_candidates, parse_requirement_import

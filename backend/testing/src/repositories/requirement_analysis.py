@@ -32,6 +32,7 @@ class RequirementAnalysisRepository:
         version_id,
         project_id,
         revision,
+        draft_status,
         dependencies,
         updated_at,
     ):
@@ -39,7 +40,7 @@ class RequirementAnalysisRepository:
             {
                 "_id": version_id,
                 "project_id": project_id,
-                "status": "DRAFT",
+                "status": draft_status,
                 "revision": revision,
             },
             {

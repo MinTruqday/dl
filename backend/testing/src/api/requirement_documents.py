@@ -4,10 +4,10 @@ from fastapi.responses import Response
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
 from src.core.configuration import settings
-from src.domain.contracts import (
+from src.domain.contracts.project import ProjectArchiveInput
+from src.domain.contracts.requirements import (
     ImportCreate,
     KnowledgeSourceCreate,
-    ProjectArchiveInput,
     RequirementDocumentPatch,
     RequirementExtractionInput,
     RequirementParseRetry,

@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, new_id
-from src.domain.contracts import ProjectQuestionInput, SearchInput
+from src.domain.contracts.utility import (
+    ProjectQuestionInput,
+    SearchInput,
+)
 from src.services.analytics import AnalyticsService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])

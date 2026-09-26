@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import AttachmentCreate, AttachmentModeration
+from src.domain.contracts.requirements import (
+    AttachmentCreate,
+    AttachmentModeration,
+)
 from src.services.attachment import AttachmentService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tệp đính kèm kiểm thử"])

@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.domain.contracts.common import EnvironmentIncidentStatus
+
 
 class EnvironmentIncidentCreate(BaseModel):
     idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
@@ -45,11 +47,15 @@ class EnvironmentIncidentPatch(BaseModel):
 
 class EnvironmentIncidentTransition(BaseModel):
     expected_revision: int = Field(ge=1)
-    status: Literal["INVESTIGATING", "MITIGATED", "RESOLVED", "CLOSED"]
+    status: EnvironmentIncidentStatus
     resolution: str = Field(default="", max_length=10000)
 
     @model_validator(mode="after")
     def validate_resolution(self):
-        if self.status in {"RESOLVED", "CLOSED"} and not self.resolution.strip():
+        if (
+            self.status
+            in {EnvironmentIncidentStatus.RESOLVED, EnvironmentIncidentStatus.CLOSED}
+            and not self.resolution.strip()
+        ):
             raise ValueError("Incident đã xử lý phải có kết quả")
         return self

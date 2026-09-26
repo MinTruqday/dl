@@ -7,6 +7,7 @@ from src.domain.contracts.common import (
     KnowledgeApprovalStatus,
     KnowledgeAuthority,
     KnowledgeSourceType,
+    RequirementCandidateStatus,
     empty_doc,
 )
 
@@ -174,7 +175,7 @@ class KnowledgeSourceCreate(BaseModel):
     product_area: str | None = Field(default=None, max_length=200)
     release_id: str | None = Field(default=None, max_length=200)
     external_source_id: str | None = Field(default=None, max_length=500)
-    approval_status: KnowledgeApprovalStatus = "DRAFT"
+    approval_status: KnowledgeApprovalStatus = KnowledgeApprovalStatus.DRAFT
     approved_by: str | None = Field(default=None, max_length=200)
     approved_at: datetime | None = None
     source_version: str = Field(default="1", min_length=1, max_length=100)
@@ -183,7 +184,9 @@ class KnowledgeSourceCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_approval(self):
-        if self.approval_status == "APPROVED" and (not self.approved_by or not self.approved_at):
+        if self.approval_status == KnowledgeApprovalStatus.APPROVED and (
+            not self.approved_by or not self.approved_at
+        ):
             raise ValueError("Nguồn đã phê duyệt phải có người và thời điểm phê duyệt")
         return self
 
@@ -253,7 +256,7 @@ class APIArtifactImpact(BaseModel):
 
 class RequirementCandidateReview(RequirementCreate):
     candidate_id: str | None = Field(default=None, max_length=200)
-    candidate_status: Literal["ACTIVE", "REJECTED", "SUPERSEDED"] = "ACTIVE"
+    candidate_status: RequirementCandidateStatus = RequirementCandidateStatus.ACTIVE
     candidate_revision: int = Field(default=1, ge=1)
     extraction_confidence: float = Field(default=1, ge=0, le=1)
     candidate_relation: str | None = Field(default=None, max_length=80)
@@ -282,4 +285,3 @@ class RequirementCandidateSplitInput(BaseModel):
 class RequirementCandidateRejectInput(BaseModel):
     expected_revision: int = Field(ge=1)
     reason: str = Field(default="", max_length=2000)
-

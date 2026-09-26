@@ -69,37 +69,32 @@ async def structured(
 ):
     response_schema = schema.model_json_schema()
     constrained_prompt = f"{prompt}\n{schema_instruction(response_schema)}"
-    raw = await chat(
-        [
-            {"role": "system", "content": constrained_prompt},
-            {"role": "user", "content": "Produce the required output"},
-        ],
-        max_tokens=max_tokens,
-        temperature=0.1,
-        attempts=1,
-        timeout_seconds=timeout_seconds,
-        response_schema=response_schema if provider_schema else None,
-    )
-    try:
-        return validate_structured_output(raw, schema)
-    except Exception as error:
-        corrected = await chat(
-            [
-                {"role": "system", "content": constrained_prompt},
-                {"role": "user", "content": "Produce the required output"},
-                {"role": "assistant", "content": raw[:4000]},
-                {
-                    "role": "user",
-                    "content": correction_instruction(error),
-                },
-            ],
+    base_messages = [
+        {"role": "system", "content": constrained_prompt},
+        {"role": "user", "content": "Produce the required output"},
+    ]
+    messages = base_messages
+    maximum_attempts = max(2, settings.AGENT_MAX_RETRIES)
+    for attempt in range(maximum_attempts):
+        raw = await chat(
+            messages,
             max_tokens=max_tokens,
-            temperature=0,
+            temperature=0.1 if attempt == 0 else 0,
             attempts=1,
             timeout_seconds=timeout_seconds,
             response_schema=response_schema if provider_schema else None,
         )
-        return validate_structured_output(corrected, schema)
+        try:
+            return validate_structured_output(raw, schema)
+        except Exception as error:
+            if attempt == maximum_attempts - 1:
+                raise
+            messages = [
+                *base_messages,
+                {"role": "assistant", "content": raw[:4000]},
+                {"role": "user", "content": correction_instruction(error)},
+            ]
+    raise RuntimeError("structured_output_attempts_exhausted")
 
 
 def prompt_messages(prompt: str, instruction: str) -> list[dict[str, str]]:

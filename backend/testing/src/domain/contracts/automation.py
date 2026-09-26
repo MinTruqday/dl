@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from src.domain.contracts.common import AutomationExecutionStatus
+
 class AutomationScriptGenerateInput(BaseModel):
     framework: Literal["playwright", "cypress", "selenium"]
     language: Literal["typescript", "javascript", "python"]
@@ -113,7 +115,7 @@ class AutomationExecutionAction(BaseModel):
 class AutomationExecutionResultInput(BaseModel):
     execution_id: str = Field(min_length=1, max_length=200)
     operation_id: str = Field(min_length=1, max_length=200)
-    status: Literal["COMPLETED", "FAILED", "CANCELLED"]
+    status: AutomationExecutionStatus
     summary: dict[str, Any] = Field(default_factory=dict)
     results: list[dict[str, Any]] = Field(default_factory=list, max_length=100000)
     logs: list[str] = Field(default_factory=list, max_length=10000)
@@ -166,7 +168,7 @@ class CiCdTriggerInput(BaseModel):
 class CiCdResultInput(BaseModel):
     project_id: str = Field(min_length=1, max_length=200)
     pipeline_run_id: str = Field(min_length=1, max_length=200)
-    status: Literal["COMPLETED", "FAILED", "CANCELLED"]
+    status: AutomationExecutionStatus
     summary: dict[str, Any] = Field(default_factory=dict)
     results: list[dict[str, Any]] = Field(default_factory=list, max_length=100000)
     logs: list[str] = Field(default_factory=list, max_length=10000)
@@ -202,4 +204,3 @@ class CollaborationConflictResolution(BaseModel):
         if self.resolution == "MERGED" and self.merged_changes is None:
             raise ValueError("Phải cung cấp nội dung hợp nhất")
         return self
-

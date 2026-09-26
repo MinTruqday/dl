@@ -7,11 +7,11 @@ import {
   ErrorState,
   LoadingState,
   Metric,
-  Pagination,
   Panel,
   WorkspacePage,
   StatusPill,
 } from "../components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 

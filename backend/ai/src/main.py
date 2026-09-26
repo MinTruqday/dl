@@ -22,6 +22,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
+from src.runtime.models import AgentRunStatus
 from src.services.agent_metrics import agentops
 from src.services.evaluation import evaluation
 from src.services.retrieval import initialize_retrieval
@@ -169,10 +170,19 @@ async def agent_status():
     return {
         "orchestration": {
             "active_runs": await db.agent_runs.count_documents(
-                {"status": {"$in": ["PLANNING", "RUNNING", "APPLYING", "VERIFYING"]}}
+                {
+                    "status": {
+                        "$in": [
+                            AgentRunStatus.PLANNING,
+                            AgentRunStatus.RUNNING,
+                            AgentRunStatus.APPLYING,
+                            AgentRunStatus.VERIFYING,
+                        ]
+                    }
+                }
             ),
             "approval_required": await db.agent_runs.count_documents(
-                {"status": "APPROVAL_REQUIRED"}
+                {"status": AgentRunStatus.APPROVAL_REQUIRED}
             ),
         },
         "evaluation": evaluation.get_dashboard_metrics(),

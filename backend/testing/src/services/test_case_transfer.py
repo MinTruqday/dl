@@ -8,7 +8,11 @@ from src.core.common import audit, envelope, get_project, get_project_entity, ne
 from src.core.configuration import settings
 from src.repositories.test_design import test_design_repository
 from src.core.rich_text import text_document
-from src.domain.contracts import ImportConfirm, ImportCreate, TestCaseDraftCreate
+from src.domain.contracts.design import TestCaseDraftCreate
+from src.domain.contracts.requirements import (
+    ImportConfirm,
+    ImportCreate,
+)
 from src.services.api_artifact_formats import create_xlsx, lexical_similarity, model_metadata, terms
 from src.services.domain_policy import domain_policy
 from src.services.requirement_import import extract_xlsx_csv

@@ -8,13 +8,13 @@ import EnvironmentIncidentPanel from "../../components/EnvironmentIncidentPanel"
 import NonFunctionalTestPanel from "../../components/NonFunctionalTestPanel";
 import {
   ErrorState,
-  Pagination,
   Panel,
   ProjectCrumb,
   WorkspacePage,
   StatusPill,
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { testingApi } from "../../services/testing.service";
 import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";

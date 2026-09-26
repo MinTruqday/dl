@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import PerformancePlanDraftInput, SecurityTestSuggestionInput
+from src.domain.contracts.environment import (
+    PerformancePlanDraftInput,
+    SecurityTestSuggestionInput,
+)
 from src.services.design_suggestion import DesignSuggestionService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử chuyên sâu"])

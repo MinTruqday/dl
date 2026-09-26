@@ -5,9 +5,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-CompletionRecommendation = Literal[
-    "READY_FOR_RELEASE", "READY_WITH_RISK", "NOT_READY", "CONTINUE_TESTING"
-]
+from src.domain.contracts.common import (
+    CompletionRecommendation,
+    ImprovementActionStatus,
+    ResidualRiskStatus,
+    ResidualRiskTreatment,
+    TestwareHandoverStatus,
+)
 
 
 class ResidualRisk(BaseModel):
@@ -19,20 +23,24 @@ class ResidualRisk(BaseModel):
     impact: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"] = "MEDIUM"
     source_refs: list[str] = Field(default_factory=list, max_length=500)
     owner_id: str = Field(min_length=1, max_length=200)
-    treatment: Literal["PENDING", "ACCEPTED", "MITIGATE", "TRANSFER", "AVOID"] = "PENDING"
-    acceptance: Literal["PENDING", "ACCEPTED", "MITIGATE", "TRANSFER", "AVOID"] = "PENDING"
+    treatment: ResidualRiskTreatment = ResidualRiskTreatment.PENDING
+    acceptance: ResidualRiskTreatment = ResidualRiskTreatment.PENDING
     acceptance_reason: str = Field(default="", max_length=5000)
     accepted_by: str | None = Field(default=None, max_length=200)
     accepted_at: datetime | None = None
     expiry_at: datetime | None = None
-    status: Literal["OPEN", "MONITORING", "CLOSED"] = "OPEN"
+    status: ResidualRiskStatus = ResidualRiskStatus.OPEN
 
     @model_validator(mode="before")
     @classmethod
     def normalize_treatment(cls, value):
         if isinstance(value, dict):
             normalized = dict(value)
-            treatment = normalized.get("treatment") or normalized.get("acceptance") or "PENDING"
+            treatment = (
+                normalized.get("treatment")
+                or normalized.get("acceptance")
+                or ResidualRiskTreatment.PENDING
+            )
             normalized["treatment"] = treatment
             normalized["acceptance"] = treatment
             return normalized
@@ -40,7 +48,7 @@ class ResidualRisk(BaseModel):
 
     @model_validator(mode="after")
     def validate_acceptance(self):
-        if self.treatment != "PENDING" and (
+        if self.treatment != ResidualRiskTreatment.PENDING and (
             not self.acceptance_reason.strip() or not self.accepted_by
         ):
             raise ValueError("Residual risk đã xử lý phải có lý do và người chấp nhận")
@@ -53,7 +61,7 @@ class TestwareHandoverItem(BaseModel):
     artifact_version_id: str | None = Field(default=None, max_length=200)
     handover_to: str = Field(min_length=1, max_length=500)
     storage_location: str = Field(min_length=1, max_length=2000)
-    status: Literal["PENDING", "READY", "HANDED_OVER", "ACCEPTED"] = "PENDING"
+    status: TestwareHandoverStatus = TestwareHandoverStatus.PENDING
     note: str = Field(default="", max_length=5000)
 
 
@@ -89,7 +97,7 @@ class ImprovementAction(BaseModel):
     title: str = Field(min_length=2, max_length=500)
     owner_id: str = Field(min_length=1, max_length=200)
     due_at: datetime | None = None
-    status: Literal["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] = "OPEN"
+    status: ImprovementActionStatus = ImprovementActionStatus.OPEN
     evidence_refs: list[str] = Field(default_factory=list, max_length=500)
 
 
@@ -153,7 +161,7 @@ class CompletionSignOff(BaseModel):
 
 class ResidualRiskDecision(BaseModel):
     expected_revision: int = Field(ge=1)
-    acceptance: Literal["ACCEPTED", "MITIGATE", "TRANSFER", "AVOID"]
+    acceptance: ResidualRiskTreatment
     reason: str = Field(min_length=2, max_length=5000)
 
 

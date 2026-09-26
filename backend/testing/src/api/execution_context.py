@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import (
+from src.domain.contracts.environment import (
     BuildCreate,
     BuildPatch,
     EnvironmentCreate,

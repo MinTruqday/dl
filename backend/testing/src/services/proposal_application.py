@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.common import audit, get_project_entity, new_id, now
-from src.domain.contracts import TestCaseDraftCreate
+from src.domain.contracts.design import TestCaseDraftCreate
 from src.repositories.proposal_application import proposal_application_repository
 from src.services.domain_policy import domain_policy
 from src.services.maintenance_proposal import (

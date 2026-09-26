@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
+from src.domain.contracts.requirements import (
+    ReviewCommentAction,
+    ReviewCommentCreate,
+    ReviewCommentPatch,
+)
 from src.services.review_comment import ReviewCommentService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Rà soát kiểm thử"])
@@ -20,7 +24,7 @@ async def list_review_comments(
     project_id: str,
     artifact_type: str | None = Query(default=None, max_length=80),
     artifact_id: str | None = Query(default=None, max_length=200),
-    status: str | None = Query(default="OPEN", max_length=20),
+    status: str | None = Query(default=None, max_length=20),
     user: CurrentUser = Depends(get_current_user),
 ):
     return envelope(

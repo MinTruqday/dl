@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Pagination } from "@/features/testing/components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import {
   changeMyPassword,
   listMySessions,

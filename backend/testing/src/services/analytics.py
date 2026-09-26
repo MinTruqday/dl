@@ -1,7 +1,7 @@
 import re
 
 from src.core.common import get_project, load_user_identities, now
-from src.domain.contracts import SearchInput
+from src.domain.contracts.utility import SearchInput
 from src.repositories.analytics import analytics_repository
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.domain_policy import domain_policy

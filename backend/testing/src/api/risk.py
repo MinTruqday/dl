@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import RiskRankingApproval, RiskRankingGenerate, RiskRankingPatch
+from src.domain.contracts.design import (
+    RiskRankingApproval,
+    RiskRankingGenerate,
+    RiskRankingPatch,
+)
 from src.services.risk_ranking import RiskRankingService
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ưu tiên rủi ro"])

@@ -3,6 +3,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.domain.contracts.common import (
+    ReviewDecision as ReviewDecisionStatus,
+    ReviewFindingStatus,
+    ReviewTerminalStatus,
+)
+
 ReviewType = Literal[
     "REQUIREMENT",
     "TEST_STRATEGY",
@@ -103,12 +109,15 @@ class ReviewFindingCreate(BaseModel):
 
 class ReviewFindingPatch(BaseModel):
     expected_revision: int = Field(ge=1)
-    status: Literal["OPEN", "IN_PROGRESS", "RESOLVED", "VERIFIED"]
+    status: ReviewFindingStatus
     resolution: str = Field(default="", max_length=5000)
 
     @model_validator(mode="after")
     def validate_resolution(self):
-        if self.status in {"RESOLVED", "VERIFIED"} and not self.resolution.strip():
+        if (
+            self.status in {ReviewFindingStatus.RESOLVED, ReviewFindingStatus.VERIFIED}
+            and not self.resolution.strip()
+        ):
             raise ValueError("Finding đã xử lý phải có kết quả")
         return self
 
@@ -130,7 +139,7 @@ class ReviewFindingVerification(BaseModel):
 
 class ReviewDecision(BaseModel):
     expected_revision: int = Field(ge=1)
-    decision: Literal["ACCEPTED", "ACCEPTED_WITH_ACTIONS", "REWORK_REQUIRED", "REJECTED"]
+    decision: ReviewDecisionStatus
     note: str = Field(default="", max_length=5000)
 
 
@@ -147,12 +156,10 @@ class ReviewFollowUpCreate(BaseModel):
 class ReviewTransition(BaseModel):
     expected_revision: int = Field(ge=1)
     note: str = Field(default="", max_length=5000)
-    decision: Literal["ACCEPTED", "ACCEPTED_WITH_ACTIONS", "REWORK_REQUIRED", "REJECTED"] | None = (
-        None
-    )
+    decision: ReviewDecisionStatus | None = None
 
 
 class ReviewTerminalTransition(BaseModel):
     expected_revision: int = Field(ge=1)
-    target_status: Literal["CANCELLED", "ARCHIVED"]
+    target_status: ReviewTerminalStatus
     note: str = Field(min_length=2, max_length=5000)

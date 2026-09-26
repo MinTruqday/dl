@@ -3,6 +3,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.domain.contracts.common import PreventionActionStatus
+
 RootCauseCategory = Literal[
     "REQUIREMENT",
     "DESIGN",
@@ -77,14 +79,19 @@ class PreventionActionAssign(BaseModel):
 
 class PreventionActionPatch(BaseModel):
     expected_revision: int = Field(ge=1)
-    status: Literal["OPEN", "IN_PROGRESS", "IMPLEMENTED", "EFFECTIVENESS_REVIEW", "CLOSED"]
+    status: PreventionActionStatus
     result: str = Field(default="", max_length=5000)
     evidence_refs: list[str] | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
     def validate_result(self):
         if (
-            self.status in {"IMPLEMENTED", "EFFECTIVENESS_REVIEW", "CLOSED"}
+            self.status
+            in {
+                PreventionActionStatus.IMPLEMENTED,
+                PreventionActionStatus.EFFECTIVENESS_REVIEW,
+                PreventionActionStatus.CLOSED,
+            }
             and not self.result.strip()
         ):
             raise ValueError("Hành động đã triển khai phải có kết quả")

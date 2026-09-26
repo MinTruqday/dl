@@ -14,7 +14,7 @@ from src.core.common import (
     require_action_policy,
     sort_spec,
 )
-from src.domain.contracts import TestPlanCreate
+from src.domain.contracts.planning import TestPlanCreate
 from src.repositories.test_plan import test_plan_repository
 from src.services.domain_policy import domain_policy
 from src.services.execution_context import resolve_execution_context

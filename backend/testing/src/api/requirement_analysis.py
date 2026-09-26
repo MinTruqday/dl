@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project, get_project_entity
-from src.domain.contracts import (
+from src.domain.contracts.requirements import (
     RequirementAIAnalysisInput,
     RequirementAISuggestionApply,
     RequirementCompareInput,
@@ -174,6 +174,5 @@ async def find_duplicate_requirements(
     user: CurrentUser = Depends(get_current_user),
 ):
     return envelope(await find_requirement_duplicates(project_id, payload, user))
-
 
 

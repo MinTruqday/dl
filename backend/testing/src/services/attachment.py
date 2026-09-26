@@ -4,7 +4,10 @@ from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, get_project_role, new_id, now
 from src.repositories.test_design import test_design_repository
 from src.services.domain_policy import domain_policy
-from src.domain.contracts import AttachmentCreate, AttachmentModeration
+from src.domain.contracts.requirements import (
+    AttachmentCreate,
+    AttachmentModeration,
+)
 
 
 class AttachmentService:

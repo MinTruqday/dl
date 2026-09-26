@@ -5,11 +5,11 @@ import DataTable from "./DataTable";
 import {
   ErrorState,
   LoadingState,
-  Pagination,
   Panel,
   StatusPill,
   useActionDialog,
 } from "./WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import PlatformControlsPanel from "./PlatformControlsPanel";
 

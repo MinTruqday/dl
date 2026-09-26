@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project_entity
-from src.domain.contracts import (
+from src.domain.contracts.requirements import (
     RequirementBaselineInput,
     RequirementCreate,
     RequirementDependencyInput,
@@ -191,17 +191,17 @@ async def baseline_requirement_version(
     payload: RequirementBaselineInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    version, indexed = await baseline_requirement(
+    result = await baseline_requirement(
         version_id,
         payload.expected_revision,
         payload.review_note,
         user,
     )
     return envelope(
-        version,
-        revision=version["revision"],
-        status="DEGRADED" if not indexed else "SUCCESS",
-        degraded_mode="DEGRADED_VECTOR" if not indexed else None,
+        result.version,
+        revision=result.version["revision"],
+        status=result.status,
+        degraded_mode=result.degraded_mode,
     )
 
 
@@ -271,4 +271,3 @@ async def restore_requirement(
             user,
         )
     )
-

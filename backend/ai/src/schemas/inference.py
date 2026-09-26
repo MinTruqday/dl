@@ -1,6 +1,17 @@
+from enum import Enum
 from typing import Annotated, Any, List, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class TestingAssistanceStatus(str, Enum):
+    SUCCESS = "SUCCESS"
+    DEGRADED = "DEGRADED"
+
+
+class TestingAssistanceDegradedMode(str, Enum):
+    OUTPUT = "DEGRADED_OUTPUT"
+    PROVIDER = "DEGRADED_AI"
 
 
 class RetrievalExpansionRequest(BaseModel):
@@ -96,10 +107,10 @@ class TestingAssistanceResult(BaseModel):
     warnings: List[str] = Field(
         default_factory=list, max_length=50, description="Evidence limitation and conflict warnings"
     )
-    status: Literal["SUCCESS", "DEGRADED"] = Field(
-        default="SUCCESS", description="AI capability operating status"
+    status: TestingAssistanceStatus = Field(
+        default=TestingAssistanceStatus.SUCCESS, description="AI capability operating status"
     )
-    degraded_mode: str | None = Field(
+    degraded_mode: TestingAssistanceDegradedMode | None = Field(
         default=None, description="Fallback mode when the provider or retrieval is unavailable"
     )
     provider: str = Field(min_length=1, max_length=100, description="Provider that produced the result")

@@ -4,7 +4,10 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from src.core.common import plain_text
-from src.domain.contracts import ScenarioCreate, TestCaseDraftCreate
+from src.domain.contracts.design import (
+    ScenarioCreate,
+    TestCaseDraftCreate,
+)
 from src.services.design_assistance import request_design_assistance
 from src.services.domain_policy import domain_policy
 

@@ -75,6 +75,7 @@ async def add_dependency(requirement_id, dependency_id, expected_revision, user)
         version["_id"],
         requirement["project_id"],
         expected_revision,
+        DEPENDENCY_POLICY["draft_status"],
         dependencies,
         now(),
     )
@@ -116,6 +117,7 @@ async def remove_dependency(requirement_id, dependency_id, expected_revision, us
         version["_id"],
         requirement["project_id"],
         expected_revision,
+        DEPENDENCY_POLICY["draft_status"],
         [item for item in dependencies if item != dependency_id],
         now(),
     )

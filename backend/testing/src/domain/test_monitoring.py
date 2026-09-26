@@ -5,6 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.domain.contracts.common import ControlActionStatus
+
 
 class MonitoringSnapshotCreate(BaseModel):
     idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
@@ -46,7 +48,7 @@ class ControlActionPatch(BaseModel):
     owner_id: str | None = Field(default=None, min_length=1, max_length=200)
     due_at: datetime | None = None
     priority: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"] | None = None
-    status: Literal["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] | None = None
+    status: ControlActionStatus | None = None
     decision_reason: str | None = Field(default=None, min_length=2, max_length=5000)
     evidence_refs: list[str] | None = Field(default=None, max_length=500)
 

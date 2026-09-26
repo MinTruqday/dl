@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
-from src.domain.contracts import (
+from src.domain.contracts.requirements import (
     APIArtifactArchive,
     APIArtifactConfirm,
     APIArtifactImpact,

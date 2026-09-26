@@ -3,7 +3,11 @@ from fastapi import HTTPException
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.repositories.review import review_repository
-from src.domain.contracts import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
+from src.domain.contracts.requirements import (
+    ReviewCommentAction,
+    ReviewCommentCreate,
+    ReviewCommentPatch,
+)
 from src.services.domain_policy import domain_policy
 
 
@@ -57,8 +61,7 @@ class ReviewCommentService:
             query["artifact_type"] = artifact_type
         if artifact_id:
             query["artifact_id"] = artifact_id
-        if status:
-            query["status"] = status
+        query["status"] = status or COMMENT_POLICY["open_status"]
         return await review_repository.list_comments(query)
 
     @staticmethod

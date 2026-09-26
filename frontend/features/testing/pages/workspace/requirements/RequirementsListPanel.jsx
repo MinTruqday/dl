@@ -1,10 +1,6 @@
 import DataTable from "../../../components/DataTable";
-import {
-  LoadingState,
-  Pagination,
-  Panel,
-  StatusPill,
-} from "../../../components/WorkspacePrimitives";
+import { LoadingState, Panel, StatusPill } from "../../../components/WorkspacePrimitives";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { valueLabel } from "../../../lib/testing";
 import {
   REQUIREMENT_COVERAGE_FILTERS,

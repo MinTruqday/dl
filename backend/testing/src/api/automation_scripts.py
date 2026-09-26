@@ -3,7 +3,7 @@ from fastapi.responses import Response
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.contracts import (
+from src.domain.contracts.automation import (
     AutomationScriptApproval,
     AutomationScriptGenerateInput,
     AutomationScriptPatch,

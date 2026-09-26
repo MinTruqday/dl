@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from src.domain.contracts.common import WebhookDeliveryStatus
+
 class ReleaseCreate(BaseModel):
     key: str = Field(min_length=2, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]+$")
     name: str = Field(min_length=2, max_length=300)
@@ -244,10 +246,9 @@ class WebhookDeliveryRecordInput(BaseModel):
     project_id: str = Field(min_length=1, max_length=200)
     subscription_id: str = Field(min_length=1, max_length=200)
     event_type: str = Field(min_length=1, max_length=200)
-    status: Literal["DELIVERED", "FAILED"]
+    status: WebhookDeliveryStatus
     attempt: int = Field(default=1, ge=1, le=1000)
     response_status: int | None = Field(default=None, ge=100, le=599)
     error_code: str | None = Field(default=None, max_length=200)
     payload_hash: str = Field(min_length=16, max_length=200)
     duration_ms: float | None = Field(default=None, ge=0, le=3600000)
-

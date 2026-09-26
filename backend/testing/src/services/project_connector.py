@@ -142,6 +142,7 @@ class ProjectConnectorService:
             connector_id,
             project_id,
             payload.expected_revision,
+            CONNECTOR_POLICY["bound_status"],
             {
                 "status": CONNECTOR_POLICY["unbound_status"],
                 "enabled": False,
@@ -262,6 +263,7 @@ class ProjectConnectorService:
             conflict_id,
             project_id,
             payload.expected_revision,
+            CONNECTOR_POLICY["open_status"],
             {
                 "status": CONNECTOR_POLICY["resolved_status"],
                 "resolution": payload.resolution,

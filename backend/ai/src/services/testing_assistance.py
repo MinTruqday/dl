@@ -21,7 +21,9 @@ from src.schemas.inference import (
     StatusReportNarrativeOutput,
     TestConditionSuggestionsOutput,
     TestingAssistanceRequest,
+    TestingAssistanceDegradedMode,
     TestingAssistanceResult,
+    TestingAssistanceStatus,
 )
 from src.services.inference import model_metadata, structured
 
@@ -110,7 +112,7 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
     )
     model = {
         **model_metadata(),
-        "prompt_version": "testing_assistance_v2_structured_few_shot",
+        "prompt_version": "testing_assistance_v3_multilingual_few_shot",
         "tool_schema_version": "testing_assistance",
         "retrieval_version": "project_evidence",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -133,7 +135,7 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
             generated_data["suggestions"] = generated_data.pop("condition_candidates")
         generated_data.update(
             {
-                "status": "SUCCESS",
+                "status": TestingAssistanceStatus.SUCCESS,
                 "degraded_mode": None,
                 "provider": model["provider"],
                 "model": model,
@@ -151,7 +153,11 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
             "ValueError",
         }
         failure_code = "AI_OUTPUT_INVALID" if output_invalid else "AI_PROVIDER_UNAVAILABLE"
-        degraded_mode = "DEGRADED_OUTPUT" if output_invalid else "DEGRADED_AI"
+        degraded_mode = (
+            TestingAssistanceDegradedMode.OUTPUT
+            if output_invalid
+            else TestingAssistanceDegradedMode.PROVIDER
+        )
         provider = model["provider"] if output_invalid else "unavailable"
         answer = (
             "The model output did not satisfy the required response contract"
@@ -164,7 +170,7 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
             evidence_refs=evidence_reference_ids(evidence),
             confidence=0,
             warnings=[failure_code, "MANUAL_REVIEW_REQUIRED"],
-            status="DEGRADED",
+            status=TestingAssistanceStatus.DEGRADED,
             degraded_mode=degraded_mode,
             provider=provider,
             model={**model, "provider": provider},
@@ -198,7 +204,9 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
         "evidence_count": len(evidence),
         "candidate_count": len(result.suggestions),
         "confidence": result.confidence,
-        "degraded_flags": result.warnings if result.status == "DEGRADED" else [],
+        "degraded_flags": (
+            result.warnings if result.status == TestingAssistanceStatus.DEGRADED else []
+        ),
         "approval_required": bool(result.suggestions),
         "hidden_reasoning_stored": False,
     }
