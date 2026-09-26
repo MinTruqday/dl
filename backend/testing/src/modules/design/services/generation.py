@@ -8,7 +8,7 @@ from src.domain.contracts.design import (
     ScenarioCreate,
     TestCaseDraftCreate,
 )
-from src.modules.design.services.design_assistance import request_design_assistance
+from src.core.ai_assistance import request_ai_assistance
 from src.services.domain_policy import domain_policy
 
 
@@ -173,7 +173,7 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
         raise HTTPException(
             422, detail={"code": GENERATION_POLICY["instruction_too_long_code"]}
         )
-    result = await request_design_assistance(
+    result = await request_ai_assistance(
         GENERATION_POLICY["scenario_capability"]
         if scenario
         else GENERATION_POLICY["test_capability"],

@@ -8,7 +8,7 @@ from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
 from src.services.domain_policy import domain_policy
 
 
-ASSISTANCE_POLICY = domain_policy("design_assistance")
+ASSISTANCE_POLICY = domain_policy("ai_assistance")
 
 stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
     "stream_sink", default=None
@@ -44,7 +44,7 @@ def ai_contract_metadata(result):
     }
 
 
-async def request_design_assistance(capability, project_id, instruction, evidence):
+async def request_ai_assistance(capability, project_id, instruction, evidence):
     started_at = time.perf_counter()
     try:
         sink = stream_sink.get()

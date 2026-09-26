@@ -20,7 +20,7 @@ from src.modules.execution.repositories.test_status_report import (
     update_report,
 )
 from src.services.domain_policy import domain_policy
-from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.modules.execution.services.test_monitoring import effective_snapshot
 
 
@@ -308,7 +308,7 @@ async def generate_status_report_narrative(report_id, payload, user):
         {"user_instruction": payload.instruction},
         ensure_ascii=False,
     )
-    ai = await request_design_assistance(
+    ai = await request_ai_assistance(
         policy["narrative_assistance_type"], report["project_id"], instruction, evidence
     )
     result = {

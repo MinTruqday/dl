@@ -84,7 +84,7 @@ def nested_values(value, key_name):
     return values
 
 
-async def generate_testing_assistance(req: TestingAssistanceRequest):
+async def generate_ai_assistance(req: TestingAssistanceRequest):
     evidence = [
         {
             "artifact_type": item.artifact_type,
@@ -112,8 +112,8 @@ async def generate_testing_assistance(req: TestingAssistanceRequest):
     )
     model = {
         **model_metadata(),
-        "prompt_version": "testing_assistance_v3_multilingual_few_shot",
-        "tool_schema_version": "testing_assistance",
+        "prompt_version": "ai_assistance_v3_multilingual_few_shot",
+        "tool_schema_version": "ai_assistance",
         "retrieval_version": "project_evidence",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

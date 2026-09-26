@@ -2408,7 +2408,7 @@
     "lint_blocking_severity": "error",
     "deterministic_provider": "deterministic",
     "quality_model": "test_case_quality",
-    "prompt_version": "testing_assistance",
+    "prompt_version": "ai_assistance",
     "tool_schema_version": "1",
     "retrieval_version": "project_evidence",
     "test_case_artifact_type": "test_case_draft",
@@ -3218,7 +3218,7 @@
     "revision_conflict_code": "REVISION_CONFLICT",
     "archived_code": "KNOWLEDGE_SOURCE_ARCHIVED"
   },
-  "design_assistance": {
+  "ai_assistance": {
     "unknown_value": "unknown",
     "success_status": "SUCCESS",
     "degraded_status": "DEGRADED",

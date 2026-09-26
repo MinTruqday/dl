@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
 from src.modules.execution.repositories.execution_asset import execution_asset_repository
-from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.services.domain_policy import domain_policy
 
 
@@ -120,7 +120,7 @@ class AutomationScriptService:
                 )[: int(EXECUTION_ASSET_POLICY["maximum_evidence_characters"])],
             }
         ]
-        ai_result = await request_design_assistance(
+        ai_result = await request_ai_assistance(
             EXECUTION_ASSET_POLICY["script_generation_assistance_type"],
             project_id,
             json.dumps(

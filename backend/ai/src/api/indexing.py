@@ -13,7 +13,6 @@ from src.schemas.response import APIResponse
 from src.services.ingestion import convert_attachment as convert_attachment_data
 from src.services.ingestion import extract_document as extract_document_text
 from src.services.ingestion import index_document, remove_document
-from src.services.knowledge import knowledge_service
 
 router = APIRouter(prefix="/tiep-nap")
 indexing_router = APIRouter(dependencies=[Depends(verify_internal_token)])
@@ -25,7 +24,7 @@ async def ingest_endpoint(
 ):
     logger.info(f"Started document ingestion process document_id={req.document_id}")
     try:
-        result = await knowledge_service.ingest_document(
+        result = await index_document(
             req.document_id,
             str(current_user.id),
             current_user.system_role == SystemRole.ADMIN,
@@ -43,7 +42,7 @@ async def delete_document_endpoint(
 ):
     logger.info(f"Started document deletion from vector store document_id={document_id}")
     try:
-        await knowledge_service.delete_document(
+        await remove_document(
             document_id,
             str(current_user.id),
             current_user.system_role == SystemRole.ADMIN,

@@ -19,7 +19,7 @@ from src.services.inference import (
     stream_sink,
     summarize_document,
 )
-from src.services.testing_assistance import generate_testing_assistance
+from src.services.ai_assistance import generate_ai_assistance
 
 router = APIRouter(prefix="/suy-luan")
 
@@ -65,12 +65,12 @@ async def summarize_knowledge_document(req: KnowledgeDocumentSummaryRequest):
     response_model=TestingAssistanceResult,
     description="Sinh đề xuất kiểm thử có bằng chứng và không tự thực hiện quyết định dành cho con người",
 )
-async def testing_assistance(req: TestingAssistanceRequest):
-    return await generate_testing_assistance(req)
+async def ai_assistance(req: TestingAssistanceRequest):
+    return await generate_ai_assistance(req)
 
 
 @router.post("/noi-bo/kiem-thu/ho-tro/stream", dependencies=[Depends(verify_internal_token)])
-async def stream_testing_assistance(req: TestingAssistanceRequest):
+async def stream_ai_assistance(req: TestingAssistanceRequest):
     queue = asyncio.Queue()
 
     async def emit(piece):
@@ -86,7 +86,7 @@ async def stream_testing_assistance(req: TestingAssistanceRequest):
     async def run():
         token = stream_sink.set(emit)
         try:
-            result = await testing_assistance(req)
+            result = await ai_assistance(req)
             await queue.put({"type": "result", "data": jsonable_encoder(result)})
         except Exception as error:
             await queue.put({"type": "error", "code": type(error).__name__})

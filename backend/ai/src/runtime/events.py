@@ -319,13 +319,13 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
 
 
 async def _index_uploaded_document(doc_id: str, user_id: str, superseded_document_id: str):
-    from src.services.knowledge import knowledge_service
+    from src.services.ingestion import index_document, remove_document
 
     system_ingest = not bool(user_id)
     requester_id = user_id or "platform-system"
     if superseded_document_id:
-        await knowledge_service.delete_document(superseded_document_id, requester_id, system_ingest)
-    return await knowledge_service.ingest_document(doc_id, requester_id, system_ingest)
+        await remove_document(superseded_document_id, requester_id, system_ingest)
+    return await index_document(doc_id, requester_id, system_ingest)
 
 
 async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:

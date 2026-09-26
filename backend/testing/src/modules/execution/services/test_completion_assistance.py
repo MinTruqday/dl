@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, new_id, now
 from src.modules.execution.repositories.test_completion import find_ai_result, insert_ai_result
-from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.services.domain_policy import domain_policy
 
 
@@ -62,7 +62,7 @@ async def completion_ai_result(report, payload, user, capability, result_type):
     instruction = json.dumps(
         {"user_instruction": payload.instruction}, ensure_ascii=False
     )
-    ai = await request_design_assistance(capability, report["project_id"], instruction, evidence)
+    ai = await request_ai_assistance(capability, report["project_id"], instruction, evidence)
     result = {
         "_id": new_id(policy["ai"]["result_id_prefix"]),
         "project_id": report["project_id"],

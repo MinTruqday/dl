@@ -6,7 +6,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from src.schemas.inference import TestingAssistanceRequest
-from src.services.testing_assistance import generate_testing_assistance
+from src.services.ai_assistance import generate_ai_assistance
 
 
 class TestingSkillInput(BaseModel):
@@ -24,7 +24,7 @@ async def execute_skill(capability, project_id, instruction, config):
                 "reason_codes": ["INSUFFICIENT_EVIDENCE"],
             }
         )
-    result = await generate_testing_assistance(
+    result = await generate_ai_assistance(
         TestingAssistanceRequest(
             capability=capability,
             project_id=project_id,

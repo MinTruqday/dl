@@ -3,7 +3,7 @@ import re
 from src.core.common import get_project, load_user_identities, now
 from src.domain.contracts.utility import SearchInput
 from src.modules.quality.repositories.analytics import analytics_repository
-from src.modules.design.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.services.domain_policy import domain_policy
 from src.clients.project_knowledge import search_project_with_status
 
@@ -258,7 +258,7 @@ class AnalyticsService:
                 "reason_codes": [ANALYTICS_POLICY["evidence_not_found_code"]],
             })
             return {"answer": "Không có đủ bằng chứng trong dự án để trả lời câu hỏi này", "evidence": [], **missing}, {"status": missing["status"], "degraded_mode": missing["degraded_mode"]}
-        result = await request_design_assistance("project_question", project_id, payload.question, evidence)
+        result = await request_ai_assistance("project_question", project_id, payload.question, evidence)
         contract = ai_contract_metadata(result)
         await analytics_repository.insert_ai_audit({
             "_id": f"{ANALYTICS_POLICY['question_id_prefix']}{trace_id}",
