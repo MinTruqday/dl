@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DataTable from "../../../components/DataTable";
 import { Panel } from "../../../components/WorkspacePrimitives";
 import { messageOf } from "../../../lib/testing";
@@ -13,6 +14,7 @@ export default function RequirementQualityPanel({
   onLintChange,
   onError,
 }) {
+  const [applyingSuggestionId, setApplyingSuggestionId] = useState("");
   if (!lint) return null;
   return (
     <Panel
@@ -79,29 +81,33 @@ export default function RequirementQualityPanel({
                   <button
                     className="apple-button"
                     type="button"
-                    disabled={(lint.applied_suggestion_ids || []).includes(item.suggestion_id)}
+                    disabled={Boolean(applyingSuggestionId)}
                     onClick={async () => {
+                      setApplyingSuggestionId(item.suggestion_id);
                       try {
                         await testingApi.applyRequirementAiSuggestion(current._id, {
                           expected_revision: current.revision,
                           ai_result_id: lint._id,
                           suggestion_id: item.suggestion_id,
                         });
-                        onSelectedChange(await testingApi.getRequirement(selected._id));
-                        onLintChange((value) => ({
-                          ...value,
-                          applied_suggestion_ids: [
-                            ...(value.applied_suggestion_ids || []),
-                            item.suggestion_id,
-                          ],
-                        }));
+                        const updatedRequirement = await testingApi.getRequirement(selected._id);
+                        onSelectedChange(updatedRequirement);
+                        onLintChange(
+                          await testingApi.lintRequirement(updatedRequirement.current_version._id, {
+                            idempotency_key: crypto.randomUUID(),
+                            instruction:
+                              "Kiểm tra lại bản đã áp dụng và chỉ trả về kết quả cuối cùng",
+                          }),
+                        );
                       } catch (reason) {
                         onError(messageOf(reason));
+                      } finally {
+                        setApplyingSuggestionId("");
                       }
                     }}
                   >
-                    {(lint.applied_suggestion_ids || []).includes(item.suggestion_id)
-                      ? "Đã áp dụng"
+                    {applyingSuggestionId === item.suggestion_id
+                      ? "Đang áp dụng và kiểm tra lại"
                       : "Áp dụng vào bản nháp"}
                   </button>
                 ) : null,

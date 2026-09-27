@@ -140,11 +140,11 @@ export default function RequirementSourceDocumentsPanel({
       onError(messageOf(reason));
     }
   };
-  const toggleAiRead = async (item) => {
+  const enableAiRead = async (item) => {
     try {
       await testingApi.updateRequirementDocumentAiRead(item._id, {
         expected_revision: item.revision,
-        ai_enabled: !item.ai_enabled,
+        ai_enabled: true,
       });
       await reload();
     } catch (reason) {
@@ -292,13 +292,13 @@ export default function RequirementSourceDocumentsPanel({
                     </button>
                   </>
                 )}
-                {item.status !== "ARCHIVED" && (
+                {item.status !== "ARCHIVED" && !item.ai_enabled && (
                   <button
                     className="secondary-button"
                     type="button"
-                    onClick={() => toggleAiRead(item)}
+                    onClick={() => enableAiRead(item)}
                   >
-                    {item.ai_enabled ? "Ngừng cho AI đọc" : "Cho AI đọc"}
+                    Cho AI đọc
                   </button>
                 )}
                 {item.status !== "ARCHIVED" && (

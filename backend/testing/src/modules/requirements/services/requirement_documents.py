@@ -431,6 +431,8 @@ async def update_requirement_document_ai_read(document_id, payload, user):
         'requirement_document.read',
     )
     await require_document_owner(document, user)
+    if document.get("ai_enabled") and not payload.ai_enabled:
+        raise HTTPException(status_code=409, detail={"code": "AI_READ_ACCESS_LOCKED"})
     if payload.ai_enabled and not document.get("normalized_content"):
         raise HTTPException(status_code=409, detail={"code": "DOCUMENT_PARSE_REQUIRED"})
     updated = await requirement_document_repository.update_with_revision(

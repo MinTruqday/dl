@@ -85,9 +85,12 @@ function DocumentAccessControl({ access, members, onChange, privateLabel, name }
         <input
           type="checkbox"
           checked={Boolean(access.ai_enabled)}
+          disabled={Boolean(access.ai_enabled)}
           onChange={(event) => onChange({ ...access, ai_enabled: event.target.checked })}
         />
-        Cho phép AI truy cập tài liệu này
+        {access.ai_enabled
+          ? "Đã cho phép AI truy cập tài liệu này"
+          : "Cho phép AI truy cập tài liệu này"}
       </label>
     </fieldset>
   );
