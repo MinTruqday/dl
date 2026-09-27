@@ -1,8 +1,7 @@
 import os
 from typing import Optional
 
-from pydantic import BaseModel
-class Settings(BaseModel):
+class Settings:
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
     INTERNAL_API_URL: str = os.environ["INTERNAL_API_URL"]
@@ -29,6 +28,7 @@ class Settings(BaseModel):
     PRIMARY_MODEL_URL: str = os.environ["PRIMARY_MODEL_URL"]
     PRIMARY_MODEL_HEALTH_URL: str = os.environ["PRIMARY_MODEL_HEALTH_URL"]
     LLM_MODEL: str = os.environ["LLM_MODEL"]
+    MODEL_TIMEOUT_SECONDS: int = int(os.environ["MODEL_TIMEOUT_SECONDS"])
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]

@@ -64,13 +64,11 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    from src.core.registry import PromptType, registry
+    from src.prompts.catalog import eval_judge
     from src.schemas.evaluation import JudgeScores
     from src.utils.huggingface import create_chat_model
 
-    prompt = registry.get(PromptType.EVAL_JUDGE).format(
-        instruction=instruction, expected=expected, actual=actual
-    )
+    prompt = eval_judge(instruction, expected, actual)
     try:
         evaluator = create_chat_model().with_structured_output(JudgeScores)
         scores = await evaluator.ainvoke(
@@ -174,13 +172,9 @@ class EvaluationHarness:
             instruction = sample.get("instruction", "")
             inp = sample.get("input", "")
             expected = sample.get("output", "")
-            from src.core.registry import PromptType, registry
+            from src.prompts.catalog import evaluation_harness_prompt
 
-            prompt = (
-                registry.get(PromptType.EVALUATION_HARNESS_PROMPT)
-                .format(instruction=instruction, inp=inp)
-                .strip()
-            )
+            prompt = evaluation_harness_prompt(instruction, inp).strip()
             try:
                 resp = await client.chat_completion(
                     messages=[

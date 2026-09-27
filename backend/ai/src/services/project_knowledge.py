@@ -5,7 +5,6 @@ from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import HTTPException
 
-from src.core.policies import document_policy
 from src.schemas.project import ProjectArtifactIndexRequest, ProjectKnowledgeSearchRequest
 from src.services.chunking import chunker
 from src.services.embedding import embedder
@@ -13,12 +12,6 @@ from src.services.retrieval import RetrievalUnavailableError, retriever
 from src.store.bm25 import bm25_store
 from src.store.vector import vector_store
 
-PROJECT_KNOWLEDGE_POLICY = document_policy()["project_knowledge"]
-SEARCH_CACHE_TTL_SECONDS = float(PROJECT_KNOWLEDGE_POLICY["search_cache_ttl_seconds"])
-SEARCH_CACHE_MAXIMUM_ENTRIES = int(
-    PROJECT_KNOWLEDGE_POLICY["search_cache_maximum_entries"]
-)
-MAXIMUM_ARTIFACT_CHARACTERS = int(PROJECT_KNOWLEDGE_POLICY["maximum_artifact_characters"])
 SEARCH_CACHE: dict[tuple, tuple[float, dict]] = {}
 
 
@@ -64,7 +57,7 @@ def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest)
 
 async def index_project_artifact(project_id: str, req: ProjectArtifactIndexRequest):
     metadata = project_artifact_metadata(project_id, req)
-    bounded_text = req.text[:MAXIMUM_ARTIFACT_CHARACTERS]
+    bounded_text = req.text[:50000]
     chunks = await chunker.chunk_document(bounded_text, metadata)
     documents = [chunk["text"] for chunk in chunks]
     vectors = await embedder.embed_batch([f"{req.title} {text}" for text in documents])
@@ -138,7 +131,7 @@ async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchR
         req.is_admin,
     )
     cached = SEARCH_CACHE.get(cache_key)
-    if cached and time.monotonic() - cached[0] < SEARCH_CACHE_TTL_SECONDS:
+    if cached and time.monotonic() - cached[0] < 30:
         return cached[1]
     if cached:
         SEARCH_CACHE.pop(cache_key, None)
@@ -165,7 +158,7 @@ async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchR
         for document in documents
     ]
     result = {"items": items, "degraded_mode": "NORMAL", "error_code": None}
-    if len(SEARCH_CACHE) >= SEARCH_CACHE_MAXIMUM_ENTRIES:
+    if len(SEARCH_CACHE) >= 512:
         oldest_key = min(SEARCH_CACHE, key=lambda key: SEARCH_CACHE[key][0])
         SEARCH_CACHE.pop(oldest_key, None)
     SEARCH_CACHE[cache_key] = (time.monotonic(), result)

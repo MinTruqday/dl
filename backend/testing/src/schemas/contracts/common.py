@@ -1,6 +1,23 @@
 from enum import Enum
 from typing import Literal, TypeAlias
 
+from pydantic import BaseModel, Field
+
+
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
+class CurrentUser(BaseModel):
+    id: str = Field(alias="_id")
+    email: str = ""
+    system_role: SystemRole = SystemRole.USER
+
+    @property
+    def is_system_admin(self):
+        return self.system_role == SystemRole.ADMIN
+
 
 def empty_doc():
     return {"type": "doc", "content": []}

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, Any, List, Literal
+from typing import Annotated, Any, List, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -52,21 +52,7 @@ class TestingEvidence(BaseModel):
 
 
 class TestingAssistanceRequest(BaseModel):
-    capability: Literal[
-        "project_question",
-        "requirement_quality_analysis",
-        "scenario_generation",
-        "test_generation",
-        "impact_analysis",
-        "security_test_generation",
-        "performance_plan_generation",
-        "automation_script_generation",
-        "test_condition_generation",
-        "causal_analysis",
-        "status_report_narrative",
-        "completion_report_narrative",
-        "lessons_learned_clustering",
-    ] = Field(description="Testing capability to perform")
+    capability: str = Field(min_length=1, max_length=100, description="Testing capability to perform")
     project_id: str = Field(
         min_length=1, max_length=128, description="Project identifier that bounds the operation"
     )
@@ -79,6 +65,11 @@ class TestingAssistanceRequest(BaseModel):
         description="Artifact evidence already bounded to the project",
     )
 
+    @model_validator(mode="after")
+    def require_registered_capability(self):
+        output_schema(self.capability)
+        return self
+
 
 class TestingAssistanceResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -88,6 +79,11 @@ class TestingAssistanceResult(BaseModel):
         default_factory=list,
         max_length=100,
         description="Proposals that remain pending review",
+    )
+    new_test_candidates: List[dict[str, Any]] = Field(
+        default_factory=list,
+        max_length=100,
+        description="New test case proposals that remain pending review",
     )
     findings: List[dict[str, Any]] = Field(
         default_factory=list,
@@ -177,22 +173,22 @@ class RequirementAcceptanceCriterionSuggestionOutput(BaseModel):
 class RequirementRevisionSuggestionOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    revised_title: str | None = Field(min_length=2, max_length=300)
-    revised_content: str | None = Field(min_length=2, max_length=20000)
-    revised_actors: List[str] | None = Field(min_length=1, max_length=100)
-    revised_business_rules: List[str] | None = Field(min_length=1, max_length=200)
+    revised_title: str | None = Field(default=None, min_length=2, max_length=300)
+    revised_content: str | None = Field(default=None, min_length=2, max_length=20000)
+    revised_actors: List[str] | None = Field(default=None, min_length=1, max_length=100)
+    revised_business_rules: List[str] | None = Field(default=None, min_length=1, max_length=200)
     revised_acceptance_criteria: List[RequirementAcceptanceCriterionSuggestionOutput] | None = (
-        Field(min_length=1, max_length=200)
+        Field(default=None, min_length=1, max_length=200)
     )
-    revised_dependencies: List[str] | None = Field(max_length=200)
+    revised_dependencies: List[str] | None = Field(default=None, max_length=200)
     target_fields: List[
         Literal[
             "title", "content", "actors", "business_rules", "acceptance_criteria", "dependencies"
         ]
-    ] = Field(min_length=1, max_length=6)
-    rationale: str = Field(min_length=2, max_length=5000)
-    evidence_refs: List[str] = Field(min_length=1, max_length=100)
-    reason_codes: List[str] = Field(min_length=1, max_length=100)
+    ] = Field(default_factory=list, max_length=6)
+    rationale: str = Field(default="", max_length=5000)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=100)
+    reason_codes: List[str] = Field(default_factory=list, max_length=100)
 
     @model_validator(mode="after")
     def require_revision_value(self):
@@ -207,27 +203,33 @@ class RequirementRevisionSuggestionOutput(BaseModel):
         revised_fields = {field for field, value in values.items() if value is not None}
         if not revised_fields:
             raise ValueError("requirement_revision_value_required")
-        if len(self.target_fields) != len(set(self.target_fields)):
-            raise ValueError("requirement_revision_target_fields_duplicate")
-        if set(self.target_fields) != revised_fields:
-            raise ValueError("requirement_revision_target_fields_mismatch")
+        self.target_fields = [
+            field
+            for field in (
+                "title",
+                "content",
+                "actors",
+                "business_rules",
+                "acceptance_criteria",
+                "dependencies",
+            )
+            if field in revised_fields
+        ]
         for values in (self.revised_actors, self.revised_business_rules):
             if values is not None and any(not value.strip() for value in values):
                 raise ValueError("requirement_revision_blank_list_value")
         return self
 
 
-class RequirementQualityOutput(BaseModel):
+class RequirementQualityModelOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    capability: Literal["requirement_quality_analysis"]
-    findings: List[RequirementQualityFindingOutput] = Field(default_factory=list, max_length=100)
+    capability: Literal["requirement_quality_analysis"] = "requirement_quality_analysis"
     suggestions: List[RequirementRevisionSuggestionOutput] = Field(
-        default_factory=list, max_length=1
+        default_factory=list,
+        max_length=1,
+        description="Return an empty list when no concrete revision is justified. Each suggestion must include at least one non-null revised field, and target_fields must contain only the names of those non-null revised fields.",
     )
-    evidence_refs: List[str] = Field(min_length=1, max_length=200)
-    confidence: float = Field(ge=0, le=1)
-    warnings: List[str] = Field(default_factory=list, max_length=20)
 
 
 class GeneratedStepOutput(BaseModel):
@@ -279,7 +281,11 @@ class TestConditionSuggestionsOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["test_condition_generation"]
-    condition_candidates: List[TestConditionSuggestionOutput] = Field(min_length=1, max_length=100)
+    condition_candidates: List[TestConditionSuggestionOutput] = Field(
+        min_length=1,
+        max_length=100,
+        description="Include at least one POSITIVE, one NEGATIVE, and one BOUNDARY candidate.",
+    )
     evidence_refs: List[str] = Field(min_length=1, max_length=200)
     confidence: float = Field(ge=0, le=1)
     warnings: List[str] = Field(default_factory=list, max_length=20)
@@ -297,7 +303,9 @@ class ImpactClassificationSuggestionOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     test_case_version_id: str = Field(min_length=1, max_length=128)
-    classification: Literal["STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"]
+    classification: Literal["STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"] = Field(
+        description="Use NEEDS_UPDATE only when maintenance_patch contains at least one concrete evidence grounded revision"
+    )
     confidence: float = Field(ge=0, le=1)
     reason: str = Field(min_length=2, max_length=5000)
     maintenance_patch: "MaintenanceTestCasePatchOutput | None" = None
@@ -536,3 +544,13 @@ class LessonsLearnedClustersOutput(BaseModel):
     evidence_refs: List[str] = Field(min_length=1, max_length=200)
     confidence: float = Field(ge=0, le=1)
     warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
+def output_schema(capability):
+    for schema in BaseModel.__subclasses__():
+        if schema.__module__ != __name__ or not schema.__name__.endswith("Output"):
+            continue
+        field = schema.model_fields.get("capability")
+        if field and capability in get_args(field.annotation):
+            return schema
+    raise ValueError("testing_capability_schema_missing")

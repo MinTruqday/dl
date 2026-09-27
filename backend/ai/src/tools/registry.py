@@ -1,41 +1,70 @@
 import json
 import time
 from functools import lru_cache
-from pathlib import Path
+from typing import Any, Callable, Literal
 
 from langchain_core.runnables import RunnableConfig
-
-from src.runtime.models import AgentApprovalStatus, AgentTask, ToolExecutionStatus
+from langchain_core.tools import tool
+from src.schemas.agent import (
+    AgentApprovalStatus,
+    AgentTask,
+    SpecialistName,
+    ToolAccess,
+    ToolDecision,
+    ToolExecutionStatus,
+)
 from src.services.agent_metrics import agentops
 from src.services.token_accounting import add_tool_usage
-from src.tools.policy import ToolDecision, ToolPolicy
 
 
-@lru_cache(maxsize=1)
-def policies():
-    path = Path(__file__).with_name("policies.json")
-    with path.open(encoding="utf-8") as source:
-        return {item["name"]: ToolPolicy(**item) for item in json.load(source)}
+def with_tool_access(
+    specialists: tuple[SpecialistName, ...],
+    action: Literal["READ", "PROPOSE", "MUTATE"],
+    permission: str,
+    requires_approval: bool = False,
+    verification: dict[str, Any] | None = None,
+) -> Callable:
+    def decorate(function: Callable):
+        value = tool(function)
+        value.metadata = {
+            "specialists": list(specialists),
+            "action": action,
+            "permission": permission,
+            "requires_approval": requires_approval,
+            "verification": verification,
+        }
+        return value
+
+    return decorate
+
+
+def tool_access(value) -> ToolAccess | None:
+    if not value or not value.metadata:
+        return None
+    try:
+        return ToolAccess(name=value.name, **value.metadata)
+    except Exception:
+        return None
 
 
 @lru_cache(maxsize=1)
 def registered_tools():
     from src.tools import tools
 
-    return {item.name: item for item in tools if item.name in policies()}
+    return {item.name: item for item in tools if tool_access(item)}
 
 
 def authorize_tool(task, tool_name, permissions, approval_status=None):
-    policy = policies().get(tool_name)
-    if not policy:
+    access = tool_access(registered_tools().get(tool_name))
+    if not access:
         return ToolDecision(allowed=False, reason_code="TOOL_UNAVAILABLE")
-    if task.specialist not in policy.specialists:
-        return ToolDecision(allowed=False, reason_code="TOOL_SPECIALIST_DENIED", policy=policy)
-    if policy.permission not in permissions:
-        return ToolDecision(allowed=False, reason_code="PERMISSION_DENIED", policy=policy)
-    if policy.requires_approval and approval_status != AgentApprovalStatus.APPROVED:
-        return ToolDecision(allowed=False, reason_code="APPROVAL_REQUIRED", policy=policy)
-    return ToolDecision(allowed=True, reason_code="ALLOWED", policy=policy)
+    if task.specialist not in access.specialists:
+        return ToolDecision(allowed=False, reason_code="TOOL_SPECIALIST_DENIED", access=access)
+    if access.permission not in permissions:
+        return ToolDecision(allowed=False, reason_code="PERMISSION_DENIED", access=access)
+    if access.requires_approval and approval_status != AgentApprovalStatus.APPROVED:
+        return ToolDecision(allowed=False, reason_code="APPROVAL_REQUIRED", access=access)
+    return ToolDecision(allowed=True, reason_code="ALLOWED", access=access)
 
 
 def audit_arguments(arguments):
@@ -72,8 +101,8 @@ def resolved_value(reference, task, arguments, result):
 
 
 async def verify_application(task, tool_name, arguments, outcome, token):
-    policy = policies().get(tool_name)
-    specification = policy.verification if policy else None
+    access = tool_access(registered_tools().get(tool_name))
+    specification = access.verification if access else None
     if not specification:
         return {"status": ToolExecutionStatus.NOT_REQUIRED}
     result = outcome.get("result") or {}

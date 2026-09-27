@@ -32,8 +32,10 @@ router = APIRouter(prefix="/suy-luan")
 async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
     try:
         queries = await decompose_retrieval(req.question, req.document_ids)
-    except ValueError as error:
-        raise HTTPException(status_code=502, detail={"code": str(error)}) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=502, detail={"code": "cross_document_query_unavailable"}
+        ) from error
     return {"queries": queries}
 
 

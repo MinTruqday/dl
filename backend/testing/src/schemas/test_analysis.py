@@ -13,6 +13,56 @@ def normalize_testability_status(value):
     )
 
 
+class GeneratedStep(BaseModel):
+    action: str = Field(min_length=2, max_length=5000)
+    expected: str = Field(min_length=2, max_length=5000)
+    test_data: dict = Field(default_factory=dict)
+
+
+class SecurityCandidate(BaseModel):
+    category: str
+    title: str = Field(min_length=2, max_length=300)
+    preconditions: list[str] = Field(min_length=1, max_length=30)
+    action: str = Field(min_length=2, max_length=5000)
+    expected: str = Field(min_length=2, max_length=5000)
+    requirement_version_ids: list[str] = Field(default_factory=list, max_length=100)
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, value):
+        if value not in ['authorization', 'authentication', 'input_validation', 'session', 'data_protection']:
+            raise ValueError('INVALID_GENERATION_CATEGORIES')
+        return value
+
+
+class PerformanceScenario(BaseModel):
+    workload_type: str
+    title: str = Field(min_length=2, max_length=300)
+    virtual_users: int = Field(ge=1, le=1000000)
+    requests_per_second: float | None = Field(default=None, gt=0)
+    duration_minutes: int = Field(ge=1, le=10080)
+    ramp_pattern: str = Field(min_length=2, max_length=2000)
+    actions: list[str] = Field(min_length=1, max_length=50)
+    expected: str = Field(min_length=2, max_length=5000)
+
+    @field_validator("workload_type")
+    @classmethod
+    def validate_workload_type(cls, value):
+        if value not in ['baseline', 'load', 'stress', 'spike', 'soak']:
+            raise ValueError('INVALID_GENERATION_CATEGORIES')
+        return value
+
+
+class GeneratedCase(BaseModel):
+    title: str = Field(min_length=2, max_length=300)
+    category: str
+    objective: str = Field(min_length=2, max_length=5000)
+    preconditions: str = Field(min_length=2, max_length=5000)
+    steps: list[GeneratedStep] = Field(min_length=1, max_length=50)
+    expected: str = Field(min_length=2, max_length=5000)
+    acceptance_criterion_ids: list[str] = Field(default_factory=list)
+
+
 class TestBasisRef(BaseModel):
     artifact_type: Literal[
         "REQUIREMENT_VERSION",

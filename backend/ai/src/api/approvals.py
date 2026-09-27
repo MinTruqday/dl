@@ -8,7 +8,7 @@ from src.core.dependency import get_current_user, oauth2_scheme
 from src.memory.long_term import long_term_memory
 from src.memory.short_term import run_store
 from src.runtime.limits import limits
-from src.runtime.models import (
+from src.schemas.agent import (
     AgentApprovalStatus,
     AgentRunStatus,
     AgentTask,

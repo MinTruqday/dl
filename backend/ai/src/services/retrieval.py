@@ -6,7 +6,6 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.services.embedding import embedder
 from src.services.inference import decompose_retrieval
-from src.core.policies import document_policy
 from src.store.bm25 import bm25_store
 from src.store.vector import vector_store
 from src.utils.model_provider import auxiliary_client
@@ -138,7 +137,7 @@ class RetrievalService:
         rank_constant: Optional[int] = None,
     ) -> List[Dict]:
         if rank_constant is None:
-            rank_constant = document_policy()["retrieval"]["reciprocal_rank_constant"]
+            rank_constant = 60
         fused: Dict[str, Dict] = {}
         for source, documents in (("dense", dense_documents), ("bm25", sparse_documents)):
             for rank, document in enumerate(documents, start=1):
@@ -170,11 +169,10 @@ class RetrievalService:
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
-        policy = document_policy()["retrieval"]
-        result_count = policy["default_result_count"] if k is None else k
+        result_count = 5 if k is None else k
         fetch_limit = min(
-            max(result_count * policy["candidate_multiplier"], result_count),
-            policy["maximum_candidate_count"],
+            max(result_count * 3, result_count),
+            100,
         )
 
         async def dense_search():
@@ -192,7 +190,7 @@ class RetrievalService:
 
         dense_result, sparse_result = await asyncio.gather(
             asyncio.wait_for(
-                dense_search(), timeout=policy["dense_search_timeout_seconds"]
+                dense_search(), timeout=settings.MODEL_TIMEOUT_SECONDS
             ),
             bm25_store.search(
                 query=query,
@@ -227,7 +225,7 @@ class RetrievalService:
             pairs = [[query, doc.get("text", "")] for doc in documents]
             scores = await asyncio.wait_for(
                 auxiliary_client.rerank(pairs),
-                timeout=policy["reranking_timeout_seconds"],
+                timeout=settings.MODEL_TIMEOUT_SECONDS,
             )
             scored_documents = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
             return [doc for doc, _ in scored_documents[:result_count]]
@@ -244,9 +242,7 @@ class RetrievalService:
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
-        result_count = (
-            document_policy()["retrieval"]["default_result_count"] if k is None else k
-        )
+        result_count = 5 if k is None else k
         if not document_ids or len(document_ids) < 2:
             return await self.retrieve(
                 query=question,

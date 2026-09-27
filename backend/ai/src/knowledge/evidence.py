@@ -1,4 +1,4 @@
-from src.runtime.models import EvidencePackage
+from src.schemas.agent import EvidencePackage
 
 
 def deduplicate(items):

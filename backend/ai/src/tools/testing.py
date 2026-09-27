@@ -3,11 +3,10 @@ from typing import Annotated
 from uuid import uuid4
 
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
 from pydantic import Field
 
 from src.core.infrastructure.configuration import settings
-from src.prompts.testing import LINT_REQUIREMENT_INSTRUCTION
+from src.tools.registry import with_tool_access
 from src.tools.http_client import INTERNAL_API_URL, make_api_request
 
 
@@ -51,7 +50,7 @@ def parse(value):
         return None
 
 
-@tool
+@with_tool_access(("reporting",), "READ", "project.read")
 async def get_project_context(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
@@ -64,7 +63,7 @@ async def get_project_context(
     )
 
 
-@tool
+@with_tool_access(("requirement", "reporting"), "READ", "knowledge.read")
 async def search_project_knowledge(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     query: Annotated[str, Field(min_length=1, description="Artifact search query")],
@@ -79,7 +78,7 @@ async def search_project_knowledge(
     )
 
 
-@tool
+@with_tool_access(("requirement", "analysis"), "READ", "requirement.version.read")
 async def get_requirement_version(
     requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
@@ -88,7 +87,7 @@ async def get_requirement_version(
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
-@tool
+@with_tool_access(("requirement", "analysis"), "READ", "requirement.diff.read")
 async def compare_requirement_versions(
     requirement_id: Annotated[str, Field(description="Requirement identifier")],
     from_version_id: Annotated[str, Field(description="Source version identifier")],
@@ -104,7 +103,7 @@ async def compare_requirement_versions(
     )
 
 
-@tool
+@with_tool_access(("requirement", "test_design"), "READ", "requirement.read")
 async def get_acceptance_criteria(
     requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
@@ -113,7 +112,7 @@ async def get_acceptance_criteria(
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
-@tool
+@with_tool_access(("analysis", "reporting"), "READ", "trace.read")
 async def get_trace_links(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
@@ -122,7 +121,7 @@ async def get_trace_links(
     return await call("GET", f"/du-an/{project_id}/truy-vet", config)
 
 
-@tool
+@with_tool_access(("test_design", "analysis"), "READ", "testcase.read")
 async def search_test_cases(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     query: Annotated[str, Field(description="Test case search query")] = "",
@@ -132,7 +131,7 @@ async def search_test_cases(
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu?q={query}", config)
 
 
-@tool
+@with_tool_access(("test_design", "execution", "analysis"), "READ", "testcase.version.read")
 async def get_test_case_version(
     test_case_id: Annotated[str, Field(description="Test case identifier")], config: RunnableConfig = None
 ) -> str:
@@ -140,7 +139,7 @@ async def get_test_case_version(
     return await call("GET", f"/ca-kiem-thu/{test_case_id}/phien-ban", config)
 
 
-@tool
+@with_tool_access(("execution", "analysis", "reporting"), "READ", "testrun.read")
 async def get_test_results(
     test_run_id: Annotated[str, Field(description="Test run identifier")], config: RunnableConfig = None
 ) -> str:
@@ -148,7 +147,7 @@ async def get_test_results(
     return await call("GET", f"/lan-chay-kiem-thu/{test_run_id}", config)
 
 
-@tool
+@with_tool_access(("analysis", "execution", "reporting"), "READ", "defect.read")
 async def get_historical_defects(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
@@ -157,7 +156,7 @@ async def get_historical_defects(
     return await call("GET", f"/du-an/{project_id}/loi", config)
 
 
-@tool
+@with_tool_access(("test_design",), "READ", "testcase.duplicate_check")
 async def find_near_duplicates(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     config: RunnableConfig = None,
@@ -166,7 +165,17 @@ async def find_near_duplicates(
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu/trung-lap", config)
 
 
-@tool
+@with_tool_access(
+    ("test_design",),
+    "MUTATE",
+    "testcase.create",
+    True,
+    {
+        "path": "/ban-nhap-ca-kiem-thu/{identifier}",
+        "identifier": "$result._id",
+        "expected": {"_id": "$result._id", "project_id": "$project.id", "status": "DRAFT", "revision": "$result.revision"},
+    },
+)
 async def create_test_case_draft(
     project_id: Annotated[str, Field(description="Testing project identifier")],
     draft_json: Annotated[
@@ -183,7 +192,7 @@ async def create_test_case_draft(
     )
 
 
-@tool
+@with_tool_access(("analysis", "test_design"), "PROPOSE", "trace.create")
 async def create_trace_link_suggestion(
     trace_json: Annotated[
         str, Field(description="Trace link JSON with evidence confidence and project identifier")
@@ -201,7 +210,7 @@ async def create_trace_link_suggestion(
     )
 
 
-@tool
+@with_tool_access(("analysis",), "PROPOSE", "impact.execute")
 async def create_impact_analysis(
     change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
@@ -209,7 +218,7 @@ async def create_impact_analysis(
     return await call("POST", f"/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", config)
 
 
-@tool
+@with_tool_access(("analysis",), "PROPOSE", "ai.create_proposal")
 async def create_maintenance_proposal(
     impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
@@ -218,7 +227,7 @@ async def create_maintenance_proposal(
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
-@tool
+@with_tool_access(("analysis",), "PROPOSE", "ai.generate_regression")
 async def create_regression_recommendation(
     change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
@@ -226,7 +235,17 @@ async def create_regression_recommendation(
     return await call("POST", f"/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", config)
 
 
-@tool
+@with_tool_access(
+    ("analysis",),
+    "MUTATE",
+    "trace.confirm",
+    True,
+    {
+        "path": "/lien-ket-truy-vet/{identifier}",
+        "identifier": "$arguments.trace_link_id",
+        "expected": {"_id": "$arguments.trace_link_id", "project_id": "$project.id", "status": "CONFIRMED", "revision": "$result.revision"},
+    },
+)
 async def confirm_trace_link(
     trace_link_id: Annotated[str, Field(description="Trace link identifier")], config: RunnableConfig = None
 ) -> str:
@@ -234,7 +253,17 @@ async def confirm_trace_link(
     return await call("POST", f"/lien-ket-truy-vet/{trace_link_id}/xac-nhan", config)
 
 
-@tool
+@with_tool_access(
+    ("requirement",),
+    "MUTATE",
+    "requirement.approve",
+    True,
+    {
+        "path": "/phien-ban-yeu-cau/{identifier}",
+        "identifier": "$arguments.requirement_version_id",
+        "expected": {"_id": "$arguments.requirement_version_id", "project_id": "$project.id", "status": "BASELINED", "revision": "$result.revision"},
+    },
+)
 async def baseline_requirement_version(
     requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
     expected_revision: Annotated[int, Field(ge=1, description="Current revision")],
@@ -249,7 +278,17 @@ async def baseline_requirement_version(
     )
 
 
-@tool
+@with_tool_access(
+    ("test_design",),
+    "MUTATE",
+    "testcase.approve",
+    True,
+    {
+        "path": "/ca-kiem-thu/{identifier}",
+        "identifier": "$result.test_case._id",
+        "expected": {"_id": "$result.test_case._id", "project_id": "$project.id", "status": "$result.test_case.status", "current_version_id": "$result.version._id"},
+    },
+)
 async def approve_test_case_version(
     test_case_draft_id: Annotated[str, Field(description="Test case draft identifier")],
     expected_revision: Annotated[int, Field(ge=1, description="Current revision")],
@@ -265,7 +304,17 @@ async def approve_test_case_version(
     )
 
 
-@tool
+@with_tool_access(
+    ("test_design",),
+    "MUTATE",
+    "testcase.archive",
+    True,
+    {
+        "path": "/ca-kiem-thu/{identifier}",
+        "identifier": "$arguments.test_case_id",
+        "expected": {"_id": "$arguments.test_case_id", "project_id": "$project.id", "status": "OBSOLETE", "current_version_id": "$arguments.expected_current_version_id"},
+    },
+)
 async def mark_test_case_obsolete(
     test_case_id: Annotated[str, Field(description="Test case identifier")],
     expected_current_version_id: Annotated[str, Field(description="Current version identifier")],
@@ -283,7 +332,17 @@ async def mark_test_case_obsolete(
     )
 
 
-@tool
+@with_tool_access(
+    ("test_design",),
+    "MUTATE",
+    "testcase.update",
+    True,
+    {
+        "path": "/de-xuat-bao-tri/{identifier}",
+        "identifier": "$arguments.proposal_id",
+        "expected": {"_id": "$arguments.proposal_id", "project_id": "$project.id", "status": "$result.proposal.status", "applied_artifact_id": "$result.result._id", "revision": "$result.proposal.revision"},
+    },
+)
 async def apply_test_case_revision(
     proposal_id: Annotated[str, Field(description="Maintenance proposal identifier")],
     expected_revision: Annotated[int, Field(ge=1, description="Proposal revision")],
@@ -304,7 +363,7 @@ async def apply_test_case_revision(
     )
 
 
-@tool
+@with_tool_access(("requirement", "test_design", "analysis", "execution", "reporting"), "READ", "knowledge.read")
 async def retrieve_project_evidence(
     project_id: Annotated[str, Field(description="Project identifier")],
     query: Annotated[str, Field(min_length=1, description="Evidence query")],
@@ -323,7 +382,7 @@ async def retrieve_project_evidence(
     )
 
 
-@tool
+@with_tool_access(("requirement", "analysis"), "READ", "requirement.read")
 async def get_requirement(
     requirement_id: Annotated[str, Field(description="Requirement identifier")],
     config: RunnableConfig = None,
@@ -332,7 +391,7 @@ async def get_requirement(
     return await call("GET", f"/yeu-cau/{requirement_id}", config)
 
 
-@tool
+@with_tool_access(("analysis",), "READ", "changeset.read")
 async def get_change_facts(
     change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
@@ -340,7 +399,7 @@ async def get_change_facts(
     return await call("GET", f"/bo-thay-doi/{change_set_id}", config)
 
 
-@tool
+@with_tool_access(("requirement",), "PROPOSE", "ai.run_lint")
 async def lint_requirement(
     requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
     config: RunnableConfig = None,
@@ -352,12 +411,12 @@ async def lint_requirement(
         config,
         {
             "idempotency_key": f"agent-requirement-analysis-{uuid4().hex}",
-            "instruction": LINT_REQUIREMENT_INSTRUCTION,
+            "instruction": "Analyze requirement quality and propose evidence grounded revisions",
         },
     )
 
 
-@tool
+@with_tool_access(("analysis", "reporting"), "READ", "trace.read")
 async def get_traceability_links(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
@@ -365,7 +424,7 @@ async def get_traceability_links(
     return await call("GET", f"/du-an/{project_id}/truy-vet", config)
 
 
-@tool
+@with_tool_access(("test_design", "analysis"), "READ", "testcase.read")
 async def search_related_testcases(
     project_id: Annotated[str, Field(description="Project identifier")],
     query: Annotated[str, Field(description="Relevant content query")],
@@ -375,7 +434,7 @@ async def search_related_testcases(
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu?q={query}", config)
 
 
-@tool
+@with_tool_access(("test_design",), "PROPOSE", "ai.generate_scenario")
 async def generate_test_scenarios(
     requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
     instruction: Annotated[str, Field(description="Scenario generation instruction")] = "",
@@ -390,7 +449,7 @@ async def generate_test_scenarios(
     )
 
 
-@tool
+@with_tool_access(("test_design",), "PROPOSE", "ai.generate_testcase")
 async def generate_testcases(
     requirement_version_id: Annotated[str, Field(description="Requirement version identifier")],
     instruction: Annotated[str, Field(description="Test case generation instruction")] = "",
@@ -405,7 +464,7 @@ async def generate_testcases(
     )
 
 
-@tool
+@with_tool_access(("test_design",), "READ", "testcase.lint")
 async def lint_testcase(
     test_case_draft_id: Annotated[str, Field(description="Test case draft identifier")],
     config: RunnableConfig = None,
@@ -414,7 +473,7 @@ async def lint_testcase(
     return await call("POST", f"/ban-nhap-ca-kiem-thu/{test_case_draft_id}/kiem-tra", config)
 
 
-@tool
+@with_tool_access(("test_design",), "READ", "testcase.duplicate_check")
 async def find_duplicate_testcases(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
@@ -422,7 +481,7 @@ async def find_duplicate_testcases(
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu/trung-lap", config)
 
 
-@tool
+@with_tool_access(("test_design", "analysis", "reporting"), "READ", "coverage.read")
 async def calculate_coverage(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
@@ -430,7 +489,7 @@ async def calculate_coverage(
     return await call("GET", f"/du-an/{project_id}/do-phu", config)
 
 
-@tool
+@with_tool_access(("analysis",), "PROPOSE", "impact.execute")
 async def analyze_change_impact(
     change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
@@ -438,7 +497,7 @@ async def analyze_change_impact(
     return await call("POST", f"/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", config)
 
 
-@tool
+@with_tool_access(("analysis", "test_design"), "PROPOSE", "ai.create_proposal")
 async def propose_testcase_revision(
     impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
@@ -447,7 +506,7 @@ async def propose_testcase_revision(
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
-@tool
+@with_tool_access(("analysis", "test_design"), "PROPOSE", "ai.create_proposal")
 async def propose_new_testcase(
     impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
@@ -456,7 +515,7 @@ async def propose_new_testcase(
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
-@tool
+@with_tool_access(("analysis", "test_design"), "PROPOSE", "ai.create_proposal")
 async def propose_obsolete_testcase(
     impact_analysis_id: Annotated[str, Field(description="Impact analysis identifier")],
     config: RunnableConfig = None,
@@ -465,7 +524,7 @@ async def propose_obsolete_testcase(
     return await call("POST", f"/phan-tich-anh-huong/{impact_analysis_id}/de-xuat-bao-tri", config)
 
 
-@tool
+@with_tool_access(("analysis",), "PROPOSE", "ai.generate_regression")
 async def suggest_regression_scope(
     change_set_id: Annotated[str, Field(description="Change set identifier")], config: RunnableConfig = None
 ) -> str:
@@ -473,7 +532,7 @@ async def suggest_regression_scope(
     return await call("POST", f"/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", config)
 
 
-@tool
+@with_tool_access(("execution", "analysis", "reporting"), "READ", "testrun.read")
 async def get_execution_history(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
@@ -481,7 +540,7 @@ async def get_execution_history(
     return await call("GET", f"/du-an/{project_id}/lan-chay-kiem-thu", config)
 
 
-@tool
+@with_tool_access(("analysis", "execution", "reporting"), "READ", "defect.read")
 async def get_bug_history(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:
@@ -489,7 +548,7 @@ async def get_bug_history(
     return await call("GET", f"/du-an/{project_id}/loi", config)
 
 
-@tool
+@with_tool_access(("execution", "analysis"), "PROPOSE", "ai.suggest_bug_trace")
 async def link_bug_candidates(
     defect_id: Annotated[str, Field(description="Defect identifier")], config: RunnableConfig = None
 ) -> str:

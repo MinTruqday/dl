@@ -69,12 +69,15 @@ class HostedModelClient:
         max_tokens: int,
         temperature: float,
         response_schema: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
     ):
         payload = self._payload(model, messages, max_tokens, temperature, response_schema)
         maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=1800) as client:
+                async with httpx.AsyncClient(
+                    timeout=timeout_seconds or settings.MODEL_TIMEOUT_SECONDS
+                ) as client:
                     response = await client.post(
                         settings.PRIMARY_MODEL_URL, headers=self._headers(), json=payload
                     )
@@ -115,6 +118,7 @@ class HostedModelClient:
         temperature: float = 0.1,
         stream: bool = False,
         response_schema: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
         **_: Any,
     ):
         effective_model = model or settings.LLM_MODEL
@@ -122,7 +126,12 @@ class HostedModelClient:
             return self._stream(effective_model, messages, max_tokens, temperature, response_schema)
         try:
             return await self._completion(
-                effective_model, messages, max_tokens, temperature, response_schema
+                effective_model,
+                messages,
+                max_tokens,
+                temperature,
+                response_schema,
+                timeout_seconds,
             )
         except Exception as provider_error:
             self._runtime_status = "unavailable"
@@ -160,7 +169,7 @@ class HostedModelClient:
         maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=1800) as client:
+                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     async with client.stream(
                         "POST", settings.PRIMARY_MODEL_URL, headers=self._headers(), json=payload
                     ) as response:
@@ -222,7 +231,7 @@ class HostedModelClient:
     async def readiness(self) -> dict[str, str]:
         checks = {"model": "unavailable"}
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                 response = await client.get(
                     settings.PRIMARY_MODEL_HEALTH_URL, headers=self._headers()
                 )
@@ -261,7 +270,7 @@ class HostedAuxiliaryClient:
         maximum_attempts = 3
         for attempt in range(maximum_attempts):
             try:
-                async with httpx.AsyncClient(timeout=1800) as client:
+                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     response = await client.post(
                         self._endpoint(model), headers=self._headers(), json=payload
                     )

@@ -1,9 +1,7 @@
 import json
 import re
-from typing import Any, Type
-
-from src.runtime.output import output_policy
-
+from types import UnionType
+from typing import Any, Type, Union, get_args, get_origin
 
 class StructuredOutputError(ValueError):
     pass
@@ -47,7 +45,7 @@ def extract_json_values(text: Any) -> list[Any]:
     if not isinstance(text, str) or not text.strip():
         raise StructuredOutputError("Model output is empty")
     cleaned = re.sub(
-        output_policy()["hidden_reasoning_pattern"],
+        r"<(think|thought)>.*?</\1>",
         "",
         text,
         flags=re.IGNORECASE | re.DOTALL,
@@ -83,12 +81,43 @@ def extract_json_value(text: Any) -> Any:
     return extract_json_values(text)[0]
 
 
+def normalize_schema_collections(value: Any, schema: Type[Any]) -> Any:
+    if not isinstance(value, dict) or not hasattr(schema, "model_fields"):
+        return value
+    normalized = dict(value)
+    for name, field in schema.model_fields.items():
+        if name not in normalized:
+            continue
+        normalized[name] = normalize_annotation_value(normalized[name], field.annotation)
+    return normalized
+
+
+def normalize_annotation_value(value: Any, annotation: Any) -> Any:
+    origin = get_origin(annotation)
+    arguments = get_args(annotation)
+    if origin is list:
+        if value is None:
+            return []
+        if isinstance(value, list) and arguments:
+            return [normalize_annotation_value(item, arguments[0]) for item in value]
+        return value
+    if origin in {Union, UnionType}:
+        for option in arguments:
+            normalized = normalize_annotation_value(value, option)
+            if normalized is not value or option is type(None):
+                return normalized
+        return value
+    if isinstance(value, dict) and hasattr(annotation, "model_fields"):
+        return normalize_schema_collections(value, annotation)
+    return value
+
+
 def validate_structured_output(text: Any, schema: Type[Any]) -> Any:
     errors = []
     for value in extract_json_values(text):
         try:
             if hasattr(schema, "model_validate"):
-                return schema.model_validate(value, strict=True)
+                return schema.model_validate(normalize_schema_collections(value, schema), strict=True)
             return schema.parse_obj(value)
         except Exception as error:
             errors.append(error)

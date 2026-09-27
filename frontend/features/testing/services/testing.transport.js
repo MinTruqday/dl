@@ -21,32 +21,42 @@ export async function testingRequest(path, options = {}) {
 }
 
 export async function agentRequest(path, options = {}) {
-  const response = await authenticatedFetch(`${API_URL}/tac-tu${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    const detail = body?.detail;
-    const error = new Error(detail?.message || detail?.code || "Không thể hoàn tất yêu cầu AI");
-    error.status = response.status;
-    error.code = detail?.code;
+  const streamId = crypto.randomUUID();
+  const notify = (status) => {
+    window.dispatchEvent(new CustomEvent("veriq-ai-stream", { detail: { id: streamId, status } }));
+  };
+  notify("streaming");
+  try {
+    const response = await authenticatedFetch(`${API_URL}/tac-tu${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+      const detail = body?.detail;
+      const error = new Error(detail?.message || detail?.code || "Không thể hoàn tất yêu cầu AI");
+      error.status = response.status;
+      error.code = detail?.code;
+      throw error;
+    }
+    notify("complete");
+    return body;
+  } catch (error) {
+    notify("failed");
     throw error;
   }
-  return body;
 }
 
 export async function testingStreamRequest(path, options = {}) {
   const { onDelta, ...requestOptions } = options;
   const streamId = crypto.randomUUID();
-  let received = 0;
   const notify = (status) => {
     window.dispatchEvent(
       new CustomEvent("veriq-ai-stream", {
-        detail: { id: streamId, path, received, status },
+        detail: { id: streamId, path, status },
       }),
     );
   };
@@ -70,6 +80,7 @@ export async function testingStreamRequest(path, options = {}) {
     const error = new Error(messageOf(body, "Không thể hoàn tất yêu cầu AI"));
     error.status = response.status;
     error.code = body?.error?.code || body?.detail?.code;
+    notify("failed");
     throw error;
   }
   notify("streaming");
@@ -87,7 +98,6 @@ export async function testingStreamRequest(path, options = {}) {
     const event = JSON.parse(data);
     if (event.type === "delta") {
       const delta = event.delta || "";
-      received += delta.length;
       onDelta?.(delta);
       notify("streaming");
     }

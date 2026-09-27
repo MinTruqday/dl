@@ -2,47 +2,21 @@ import json
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
+from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.security.guardrails import guardrails_engine
-from src.prompts.testing import build_testing_prompt, capability_token_budget
+from src.prompts.testing import build_testing_prompt
 from src.runtime.output import normalize_narrative_payload
 from src.schemas.inference import (
-    AutomationScriptOutput,
-    CausalHypothesesOutput,
-    CompletionReportNarrativeOutput,
-    GeneratedCasesOutput,
-    ImpactClassificationOutput,
-    LessonsLearnedClustersOutput,
-    PerformanceSuggestionsOutput,
-    ProjectQuestionOutput,
-    RequirementQualityOutput,
-    SecuritySuggestionsOutput,
-    StatusReportNarrativeOutput,
-    TestConditionSuggestionsOutput,
     TestingAssistanceRequest,
     TestingAssistanceDegradedMode,
     TestingAssistanceResult,
     TestingAssistanceStatus,
+    output_schema,
 )
 from src.services.inference import model_metadata, structured
 
-
-SCHEMAS = {
-    "project_question": ProjectQuestionOutput,
-    "requirement_quality_analysis": RequirementQualityOutput,
-    "scenario_generation": GeneratedCasesOutput,
-    "test_generation": GeneratedCasesOutput,
-    "impact_analysis": ImpactClassificationOutput,
-    "security_test_generation": SecuritySuggestionsOutput,
-    "performance_plan_generation": PerformanceSuggestionsOutput,
-    "automation_script_generation": AutomationScriptOutput,
-    "test_condition_generation": TestConditionSuggestionsOutput,
-    "causal_analysis": CausalHypothesesOutput,
-    "status_report_narrative": StatusReportNarrativeOutput,
-    "completion_report_narrative": CompletionReportNarrativeOutput,
-    "lessons_learned_clustering": LessonsLearnedClustersOutput,
-}
 
 def evidence_text(evidence, compact=False):
     values = []
@@ -84,6 +58,22 @@ def nested_values(value, key_name):
     return values
 
 
+def constrain_evidence_references(value, allowed_references):
+    if isinstance(value, dict):
+        return {
+            key: (
+                [reference for reference in item if str(reference) in allowed_references]
+                or list(allowed_references)
+                if key == "evidence_refs" and isinstance(item, list)
+                else constrain_evidence_references(item, allowed_references)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [constrain_evidence_references(item, allowed_references) for item in value]
+    return value
+
+
 async def generate_ai_assistance(req: TestingAssistanceRequest):
     evidence = [
         {
@@ -99,7 +89,7 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
         evidence,
         compact=req.capability in {"project_question", "requirement_quality_analysis"},
     )
-    inspected = guardrails_engine.inspect_input(source_text)
+    inspected = await guardrails_engine.async_inspect_input(source_text)
     if not inspected.get("is_safe", False):
         raise HTTPException(status_code=422, detail={"code": "qa_evidence_unsafe"})
     allowed_evidence_refs = evidence_reference_ids(evidence)
@@ -120,12 +110,16 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
     try:
         generated = await structured(
             prompt,
-            SCHEMAS[req.capability],
-            max_tokens=capability_token_budget(req.capability),
-            timeout_seconds=1800,
-            provider_schema=req.capability != "test_condition_generation",
+            output_schema(req.capability),
+            timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
+            provider_schema=False,
         )
-        generated_data = normalize_narrative_payload(generated.model_dump())
+        generated_data = constrain_evidence_references(
+            normalize_narrative_payload(generated.model_dump()), allowed_evidence_refs
+        )
+        generated_data["capability"] = req.capability
+        generated_data.setdefault("confidence", 0)
+        generated_data.setdefault("warnings", [])
         unknown_refs = sorted(
             set(nested_values(generated_data, "evidence_refs")) - set(allowed_evidence_refs)
         )
@@ -147,6 +141,12 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
         )
         result = TestingAssistanceResult(**generated_data)
     except Exception as error:
+        logger.warning(
+            "AI assistance result rejected capability={} error_type={} error={}",
+            req.capability,
+            type(error).__name__,
+            str(error),
+        )
         output_invalid = type(error).__name__ in {
             "StructuredOutputError",
             "ValidationError",
@@ -202,12 +202,12 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
             "OBSERVE_VALIDATION",
         ],
         "evidence_count": len(evidence),
-        "candidate_count": len(result.suggestions),
+        "candidate_count": len(result.suggestions) + len(result.new_test_candidates),
         "confidence": result.confidence,
         "degraded_flags": (
             result.warnings if result.status == TestingAssistanceStatus.DEGRADED else []
         ),
-        "approval_required": bool(result.suggestions),
+        "approval_required": bool(result.suggestions or result.new_test_candidates),
         "hidden_reasoning_stored": False,
     }
     return result

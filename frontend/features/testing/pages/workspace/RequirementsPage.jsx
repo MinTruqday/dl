@@ -125,8 +125,11 @@ export default function RequirementsPage({ project, section }) {
   const current = selected?.current_version;
   useEffect(() => {
     if (!current) return;
-    if (loadedVersion.current === current._id) return;
-    loadedVersion.current = current._id;
+    const previousVersionId = loadedVersion.current.split(":", 1)[0];
+    const versionKey = `${current._id}:${current.revision || 0}`;
+    if (loadedVersion.current === versionKey) return;
+    if (previousVersionId === current._id && draftDirty) return;
+    loadedVersion.current = versionKey;
     setDraft({
       title: current.title,
       type: current.type,
@@ -144,7 +147,7 @@ export default function RequirementsPage({ project, section }) {
     });
     setDraftDirty(false);
     setSaveState("saved");
-  }, [current, selected]);
+  }, [current, draftDirty, selected]);
   const changeDraft = (patch) => {
     draftSequence.current += 1;
     setDraft((value) => ({ ...value, ...patch }));

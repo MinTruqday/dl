@@ -1,31 +1,20 @@
 import math
-import json
 import re
 from collections import Counter
-from functools import lru_cache
-from pathlib import Path
 from typing import Any, Dict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.registry import PromptType, registry
+from src.prompts.catalog import prompt_injection_detector
 from src.schemas.guardrails import SecurityAssessment
 from src.utils.huggingface import create_chat_model
-
-
-@lru_cache(maxsize=1)
-def security_rules():
-    path = Path(__file__).with_name("rules.json")
-    with path.open(encoding="utf-8") as source:
-        return json.load(source)
 
 
 class GuardrailsEngine:
     def __init__(self):
         self.llm = create_chat_model(settings.LLM_MODEL)
-        self._redis = None
 
     @staticmethod
     def _entropy(value: str) -> float:
@@ -37,57 +26,47 @@ class GuardrailsEngine:
 
     def _redact_structural_secrets(self, text: str) -> tuple[str, bool]:
         found = False
-        policy = security_rules()["secret_detection"]
-
         def redact(match: re.Match) -> str:
             nonlocal found
             candidate = match.group(0)
-            identifier = candidate.strip(policy["identifier_strip_characters"])
-            if re.fullmatch(policy["uuid_pattern"], identifier):
+            identifier = candidate.strip("\"'`,;:[]{}()")
+            if re.fullmatch(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}", identifier):
                 return candidate
-            if re.fullmatch(policy["domain_identifier_pattern"], identifier):
+            if re.fullmatch(r"[A-Z][A-Z0-9]{0,15}-[0-9a-fA-F]{32}", identifier):
                 return candidate
             has_character_mix = bool(
-                re.search(policy["alphabetic_character_pattern"], candidate)
-                and re.search(policy["numeric_character_pattern"], candidate)
+                re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)
             )
             compact_ratio = sum(character.isalnum() for character in candidate) / len(candidate)
             credential_shape = (
-                len(candidate) >= policy["long_candidate_minimum_length"]
-                and compact_ratio >= policy["compact_ratio_threshold"]
+                len(candidate) >= 32 and compact_ratio >= 0.85
             ) or (
-                len(candidate) == policy["fixed_uppercase_length"]
+                len(candidate) == 20
                 and candidate.upper() == candidate
                 and compact_ratio == 1.0
             )
             credential_uri = (
-                policy["uri_scheme_marker"] in candidate
-                and policy["uri_identity_marker"] in candidate
+                "://" in candidate and "@" in candidate
             )
             if (
                 has_character_mix
-                and self._entropy(candidate) >= policy["entropy_threshold"]
+                and self._entropy(candidate) >= 3.5
                 and (credential_shape or credential_uri)
             ):
                 found = True
-                return policy["redaction"]
+                return "[REDACTED]"
             return candidate
 
-        sanitized = re.sub(policy["candidate_pattern"], redact, text)
+        sanitized = re.sub(r"(?<![\w])[^\s]{20,}(?![\w])", redact, text)
         return sanitized, found
 
     def _deterministic_assessment(self, text: str) -> Dict[str, Any]:
         sanitized, credential_found = self._redact_structural_secrets(text)
-        normalized = sanitized.casefold()
-        injection_markers = security_rules()["prompt_injection_markers"]
-        injection_found = any(marker in normalized for marker in injection_markers)
         if credential_found:
-            threat_category = "credential_leak"
-        elif injection_found:
-            threat_category = "prompt_injection"
+            threat_category = "sensitive_content"
         else:
             threat_category = "none"
-        unsafe = credential_found or injection_found
+        unsafe = credential_found
         return {
             "is_safe": not unsafe,
             "risk_score": 1.0 if unsafe else 0.0,
@@ -95,33 +74,10 @@ class GuardrailsEngine:
             "reason": (
                 "Sensitive content redacted"
                 if credential_found
-                else "Prompt injection pattern blocked"
-                if injection_found
                 else "Passed structural security inspection"
             ),
             "sanitized_text": sanitized,
         }
-
-    def _get_redis(self):
-        if self._redis is None:
-            try:
-                import redis.asyncio as redis_lib
-
-                self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
-            except Exception:
-                logger.exception("Guardrails Redis client initialization failed")
-        return self._redis
-
-    async def _get_dynamic_patterns(self, key: str) -> list[str]:
-        redis_client = self._get_redis()
-        if redis_client:
-            try:
-                cached = await redis_client.smembers(key)
-                if cached:
-                    return [p for p in cached if p]
-            except Exception:
-                logger.exception("Dynamic security rule retrieval error")
-        return []
 
     async def async_inspect_input(self, prompt: str) -> Dict[str, Any]:
         if not prompt or not prompt.strip():
@@ -137,7 +93,7 @@ class GuardrailsEngine:
             return baseline
 
         try:
-            system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
+            system_prompt = prompt_injection_detector(prompt)
             structured_llm = self.llm.with_structured_output(SecurityAssessment)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=prompt)]
             assessment = await structured_llm.ainvoke(messages, max_tokens=256, temperature=0)

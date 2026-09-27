@@ -10,7 +10,6 @@ from loguru import logger
 from src.clients.content import ContentClient
 from src.core.infrastructure.configuration import settings
 from src.services.chunking import chunker
-from src.services.content_security import prompt_injection_flags
 from src.services.conversion import document_parser
 from src.services.embedding import embedder
 from src.services.inference import inspect_chunks, summarize_document
@@ -130,17 +129,6 @@ class IngestionPipelineService:
             structure=document_structure,
         )
         quarantined_chunks = []
-        if chunks:
-            locally_safe = []
-            for chunk in chunks:
-                flags = prompt_injection_flags(chunk["text"])
-                if flags:
-                    quarantined_chunks.append(
-                        {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": flags}
-                    )
-                else:
-                    locally_safe.append(chunk)
-            chunks = locally_safe
 
         if chunks:
             safe_indices = await inspect_chunks([chunk["text"] for chunk in chunks])

@@ -5,7 +5,7 @@ from typing import List
 
 from loguru import logger
 
-from src.core.security.guardrails import guardrails_engine, security_rules
+from src.core.security.guardrails import guardrails_engine
 
 
 @dataclass
@@ -25,7 +25,6 @@ class SecurityHarness:
         self._pii_engine_lock = asyncio.Lock()
 
     def _initialize_pii_engine(self):
-        pii_policy = security_rules()["pii"]
         try:
             from presidio_analyzer import AnalyzerEngine
             from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -33,11 +32,11 @@ class SecurityHarness:
 
             provider = NlpEngineProvider(
                 nlp_configuration={
-                    "nlp_engine_name": pii_policy["nlp_engine"],
+                    "nlp_engine_name": "spacy",
                     "models": [
                         {
-                            "lang_code": pii_policy["language"],
-                            "model_name": pii_policy["model"],
+                            "lang_code": "en",
+                            "model_name": "en_core_web_sm",
                         }
                     ],
                 }
@@ -61,31 +60,32 @@ class SecurityHarness:
 
     async def _adetect_security_issues(
         self, text: str, allow_ai_review: bool = True
-    ) -> tuple[str, List[str]]:
+    ) -> tuple[str, List[str], bool]:
         await self._ensure_pii_engine()
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        from src.core.registry import PromptType, registry
+        from src.prompts.catalog import security_scan
         from src.schemas.security import SecurityEvaluation
         from src.utils.huggingface import create_chat_model
 
         violations = []
-        baseline = guardrails_engine.inspect_input(text)
+        baseline = (
+            await guardrails_engine.async_inspect_input(text)
+            if allow_ai_review
+            else guardrails_engine.inspect_input(text)
+        )
         sanitized = baseline.get("sanitized_text", text)
         category = baseline.get("threat_category", "none")
-        if category == "prompt_injection":
-            violations.append("prompt_injection:baseline_rule")
-        elif category == "credential_leak":
-            violations.append("credential_leak")
-        elif category == "pii":
-            violations.append("pii_detected")
+        blocked = not baseline.get("is_safe", True)
+        if blocked:
+            violations.append(category)
 
         if self.analyzer and self.anonymizer:
             try:
                 results = self.analyzer.analyze(
                     text=sanitized,
-                    entities=security_rules()["pii"]["entities"],
-                    language=security_rules()["pii"]["language"],
+                    entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"],
+                    language="en",
                 )
                 if results:
                     violations.append("pii_detected")
@@ -96,56 +96,45 @@ class SecurityHarness:
             except Exception:
                 logger.exception("Presidio scan failed")
 
-        normalized = sanitized.casefold()
-        suspicious_markers = security_rules()["prompt_injection_markers"]
-        requires_ai_review = category != "none" or any(
-            marker in normalized for marker in suspicious_markers
-        )
-        if (
-            not allow_ai_review
-            or not requires_ai_review
-            or any(
-                marker in violation
-                for violation in violations
-                for marker in ("credential_leak", "prompt_injection")
-            )
-        ):
-            return sanitized, list(dict.fromkeys(violations))
+        if not allow_ai_review or blocked:
+            return sanitized, list(dict.fromkeys(violations)), blocked
 
         try:
             llm = create_chat_model()
             structured_llm = llm.with_structured_output(SecurityEvaluation)
 
-            system_prompt = registry.get(PromptType.SECURITY_SCAN)
+            system_prompt = security_scan()
 
             result = await structured_llm.ainvoke(
                 [SystemMessage(content=system_prompt), HumanMessage(content=sanitized)]
             )
             if result.is_malicious:
-                violations.append(f"prompt_injection:{result.reason[:60]}")
+                violations.append(result.reason[:60])
+                blocked = True
             if result.has_credentials:
-                violations.append("credential_leak")
+                violations.append("sensitive_content")
+                blocked = True
             if result.has_pii and "pii_detected" not in violations:
                 violations.append("pii_detected")
                 if result.sanitized_text:
                     sanitized = result.sanitized_text
         except Exception:
             logger.exception("AI security tracing failed")
-            violations.append("security_classifier_unavailable")
+            violations.append("classification_unavailable")
+            blocked = True
 
-        return sanitized, violations
+        return sanitized, violations, blocked
 
     def _anomaly_score(self, text: str) -> float:
         if not text:
             return 0.0
-        policy = security_rules()["anomaly"]
         special_ratio = sum(1 for c in text if not c.isalnum() and not c.isspace()) / max(
             len(text), 1
         )
         length_penalty = min(
-            len(text) / policy["length_scale"], policy["length_penalty_cap"]
+            len(text) / 10000, 0.3
         )
-        return min(special_ratio * policy["special_character_weight"] + length_penalty, 1.0)
+        return min(special_ratio * 0.5 + length_penalty, 1.0)
 
     async def ascan_input(
         self, text: str, session_id: str = "", user_id: str = "", allow_ai_review: bool = True
@@ -153,25 +142,17 @@ class SecurityHarness:
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
 
-        sanitized, violations = await self._adetect_security_issues(
+        sanitized, violations, blocked = await self._adetect_security_issues(
             text, allow_ai_review=allow_ai_review
         )
 
-        injection_violations = [v for v in violations if "prompt_injection" in v]
-        credential_violations = [v for v in violations if "credential_leak" in v]
         pii_violations = [v for v in violations if "pii" in v]
 
         anomaly = self._anomaly_score(text)
-        anomaly_policy = security_rules()["anomaly"]
-        injection_score = min(
-            len(injection_violations) * anomaly_policy["injection_violation_weight"], 1.0
-        )
-        risk_score = min(injection_score + anomaly * anomaly_policy["anomaly_weight"], 1.0)
+        risk_score = 1.0 if blocked else min(anomaly * 0.2, 1.0)
 
-        classifier_failures = [v for v in violations if "security_classifier_unavailable" in v]
-
-        if injection_violations or credential_violations or classifier_failures:
-            logger.warning("Malicious command or credential leak blocked")
+        if blocked:
+            logger.warning("Unsafe content blocked")
             return ScanResult(
                 passed=False,
                 blocked=True,
@@ -196,16 +177,16 @@ class SecurityHarness:
             return text
         baseline = guardrails_engine.inspect_output(text)
         text = baseline.get("sanitized_text", text)
-        if baseline.get("threat_category") == "credential_leak":
+        if not baseline.get("is_safe", True):
             raise PermissionError("output_credential_leak_blocked")
-        sanitized, violations = await self._adetect_security_issues(text, allow_ai_review=False)
+        sanitized, _, blocked = await self._adetect_security_issues(text, allow_ai_review=False)
         sanitized = re.sub(
-            security_rules()["hidden_reasoning_pattern"],
+            r"<(think|thought)>.*?</\1>",
             "",
             sanitized,
             flags=re.IGNORECASE | re.DOTALL,
         ).strip()
-        if any("credential_leak" in v for v in violations):
+        if blocked:
             logger.error("System proactively blocked and neutralized credential leak risk")
             raise PermissionError("output_credential_leak_blocked")
         return sanitized

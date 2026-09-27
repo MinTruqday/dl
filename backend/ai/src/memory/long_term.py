@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from src.memory.policy import trusted_outcome
 from src.repositories.memory import memory_repository
-from src.runtime.models import VeriqRunState
+from src.schemas.agent import AgentApprovalStatus, AgentRunStatus, AgentTaskStatus, VeriqRunState
 
 
 class LongTermMemory:
@@ -11,7 +10,17 @@ class LongTermMemory:
         return await memory_repository.list_long_term(project_id, limit)
 
     async def record_verified(self, state: VeriqRunState):
-        if not trusted_outcome(state):
+        if not (
+            state.status == AgentRunStatus.COMPLETED
+            and state.proposal is not None
+            and state.proposal.get("verification", {}).get("verified") is True
+            and state.approval_status
+            in {None, AgentApprovalStatus.APPROVED, AgentApprovalStatus.REJECTED}
+            and all(
+                result.get("status") == AgentTaskStatus.COMPLETED
+                for result in state.specialist_results
+            )
+        ):
             return None
         value = {
             "_id": f"MEM-{uuid4().hex}",

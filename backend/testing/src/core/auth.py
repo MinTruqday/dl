@@ -3,15 +3,10 @@ from enum import Enum
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, Field
 
 from src.clients.authentication import session_is_valid
 from src.core.configuration import settings
-
-
-class SystemRole(str, Enum):
-    USER = "USER"
-    ADMIN = "ADMIN"
+from src.schemas.contracts.common import CurrentUser, SystemRole
 
 
 class ProjectRole(str, Enum):
@@ -329,16 +324,6 @@ POLICY_PERMISSIONS = {
 }
 
 READ_PERMISSIONS = READ_ONLY_PERMISSIONS
-
-
-class CurrentUser(BaseModel):
-    id: str = Field(alias="_id")
-    email: str = ""
-    system_role: SystemRole = SystemRole.USER
-
-    @property
-    def is_system_admin(self):
-        return self.system_role == SystemRole.ADMIN
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap", auto_error=False)

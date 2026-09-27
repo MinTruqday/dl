@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 
 from src.agents.specialist import specialists
-from src.agents.supervisor.policy import available_tools, fallback_tasks, validated_tasks
 from src.knowledge.evidence import package
 from src.knowledge.hybrid import hybrid_evidence
 from src.prompts.agents import (
@@ -10,22 +9,116 @@ from src.prompts.agents import (
     supervisor_review_prompt,
 )
 from src.runtime.limits import limits
-from src.runtime.models import (
+from src.schemas.agent import (
     AgentApprovalStatus,
     AgentResult,
     AgentRunStatus,
     AgentTaskStatus,
     AgentTask,
+    PlannedTask,
     EvidenceItem,
     SupervisorPlan,
     SupervisorProposal,
     SupervisorReview,
     ToolExecutionStatus,
+    ToolCall,
     VeriqRunState,
 )
 from src.runtime.output import normalize_narrative, normalize_narratives
 from src.services.inference import structured
-from src.tools.registry import audit_arguments, invoke_tool, policies, verify_application
+from src.tools.registry import (
+    audit_arguments,
+    invoke_tool,
+    registered_tools,
+    tool_access,
+    verify_application,
+)
+
+
+def available_tools(permissions, intent="", compact=False):
+    values = []
+    tools = registered_tools()
+    for tool in tools.values():
+        access = tool_access(tool)
+        if access and access.permission in permissions:
+            schema = tool.args_schema.model_json_schema()
+            arguments = schema
+            if compact:
+                arguments = {
+                    "required": schema.get("required", []),
+                    "properties": {
+                        key: {
+                            attribute: value
+                            for attribute, value in specification.items()
+                            if attribute in {"type", "enum", "minimum", "maximum"}
+                        }
+                        for key, specification in schema.get("properties", {}).items()
+                    },
+                }
+            values.append(
+                {
+                    "name": access.name,
+                    "specialists": sorted(access.specialists),
+                    "action": access.action,
+                    "requires_approval": access.requires_approval,
+                    "arguments": arguments,
+                }
+            )
+    return values
+
+
+def bounded_tasks(tasks, run):
+    return list(tasks)[: limits.supervisor_steps]
+
+
+def validated_tasks(tasks, run, evidence_refs, maximum=None, known_identifiers=None):
+    tool_values = registered_tools()
+    validated = []
+    task_limit = max(0, limits.supervisor_steps - len(run.completed_tasks))
+    if maximum is not None:
+        task_limit = min(task_limit, maximum)
+    for planned in bounded_tasks(tasks, run)[:task_limit]:
+        task = planned if isinstance(planned, PlannedTask) else PlannedTask(**planned)
+        calls = []
+        for call in task.tool_calls[: limits.tool_calls_per_task]:
+            tool = tool_values.get(call.tool_name)
+            access = tool_access(tool)
+            if not access or task.specialist not in access.specialists:
+                continue
+            arguments = dict(call.arguments)
+            schema = tool.args_schema.model_json_schema()
+            properties = schema.get("properties", {})
+            if "project_id" in properties:
+                arguments["project_id"] = run.project_id
+            identifiers = {
+                str(value)
+                for key, value in arguments.items()
+                if key != "project_id" and key.endswith("_id") and value
+            }
+            if identifiers.difference(set(known_identifiers or evidence_refs)):
+                continue
+            required = set(schema.get("required", []))
+            if required.difference(arguments):
+                continue
+            try:
+                normalized = tool.args_schema.model_validate(arguments).model_dump(
+                    mode="python", exclude_unset=True
+                )
+            except Exception:
+                continue
+            calls.append(ToolCall(tool_name=call.tool_name, arguments=normalized))
+        validated.append(
+            AgentTask(
+                run_id=run.run_id,
+                project_id=run.project_id,
+                specialist=task.specialist,
+                objective=task.objective,
+                evidence_refs=task.evidence_refs or evidence_refs,
+                constraints=task.constraints,
+                tool_calls=calls,
+            )
+        )
+    return validated
 
 
 def state_run(state):
@@ -154,25 +247,6 @@ async def plan(state):
         known_identifiers=allowed_identifiers,
     )
     tasks = [task for task in tasks if task.tool_calls]
-    fallback_applied = False
-    if not tasks:
-        grounded_tasks = validated_tasks(
-            fallback_tasks(
-                run,
-                evidence_refs,
-                state.get("constraints", {}),
-            ),
-            run,
-            evidence_refs,
-            known_identifiers=allowed_identifiers,
-        )
-        if grounded_tasks:
-            tasks = grounded_tasks
-            fallback_applied = True
-    if fallback_applied:
-        run.observations.append(
-            {"phase": "PLAN", "reason_code": "ROUTING_FALLBACK_APPLIED"}
-        )
     results = []
     if not tasks:
         results.append(
@@ -404,9 +478,9 @@ async def aggregate(state):
             planned_calls = {item.tool_name: item for item in task.tool_calls}
             for action in result.proposals:
                 tool_name = action.get("tool_name")
-                policy = policies().get(tool_name)
+                access = tool_access(registered_tools().get(tool_name))
                 planned = planned_calls.get(tool_name)
-                if not policy or not policy.requires_approval or not planned:
+                if not access or not access.requires_approval or not planned:
                     continue
                 pending_actions.append(
                     {

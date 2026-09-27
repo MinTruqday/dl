@@ -58,6 +58,7 @@ async def run_chat_completion(
                     max_tokens=max_tokens,
                     temperature=temperature,
                     response_schema=response_schema,
+                    timeout_seconds=timeout_seconds,
                 )
             choices = getattr(response, "choices", None)
             if not choices:

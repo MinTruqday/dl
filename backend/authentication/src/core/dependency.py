@@ -1,37 +1,17 @@
 import hmac
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import jwt
 from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
-from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.core.security.access import ALGORITHM, SECRET_KEY
 from src.schemas.identity import SystemRole
-
-
-class CurrentUser(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="ignore")
-
-    id: str = Field(alias="_id")
-    email: str
-    system_role: SystemRole = SystemRole.USER
-    permissions: List[str] = Field(default_factory=list)
-    is_active: bool = True
-    full_name: str = ""
-    slug: str = ""
-    session_id: str = ""
-
-    @field_validator("system_role", mode="before")
-    @classmethod
-    def validate_system_role_case(cls, v: Any):
-        if isinstance(v, str):
-            return v.upper()
-        return v
+from src.schemas.common import CurrentUser
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap")

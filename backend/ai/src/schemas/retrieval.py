@@ -2,12 +2,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.core.policies import document_policy
-
-
-RETRIEVAL_POLICY = document_policy()["retrieval"]
-
-
 class ArtifactFilters(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -25,13 +19,13 @@ class ArtifactFilters(BaseModel):
 
 class RetrieveRequest(BaseModel):
     query: str = Field(
-        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+        min_length=1, max_length=10000
     )
     document_ids: Optional[List[str]] = None
     k: int = Field(
-        default=RETRIEVAL_POLICY["default_result_count"],
+        default=5,
         ge=1,
-        le=RETRIEVAL_POLICY["maximum_candidate_count"],
+        le=100,
     )
     query_vector_override: Optional[List[float]] = None
     requester_id: Optional[str] = None
@@ -41,13 +35,13 @@ class RetrieveRequest(BaseModel):
 
 class CrossDocRetrieveRequest(BaseModel):
     question: str = Field(
-        min_length=1, max_length=RETRIEVAL_POLICY["maximum_query_characters"]
+        min_length=1, max_length=10000
     )
     document_ids: List[str]
     k: int = Field(
-        default=RETRIEVAL_POLICY["default_result_count"],
+        default=5,
         ge=1,
-        le=RETRIEVAL_POLICY["maximum_candidate_count"],
+        le=100,
     )
     requester_id: Optional[str] = None
     is_admin: bool = False

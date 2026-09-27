@@ -2,12 +2,11 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.agents.supervisor.graph import canonical_workflow
-from src.agents.supervisor.policy import routing_policies
 from src.core.dependency import get_current_user, oauth2_scheme
 from src.memory.long_term import long_term_memory
 from src.memory.short_term import run_store
 from src.runtime.limits import limits
-from src.runtime.models import AgentRunRequest, AgentRunStatus, VeriqRunState
+from src.schemas.agent import AgentRunRequest, AgentRunStatus, VeriqRunState
 from src.schemas.auth import CurrentUser
 from src.services.agent_metrics import agentops
 from src.services.inference import model_metadata
@@ -24,8 +23,6 @@ async def create_agent_run(
     token: str = Depends(oauth2_scheme),
     user: CurrentUser = Depends(get_current_user),
 ):
-    if payload.intent and payload.intent not in routing_policies():
-        raise HTTPException(status_code=422, detail={"code": "AGENT_INTENT_INVALID"})
     role, permissions = await project_access(payload.project_id, token)
     run = VeriqRunState(
         project_id=payload.project_id,

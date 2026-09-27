@@ -4,7 +4,7 @@ from typing import Awaitable, Callable, List
 
 from src.core.infrastructure.configuration import settings
 from src.core.model_runtime import run_chat_completion
-from src.core.registry import PromptType, registry
+from src.prompts.catalog import cross_document_query, document_global_summary
 from src.core.security.guardrails import guardrails_engine
 from src.core.security.scanning import security
 from src.prompts.structured import correction_instruction, schema_instruction
@@ -74,7 +74,7 @@ async def structured(
         {"role": "user", "content": "Produce the required output"},
     ]
     messages = base_messages
-    maximum_attempts = 2
+    maximum_attempts = 4
     for attempt in range(maximum_attempts):
         raw = await chat(
             messages,
@@ -91,7 +91,6 @@ async def structured(
                 raise
             messages = [
                 *base_messages,
-                {"role": "assistant", "content": raw[:4000]},
                 {"role": "user", "content": correction_instruction(error)},
             ]
     raise RuntimeError("structured_output_attempts_exhausted")
@@ -106,12 +105,10 @@ def prompt_messages(prompt: str, instruction: str) -> list[dict[str, str]]:
 
 async def decompose_retrieval(question: str, document_ids: list[str]) -> list[str]:
     result = await structured(
-        registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(
-            question=question, document_ids=document_ids
-        ),
+        cross_document_query(question, document_ids),
         CrossDocumentQueries,
         max_tokens=min(1024, 96 * len(document_ids)),
-        timeout_seconds=20,
+        timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
     )
     queries = [value.strip() for value in result.queries if value.strip()]
     if len(queries) != len(document_ids):
@@ -137,9 +134,7 @@ async def summarize_document(text: str) -> str:
         raise ValueError("knowledge_summary_input_unsafe")
     summary = await chat(
         prompt_messages(
-            registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(
-                text=inspected.get("sanitized_text") or text
-            ),
+            document_global_summary(inspected.get("sanitized_text") or text),
             "Produce the requested document summary",
         ),
         max_tokens=512,

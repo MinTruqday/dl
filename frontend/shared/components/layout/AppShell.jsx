@@ -64,19 +64,25 @@ export default function AppShell({ children, requireAuth }) {
   const [searchQuery, setSearchQuery] = useState(routeQuery);
   const [projectPermissions, setProjectPermissions] = useState(null);
   const [aiStream, setAiStream] = useState(null);
+  const aiStreamDismissal = useRef(null);
   const accountRef = useRef(null);
   const mobileTriggerRef = useRef(null);
   const mobileDrawerRef = useRef(null);
   useEffect(() => {
     const updateAiStream = (event) => {
-      if (event.detail?.status === "streaming") {
-        setAiStream(event.detail);
-      } else {
-        setAiStream((value) => (value?.id === event.detail?.id ? null : value));
+      const value = event.detail;
+      if (!value?.id) return;
+      if (aiStreamDismissal.current) window.clearTimeout(aiStreamDismissal.current);
+      setAiStream(value);
+      if (value.status !== "streaming") {
+        aiStreamDismissal.current = window.setTimeout(() => setAiStream(null), 4000);
       }
     };
     window.addEventListener("veriq-ai-stream", updateAiStream);
-    return () => window.removeEventListener("veriq-ai-stream", updateAiStream);
+    return () => {
+      window.removeEventListener("veriq-ai-stream", updateAiStream);
+      if (aiStreamDismissal.current) window.clearTimeout(aiStreamDismissal.current);
+    };
   }, []);
   useEffect(() => {
     setSearchQuery(routeQuery);
@@ -191,8 +197,13 @@ export default function AppShell({ children, requireAuth }) {
           className="fixed bottom-5 right-5 z-[70] min-w-56 rounded-control border border-border bg-surface px-4 py-3 shadow-lg"
           aria-live="polite"
         >
-          <p className="text-sm font-semibold text-ink">AI đang tạo nội dung</p>
-          <p className="mt-1 text-xs text-ink-muted">Đã nhận {aiStream.received} ký tự</p>
+          <p className="text-sm font-semibold text-ink">
+            {aiStream.status === "complete"
+              ? "AI đã hoàn tất xử lý"
+              : aiStream.status === "failed"
+                ? "AI không thể hoàn tất xử lý"
+                : "AI đang xử lý nội dung"}
+          </p>
           <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-quiet">
             <div className="h-full w-2/3 animate-pulse rounded-full bg-brand" />
           </div>

@@ -1,8 +1,6 @@
 import os
 
-from pydantic import BaseModel
-
-class Settings(BaseModel):
+class Settings:
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
     SECRET_KEY: str = os.environ["SECRET_KEY"]

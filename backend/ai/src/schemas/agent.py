@@ -169,3 +169,29 @@ class ApprovalDecision(BaseModel):
     expected_revision: int = Field(ge=1)
     note: str = Field(default="", max_length=2000)
     action_edits: list[ApprovalActionEdit] = Field(default_factory=list, max_length=100)
+
+
+class TestingSkillInput(BaseModel):
+    project_id: str = Field(description="Testing project identifier")
+    instruction: str = Field(default="", description="Runtime instruction for the current request")
+
+
+class ToolVerification(BaseModel):
+    path: str
+    identifier: str
+    expected: dict[str, Any]
+
+
+class ToolAccess(BaseModel):
+    name: str
+    specialists: set[SpecialistName]
+    action: Literal["READ", "PROPOSE", "MUTATE"]
+    permission: str
+    requires_approval: bool
+    verification: ToolVerification | None = None
+
+
+class ToolDecision(BaseModel):
+    allowed: bool
+    reason_code: str
+    access: ToolAccess | None = None

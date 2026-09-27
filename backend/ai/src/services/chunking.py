@@ -7,7 +7,6 @@ from uuid import NAMESPACE_URL, uuid5
 from loguru import logger
 
 from src.services.embedding import embedder
-from src.core.policies import document_policy
 
 
 class ChunkingService:
@@ -19,19 +18,18 @@ class ChunkingService:
         semantic_threshold: float | None = None,
         soft_threshold: float | None = None,
     ):
-        policy = document_policy()["chunking"]
-        min_chars = min_chars or policy["minimum_characters"]
-        target_chars = target_chars or policy["target_characters"]
-        max_chars = max_chars or policy["maximum_characters"]
+        min_chars = min_chars or 200
+        target_chars = target_chars or 900
+        max_chars = max_chars or 1600
         semantic_threshold = (
             semantic_threshold
             if semantic_threshold is not None
-            else policy["semantic_similarity_minimum"]
+            else 0.55
         )
         soft_threshold = (
             soft_threshold
             if soft_threshold is not None
-            else policy["soft_boundary_similarity_minimum"]
+            else 0.72
         )
         if not 0 < min_chars <= target_chars <= max_chars:
             raise ValueError("chunk_size_bounds_invalid")
@@ -40,10 +38,6 @@ class ChunkingService:
         self.max_chars = max_chars
         self.semantic_threshold = semantic_threshold
         self.soft_threshold = soft_threshold
-        self.structural_boundaries = set(policy["structural_boundaries"])
-        self.paragraph_pattern = policy["paragraph_pattern"]
-        self.heading_pattern = policy["heading_pattern"]
-        self.sentence_boundary_pattern = policy["sentence_boundary_pattern"]
         logger.info("Initializing unified document ChunkingService")
 
     async def chunk_document(
@@ -85,7 +79,7 @@ class ChunkingService:
                     "type": item_type,
                     "level": item.get("level"),
                     "page_no": item.get("page_no"),
-                    "hard_boundary": item_type in self.structural_boundaries,
+                    "hard_boundary": item_type in {"title", "section_header", "chapter", "heading"},
                 }
             )
             previous_text = text
@@ -105,11 +99,11 @@ class ChunkingService:
 
     def _markdown_units(self, markdown: str) -> List[tuple[str, str]]:
         units = []
-        for part in re.split(self.paragraph_pattern, markdown):
+        for part in re.split(r"\n\s*\n+", markdown):
             text = part.strip()
             if not text:
                 continue
-            item_type = "section_header" if re.match(self.heading_pattern, text) else "text"
+            item_type = "section_header" if re.match(r"^#{1,6}\s+", text) else "text"
             units.append((text, item_type))
         return units
 
@@ -190,7 +184,7 @@ class ChunkingService:
 
         sentences = [
             sentence.strip()
-            for sentence in re.split(self.sentence_boundary_pattern, text)
+            for sentence in re.split(r"(?<=[.!?。！？])\s+", text)
             if sentence.strip()
         ]
         pieces: List[str] = []

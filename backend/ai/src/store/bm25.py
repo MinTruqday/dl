@@ -4,9 +4,6 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.core.policies import document_policy
-
-
 class BM25Store:
     def __init__(self):
         self._documents: Dict[str, Dict] = {}
@@ -16,11 +13,7 @@ class BM25Store:
 
     @staticmethod
     def _tokenize(text: str) -> List[str]:
-        return re.findall(
-            document_policy()["retrieval"]["token_pattern"],
-            text.casefold(),
-            flags=re.UNICODE,
-        )
+        return re.findall(r"\w+", text.casefold(), flags=re.UNICODE)
 
     def _rebuild(self) -> None:
         from rank_bm25 import BM25Okapi

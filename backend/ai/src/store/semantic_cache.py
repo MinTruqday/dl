@@ -4,15 +4,11 @@ from typing import Any
 
 from loguru import logger
 
-from src.core.policies import document_policy
-
-
 class SemanticCache:
     def __init__(self):
-        policy = document_policy()["semantic_cache"]
-        self.similarity_minimum = float(policy["similarity_minimum"])
-        self.ttl_seconds = int(policy["ttl_seconds"])
-        self.maximum_entries = int(policy["maximum_entries"])
+        self.similarity_minimum = 0.9
+        self.ttl_seconds = 86400
+        self.maximum_entries = 512
         self._entries: dict[str, dict[str, Any]] = {}
 
     @staticmethod

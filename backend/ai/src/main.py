@@ -22,7 +22,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
-from src.runtime.models import AgentRunStatus
+from src.schemas.agent import AgentRunStatus
 from src.services.agent_metrics import agentops
 from src.services.evaluation import evaluation
 from src.services.retrieval import initialize_retrieval

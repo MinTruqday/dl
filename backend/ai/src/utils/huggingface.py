@@ -16,6 +16,7 @@ from pydantic import Field
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from src.core.infrastructure.configuration import settings
+from src.core.model_runtime import run_chat_completion
 from src.prompts.structured import (
     correction_instruction,
     schema_instruction,
@@ -109,23 +110,21 @@ class HFInferenceChat(BaseChatModel):
         from src.utils.model_provider import model_client
 
         client = self.client or model_client
-        response = await client.chat_completion(**chat_kwargs)
-        content = response.choices[0].message.content
-        from src.services.token_accounting import record_usage
-
-        record_usage(
-            response,
-            sum(len(str(message.get("content", ""))) for message in hf_messages),
-            len(str(content or "")),
+        content = await run_chat_completion(
+            client=client,
+            messages=hf_messages,
+            model=effective_model,
+            max_tokens=chat_kwargs["max_tokens"],
+            temperature=chat_kwargs["temperature"],
+            attempts=1,
+            timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
         )
         return ChatResult(
             generations=[
                 ChatGeneration(
                     message=AIMessage(
                         content=content,
-                        response_metadata={
-                            "model": str(getattr(response, "model", effective_model))
-                        },
+                        response_metadata={"model": effective_model},
                     )
                 )
             ]

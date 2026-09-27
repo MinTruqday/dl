@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from src.repositories.memory import memory_repository
-from src.runtime.models import VeriqRunState
+from src.schemas.agent import VeriqRunState
 
 
 class RunStore:

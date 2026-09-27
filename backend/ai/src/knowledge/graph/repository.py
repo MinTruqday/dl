@@ -1,5 +1,4 @@
 from src.knowledge.graph.client import graph_client
-from src.knowledge.graph.schema import ARTIFACT_LABELS, RELATIONSHIP_TYPES
 
 
 class GraphRepository:
@@ -8,69 +7,81 @@ class GraphRepository:
             "CREATE CONSTRAINT artifact_scope IF NOT EXISTS FOR (artifact:Artifact) REQUIRE artifact.scope_id IS UNIQUE"
         )
 
-    async def upsert_artifact(self, project_id, label, artifact_id, properties=None):
-        if label not in ARTIFACT_LABELS:
-            raise ValueError("GRAPH_LABEL_INVALID")
+    async def upsert_artifact(
+        self, project_id, artifact_type, artifact_id, scope_id, properties=None, reference_ids=None
+    ):
         values = dict(properties or {})
         values.update(
             {
                 "project_id": project_id,
                 "artifact_id": artifact_id,
-                "artifact_type": label,
-                "scope_id": f"{project_id}:{label}:{artifact_id}",
+                "artifact_type": artifact_type,
+                "scope_id": scope_id,
+                "reference_ids": list(dict.fromkeys(str(value) for value in reference_ids or [])),
             }
         )
-        query = (
-            f"MERGE (artifact:Artifact:{label} {{scope_id: $scope_id}}) "
-            "SET artifact += $properties RETURN artifact.scope_id AS scope_id"
-        )
         return await graph_client.execute(
-            query,
-            {"scope_id": values["scope_id"], "properties": values},
+            "MERGE (artifact:Artifact {scope_id: $scope_id}) "
+            "SET artifact += $properties RETURN artifact.scope_id AS scope_id",
+            {"scope_id": scope_id, "properties": values},
         )
 
-    async def link(self, project_id, source_scope_id, relationship, target_scope_id):
-        if relationship not in RELATIONSHIP_TYPES:
-            raise ValueError("GRAPH_RELATIONSHIP_INVALID")
-        query = (
-            "MATCH (source:Artifact {scope_id: $source_scope_id, project_id: $project_id}) "
-            "MATCH (target:Artifact {scope_id: $target_scope_id, project_id: $project_id}) "
-            f"MERGE (source)-[relation:{relationship}]->(target) "
-            "RETURN type(relation) AS relationship"
-        )
+    async def link(self, project_id, source_scope_id, target_identifier):
         return await graph_client.execute(
-            query,
+            "MATCH (source:Artifact {scope_id: $source_scope_id, project_id: $project_id}) "
+            "MATCH (target:Artifact {project_id: $project_id}) "
+            "WHERE source.scope_id <> target.scope_id "
+            "AND $target_identifier IN [target.artifact_id, target.artifact_version_id] "
+            "MERGE (source)-[relation:RELATED]->(target) "
+            "RETURN type(relation) AS relationship",
             {
                 "project_id": project_id,
                 "source_scope_id": source_scope_id,
-                "target_scope_id": target_scope_id,
+                "target_identifier": str(target_identifier),
             },
         )
 
+    async def reconcile(self, project_id, scope_id, identifiers):
+        values = list(dict.fromkeys(str(value) for value in identifiers if value))
+        for identifier in values:
+            await self.link(project_id, scope_id, identifier)
+        if not values:
+            return []
+        return await graph_client.execute(
+            "MATCH (target:Artifact {scope_id: $scope_id, project_id: $project_id}) "
+            "MATCH (source:Artifact {project_id: $project_id}) "
+            "WHERE source.scope_id <> target.scope_id "
+            "AND any(reference IN coalesce(source.reference_ids, []) WHERE reference IN $identifiers) "
+            "MERGE (source)-[relation:RELATED]->(target) "
+            "RETURN count(relation) AS relationships",
+            {"project_id": project_id, "scope_id": scope_id, "identifiers": values},
+        )
+
     async def search(self, project_id, query, limit=20):
-        statement = """
+        matches = await graph_client.read(
+            """
 MATCH path=(source:Artifact {project_id: $project_id})-[*0..3]-(related:Artifact {project_id: $project_id})
 WHERE toLower(coalesce(source.text, '') + ' ' + coalesce(source.title, '') + ' ' + coalesce(source.artifact_id, '')) CONTAINS toLower($query)
-RETURN DISTINCT source.artifact_type AS artifact_type,
-       source.artifact_id AS artifact_id,
-       properties(source)[$artifact_version_property] AS artifact_version_id,
-       coalesce(properties(source)[$authority_property], 'graph') AS authority,
-       coalesce(source.text, source.title, '') AS text,
+RETURN DISTINCT properties(source) AS artifact,
        [node IN nodes(path) | node.scope_id] AS relationship_path,
        length(path) AS distance
 ORDER BY distance ASC
 LIMIT $limit
-"""
-        return await graph_client.read(
-            statement,
+""",
             {
                 "project_id": project_id,
                 "query": query,
                 "limit": limit,
-                "artifact_version_property": "artifact_version_id",
-                "authority_property": "authority",
             },
         )
+        return [
+            {
+                **(match.get("artifact") or {}),
+                "relationship_path": match.get("relationship_path") or [],
+                "distance": match.get("distance") or 0,
+            }
+            for match in matches
+        ]
 
 
 graph_repository = GraphRepository()

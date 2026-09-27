@@ -5,7 +5,7 @@ from langchain_core.runnables import RunnableConfig
 from src.knowledge.evidence import package
 from src.memory.long_term import long_term_memory
 from src.runtime.limits import limits
-from src.runtime.models import EvidenceItem
+from src.schemas.agent import EvidenceItem
 
 
 async def hybrid_evidence(project_id, query, requester_id, token=None, limit=None):
