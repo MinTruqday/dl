@@ -88,7 +88,69 @@ function lifecycleFields() {
   ];
 }
 
-export default function RequirementSourceDocumentsPanel({ items, can, ask, reload, onError }) {
+export default function RequirementSourceDocumentsPanel({
+  items,
+  members,
+  can,
+  ask,
+  reload,
+  onError,
+}) {
+  const changeAccess = async (item) => {
+    const answer = await ask({
+      title: "Quyền xem tài liệu",
+      description: item.filename,
+      confirmLabel: "Lưu quyền xem",
+      fields: [
+        {
+          name: "visibility",
+          label: "Phạm vi xem",
+          initialValue: item.visibility || "private",
+          options: [
+            { value: "private", label: "Riêng tư chỉ người tải lên" },
+            { value: "project", label: "Toàn bộ thành viên dự án" },
+            { value: "shared", label: "Chọn thành viên dự án" },
+          ],
+        },
+        {
+          name: "shared_with",
+          label: "Thành viên được xem khi chọn chia sẻ",
+          initialValue: item.shared_with || [],
+          multiple: true,
+          options: members.map((member) => ({
+            value: member.user_id,
+            label: member.user_label || member.user_id,
+          })),
+        },
+      ],
+    });
+    if (!answer) return;
+    if (answer.visibility === "shared" && answer.shared_with.length === 0) {
+      onError("Chọn ít nhất một thành viên để chia sẻ tài liệu");
+      return;
+    }
+    try {
+      await testingApi.updateRequirementDocumentAccess(item._id, {
+        expected_revision: item.revision,
+        visibility: answer.visibility,
+        shared_with: answer.visibility === "shared" ? answer.shared_with : [],
+      });
+      await reload();
+    } catch (reason) {
+      onError(messageOf(reason));
+    }
+  };
+  const toggleAiRead = async (item) => {
+    try {
+      await testingApi.updateRequirementDocumentAiRead(item._id, {
+        expected_revision: item.revision,
+        ai_enabled: !item.ai_enabled,
+      });
+      await reload();
+    } catch (reason) {
+      onError(messageOf(reason));
+    }
+  };
   const classify = async (item) => {
     const answer = await ask({
       title: "Phân loại tài liệu nguồn",
@@ -191,6 +253,21 @@ export default function RequirementSourceDocumentsPanel({ items, can, ask, reloa
             label: "Trạng thái",
             render: (item) => <StatusPill value={item.status} />,
           },
+          {
+            key: "visibility",
+            label: "Quyền xem",
+            render: (item) =>
+              item.visibility === "project"
+                ? "Toàn dự án"
+                : item.visibility === "shared"
+                  ? "Đã chọn thành viên"
+                  : "Riêng tư",
+          },
+          {
+            key: "ai_enabled",
+            label: "AI đọc",
+            render: (item) => (item.ai_enabled ? "Đã cho phép" : "Chưa cho phép"),
+          },
           { key: "revision", label: "Phiên bản" },
           {
             key: "actions",
@@ -214,6 +291,24 @@ export default function RequirementSourceDocumentsPanel({ items, can, ask, reloa
                       Lập chỉ mục lại
                     </button>
                   </>
+                )}
+                {item.status !== "ARCHIVED" && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => toggleAiRead(item)}
+                  >
+                    {item.ai_enabled ? "Ngừng cho AI đọc" : "Cho AI đọc"}
+                  </button>
+                )}
+                {item.status !== "ARCHIVED" && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => changeAccess(item)}
+                  >
+                    Quyền xem
+                  </button>
                 )}
                 {can("requirement_document.download") && (
                   <button className="secondary-button" type="button" onClick={() => download(item)}>

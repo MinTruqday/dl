@@ -48,7 +48,20 @@ async def index_artifact(
         return False
 
 
-async def search_project_with_status(project_id, query, artifact_types, limit) -> dict:
+async def remove_artifact(project_id, artifact_version_id) -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.delete(
+                f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/doi-tuong/{artifact_version_id}",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+        return True
+    except httpx.HTTPError:
+        return False
+
+
+async def search_project_with_status(project_id, query, artifact_types, limit, user) -> dict:
     try:
         async with httpx.AsyncClient(
             timeout=20
@@ -56,7 +69,13 @@ async def search_project_with_status(project_id, query, artifact_types, limit) -
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/tim-kiem",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
-                json={"query": query, "artifact_types": artifact_types or [], "limit": limit},
+                json={
+                    "query": query,
+                    "artifact_types": artifact_types or [],
+                    "limit": limit,
+                    "requester_id": user.id,
+                    "is_admin": user.is_system_admin,
+                },
             )
             response.raise_for_status()
             return response.json()
@@ -68,6 +87,6 @@ async def search_project_with_status(project_id, query, artifact_types, limit) -
         }
 
 
-async def search_project(project_id, query, artifact_types, limit) -> list:
-    result = await search_project_with_status(project_id, query, artifact_types, limit)
+async def search_project(project_id, query, artifact_types, limit, user) -> list:
+    result = await search_project_with_status(project_id, query, artifact_types, limit, user)
     return result.get("items", [])

@@ -10,6 +10,9 @@ export default function RequirementImportModal({
   error,
   upload,
   setUpload,
+  uploadAccess,
+  setUploadAccess,
+  members,
   onUploadPreview,
   importValue,
   setImportValue,
@@ -27,6 +30,14 @@ export default function RequirementImportModal({
   onRetrySource,
 }) {
   const updateImportValue = (patch) => setImportValue((value) => ({ ...value, ...patch }));
+  const updateSharedWith = (setAccess, access, userId, checked) => {
+    setAccess({
+      ...access,
+      shared_with: checked
+        ? [...access.shared_with, userId]
+        : access.shared_with.filter((value) => value !== userId),
+    });
+  };
 
   return (
     <Modal
@@ -49,6 +60,42 @@ export default function RequirementImportModal({
             onChange={(event) => setUpload(event.target.files?.[0] || null)}
           />
         </label>
+        <label className="field-label">
+          Quyền xem tài liệu
+          <select
+            className="apple-input mt-2"
+            value={uploadAccess.visibility}
+            onChange={(event) =>
+              setUploadAccess({ visibility: event.target.value, shared_with: [] })
+            }
+          >
+            <option value="private">Riêng tư chỉ người tải lên</option>
+            <option value="project">Toàn bộ thành viên dự án</option>
+            <option value="shared">Chọn thành viên dự án</option>
+          </select>
+        </label>
+        {uploadAccess.visibility === "shared" && (
+          <fieldset className="space-y-2">
+            <legend className="field-label">Thành viên được xem</legend>
+            {members.map((member) => (
+              <label className="flex items-center gap-2 text-sm" key={member.user_id}>
+                <input
+                  type="checkbox"
+                  checked={uploadAccess.shared_with.includes(member.user_id)}
+                  onChange={(event) =>
+                    updateSharedWith(
+                      setUploadAccess,
+                      uploadAccess,
+                      member.user_id,
+                      event.target.checked,
+                    )
+                  }
+                />
+                {member.user_label || member.user_id}
+              </label>
+            ))}
+          </fieldset>
+        )}
         <button className="secondary-button" type="submit" disabled={!upload}>
           Tải lên và xem trước
         </button>
@@ -62,6 +109,41 @@ export default function RequirementImportModal({
             onChange={(event) => updateImportValue({ filename: event.target.value })}
           />
         </label>
+        <label className="field-label">
+          Quyền xem tài liệu
+          <select
+            className="apple-input mt-2"
+            value={importValue.visibility}
+            onChange={(event) =>
+              updateImportValue({ visibility: event.target.value, shared_with: [] })
+            }
+          >
+            <option value="private">Riêng tư chỉ người tạo</option>
+            <option value="project">Toàn bộ thành viên dự án</option>
+            <option value="shared">Chọn thành viên dự án</option>
+          </select>
+        </label>
+        {importValue.visibility === "shared" && (
+          <fieldset className="space-y-2">
+            <legend className="field-label">Thành viên được xem</legend>
+            {members.map((member) => (
+              <label className="flex items-center gap-2 text-sm" key={member.user_id}>
+                <input
+                  type="checkbox"
+                  checked={importValue.shared_with.includes(member.user_id)}
+                  onChange={(event) =>
+                    updateImportValue({
+                      shared_with: event.target.checked
+                        ? [...importValue.shared_with, member.user_id]
+                        : importValue.shared_with.filter((value) => value !== member.user_id),
+                    })
+                  }
+                />
+                {member.user_label || member.user_id}
+              </label>
+            ))}
+          </fieldset>
+        )}
         <label className="field-label">
           Định dạng
           <select

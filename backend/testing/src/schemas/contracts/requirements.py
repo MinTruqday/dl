@@ -134,6 +134,17 @@ class ImportCreate(BaseModel):
     filename: str = Field(min_length=1, max_length=300)
     format: Literal["pdf", "docx", "md", "txt", "csv", "xlsx", "openapi", "postman"]
     content: str | dict[str, Any] | list[Any]
+    visibility: Literal["private", "project", "shared"] = "private"
+    shared_with: list[str] = Field(default_factory=list, max_length=100)
+    ai_enabled: bool = False
+
+    @model_validator(mode="after")
+    def validate_access(self):
+        if self.visibility == "shared" and not self.shared_with:
+            raise ValueError("Tài liệu chia sẻ phải có ít nhất một thành viên")
+        if self.visibility != "shared" and self.shared_with:
+            raise ValueError("Chỉ tài liệu chia sẻ mới có danh sách thành viên")
+        return self
 
 
 class RequirementExtractionInput(BaseModel):
@@ -161,6 +172,25 @@ class RequirementDocumentPatch(BaseModel):
     source_version: str | None = Field(default=None, max_length=100)
     effective_from: datetime | None = None
     tags: list[str] | None = Field(default=None, max_length=100)
+
+
+class RequirementDocumentAccessPatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    visibility: Literal["private", "project", "shared"]
+    shared_with: list[str] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def validate_access(self):
+        if self.visibility == "shared" and not self.shared_with:
+            raise ValueError("Tài liệu chia sẻ phải có ít nhất một thành viên")
+        if self.visibility != "shared" and self.shared_with:
+            raise ValueError("Chỉ tài liệu chia sẻ mới có danh sách thành viên")
+        return self
+
+
+class RequirementDocumentAIReadPatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    ai_enabled: bool
 
 
 class KnowledgeSourceCreate(BaseModel):

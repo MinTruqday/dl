@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends
 
 from src.core.dependency import verify_internal_token
 from src.schemas.project import ProjectArtifactIndexRequest, ProjectKnowledgeSearchRequest
-from src.services.project_knowledge import index_project_artifact, search_project_knowledge
+from src.services.project_knowledge import (
+    index_project_artifact,
+    remove_project_artifact,
+    search_project_knowledge,
+)
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
@@ -13,6 +17,11 @@ router = APIRouter(dependencies=[Depends(verify_internal_token)])
 )
 async def index_artifact(project_id: str, req: ProjectArtifactIndexRequest):
     return await index_project_artifact(project_id, req)
+
+
+@router.delete("/du-an/{project_id}/doi-tuong/{artifact_version_id}")
+async def remove_artifact(project_id: str, artifact_version_id: str):
+    return await remove_project_artifact(project_id, artifact_version_id)
 
 
 @router.post(

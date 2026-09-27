@@ -123,7 +123,7 @@ class IdentityRepository:
                 "refresh_token_hash": IdentityRepository._token_hash(refresh_token),
                 "created_at": now,
                 "last_refreshed_at": now,
-                "expires_at": now + timedelta(days=7),
+                "expires_at": now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
                 "revoked_at": None,
             },
         )
@@ -227,7 +227,7 @@ class IdentityRepository:
         cache_key = f"user_sessions:{user_id}"
         await redis.sadd(cache_key, session_id)
         return await redis.get_client().expire(
-            cache_key, settings.refresh_token_expire_seconds
+            cache_key, settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
         )
 
     @staticmethod

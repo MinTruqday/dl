@@ -57,10 +57,14 @@ export default function RequirementsPage({ project, section }) {
     filename: "requirements.md",
     format: "md",
     content: "",
+    visibility: "private",
+    shared_with: [],
+    ai_enabled: false,
   });
   const [preview, setPreview] = useState(null);
   const [selectedIndexes, setSelectedIndexes] = useState([]);
   const [upload, setUpload] = useState(null);
+  const [uploadAccess, setUploadAccess] = useState({ visibility: "private", shared_with: [] });
   const [sourceDocument, setSourceDocument] = useState(null);
   const [sourceDocuments, setSourceDocuments] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -417,7 +421,12 @@ export default function RequirementsPage({ project, section }) {
     if (!upload) return;
     const format = upload.name.split(".").pop().toLowerCase();
     try {
-      const document = await testingApi.uploadRequirementDocument(project._id, upload, format);
+      const document = await testingApi.uploadRequirementDocument(
+        project._id,
+        upload,
+        format,
+        uploadAccess,
+      );
       setSourceDocument(document);
       if (document.status === "PARSE_FAILED") {
         setPreview(null);
@@ -1017,6 +1026,7 @@ export default function RequirementsPage({ project, section }) {
           {can("requirement_document.read") && (
             <RequirementSourceDocumentsPanel
               items={sourceDocuments}
+              members={members}
               can={can}
               ask={ask}
               reload={load}
@@ -1043,6 +1053,9 @@ export default function RequirementsPage({ project, section }) {
                 error={error}
                 upload={upload}
                 setUpload={setUpload}
+                uploadAccess={uploadAccess}
+                setUploadAccess={setUploadAccess}
+                members={members}
                 onUploadPreview={uploadPreview}
                 importValue={importValue}
                 setImportValue={setImportValue}

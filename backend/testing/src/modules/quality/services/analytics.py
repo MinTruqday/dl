@@ -134,7 +134,9 @@ class AnalyticsService:
     @staticmethod
     async def search_knowledge(project_id, payload, user):
         project = await get_project(project_id, user, "knowledge.read")
-        dense_result = await search_project_with_status(project_id, payload.query, payload.artifact_types, payload.limit)
+        dense_result = await search_project_with_status(
+            project_id, payload.query, payload.artifact_types, payload.limit, user
+        )
         dense = dense_result["items"]
         retrieval_policy = domain_policy("knowledge_retrieval")
         pattern = re.escape(payload.query)
@@ -150,6 +152,17 @@ class AnalyticsService:
             }
             if collection == "requirement_documents":
                 source_query["status"] = {"$ne": ANALYTICS_POLICY["archived_status"]}
+                if not user.is_system_admin:
+                    source_query["$and"] = [
+                        source_query.pop("$or"),
+                        {
+                            "$or": [
+                                {"created_by": user.id},
+                                {"visibility": "project"},
+                                {"visibility": "shared", "shared_with": user.id},
+                            ]
+                        },
+                    ]
             documents = await analytics_repository.list_records(
                 collection, source_query, payload.limit
             )
@@ -195,9 +208,16 @@ class AnalyticsService:
             references = dense_ids_by_type.get(artifact_type, set())
             if not references:
                 continue
+            dense_query = {"project_id": project_id, "_id": {"$in": list(references)}}
+            if collection == "requirement_documents" and not user.is_system_admin:
+                dense_query["$or"] = [
+                    {"created_by": user.id},
+                    {"visibility": "project"},
+                    {"visibility": "shared", "shared_with": user.id},
+                ]
             documents = await analytics_repository.list_records(
                 collection,
-                {"project_id": project_id, "_id": {"$in": list(references)}},
+                dense_query,
                 len(references),
                 projection={"_id": 1},
             )

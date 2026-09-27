@@ -45,7 +45,7 @@ def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest)
         "authority": req.authority,
         "version": req.version,
         "module": req.module,
-        "visibility": "project",
+        "visibility": req.metadata.get("visibility", "project"),
         "requirement_ids": req.metadata.get(
             "requirement_ids",
             [req.artifact_id] if req.artifact_type == "requirement_version" else [],
@@ -53,7 +53,9 @@ def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest)
         "source_document_id": req.metadata.get("source_document_id"),
         "page": req.metadata.get("page"),
         "section": req.metadata.get("section") or req.title,
-        "owner_id": req.metadata.get("owner_id"),
+        "owner_id": req.metadata.get("owner_id") or req.metadata.get("created_by"),
+        "creator_id": req.metadata.get("created_by"),
+        "shared_with": req.metadata.get("shared_with", []),
         "source_hash": req.metadata.get("source_hash")
         or hashlib.sha256(req.text.encode("utf-8")).hexdigest(),
         "indexed_at": datetime.now(timezone.utc).isoformat(),
@@ -116,8 +118,25 @@ async def index_project_artifact(project_id: str, req: ProjectArtifactIndexReque
     }
 
 
+async def remove_project_artifact(project_id: str, artifact_version_id: str):
+    point_ids = await vector_store.ids_by_artifact_version(project_id, artifact_version_id)
+    await vector_store.delete_ids(point_ids)
+    await bm25_store.delete_ids(point_ids)
+    for key in tuple(SEARCH_CACHE):
+        if key[0] == project_id:
+            SEARCH_CACHE.pop(key, None)
+    return {"status": "removed", "artifact_version_id": artifact_version_id}
+
+
 async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchRequest):
-    cache_key = (project_id, req.query, tuple(sorted(req.artifact_types or [])), req.limit)
+    cache_key = (
+        project_id,
+        req.query,
+        tuple(sorted(req.artifact_types or [])),
+        req.limit,
+        req.requester_id,
+        req.is_admin,
+    )
     cached = SEARCH_CACHE.get(cache_key)
     if cached and time.monotonic() - cached[0] < SEARCH_CACHE_TTL_SECONDS:
         return cached[1]
@@ -130,8 +149,8 @@ async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchR
         documents = await retriever.retrieve(
             query=req.query,
             k=req.limit,
-            requester_id=None,
-            is_admin=True,
+            requester_id=req.requester_id,
+            is_admin=req.is_admin,
             metadata_filters=filters,
         )
     except RetrievalUnavailableError as error:

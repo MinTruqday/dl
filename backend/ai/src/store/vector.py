@@ -58,6 +58,7 @@ class VectorStore:
                 "status",
                 "document_id",
                 "visibility",
+                "shared_with",
                 "source_version",
                 "content_type",
                 "conflict_key",
@@ -113,12 +114,16 @@ class VectorStore:
             match = MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value)
             must.append(FieldCondition(key=key, match=match))
         if not is_admin:
-            access_conditions = [FieldCondition(key="visibility", match=MatchValue(value="public"))]
+            access_conditions = [
+                FieldCondition(key="visibility", match=MatchValue(value="public")),
+                FieldCondition(key="visibility", match=MatchValue(value="project")),
+            ]
             if requester_id:
                 access_conditions.extend(
                     [
                         FieldCondition(key="owner_id", match=MatchValue(value=str(requester_id))),
                         FieldCondition(key="creator_id", match=MatchValue(value=str(requester_id))),
+                        FieldCondition(key="shared_with", match=MatchAny(any=[str(requester_id)])),
                     ]
                 )
             must.append(Filter(should=access_conditions))

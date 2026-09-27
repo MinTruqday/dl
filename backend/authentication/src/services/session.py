@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from loguru import logger
 
+from src.core.infrastructure.configuration import settings
 from src.core.policies import platform_policy
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository as IdentityRepository
@@ -19,7 +20,7 @@ SESSION_POLICY = platform_policy()["session"]
 class SessionService:
     @staticmethod
     def refresh_cookie_seconds():
-        return 7 * 24 * 60 * 60
+        return settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
     @staticmethod
     def access_token_for_user(user_doc: dict, session_id: str):

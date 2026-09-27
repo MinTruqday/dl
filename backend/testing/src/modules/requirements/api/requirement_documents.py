@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 
@@ -8,6 +10,8 @@ from src.schemas.contracts.requirements import (
     ImportCreate,
     KnowledgeSourceCreate,
     RequirementDocumentPatch,
+    RequirementDocumentAccessPatch,
+    RequirementDocumentAIReadPatch,
     RequirementExtractionInput,
     RequirementParseRetry,
 )
@@ -21,6 +25,8 @@ from src.modules.requirements.services.requirement_documents import (
     restore_requirement_document_record,
     retry_requirement_document_parse_record,
     update_requirement_document_record,
+    update_requirement_document_access,
+    update_requirement_document_ai_read,
     upload_requirement_document_record,
 )
 from src.modules.requirements.services.requirement_import_workflow import extract_requirement_candidates
@@ -49,12 +55,24 @@ async def create_requirement_document(
 async def upload_requirement_document(
     project_id: str,
     format: str = Form(),
+    visibility: str = Form(default="private"),
+    shared_with: str = Form(default="[]"),
     file: UploadFile = File(),
     user: CurrentUser = Depends(get_current_user),
 ):
     if format not in supported_requirement_formats():
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_IMPORT_FORMAT"})
     data = await file.read(26214401)
+    try:
+        recipients = json.loads(shared_with)
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=422, detail={"code": "DOCUMENT_RECIPIENTS_INVALID"}) from error
+    if visibility not in {"private", "project", "shared"} or not isinstance(recipients, list):
+        raise HTTPException(status_code=422, detail={"code": "DOCUMENT_ACCESS_INVALID"})
+    if visibility == "shared" and not recipients:
+        raise HTTPException(status_code=422, detail={"code": "DOCUMENT_RECIPIENTS_REQUIRED"})
+    if visibility != "shared" and recipients:
+        raise HTTPException(status_code=422, detail={"code": "DOCUMENT_RECIPIENTS_UNEXPECTED"})
     result = await upload_requirement_document_record(
         project_id,
         format,
@@ -62,6 +80,8 @@ async def upload_requirement_document(
         file.content_type,
         data,
         user,
+        visibility,
+        recipients,
     )
     return envelope(
         result.data,
@@ -148,6 +168,26 @@ async def update_requirement_document_metadata(
         status=result.status,
         degraded_mode=result.degraded_mode,
     )
+
+
+@router.patch("/tai-lieu-yeu-cau/{document_id}/quyen-truy-cap")
+async def update_requirement_document_access_control(
+    document_id: str,
+    payload: RequirementDocumentAccessPatch,
+    user: CurrentUser = Depends(get_current_user),
+):
+    result = await update_requirement_document_access(document_id, payload, user)
+    return envelope(result.data, revision=result.data["revision"])
+
+
+@router.patch("/tai-lieu-yeu-cau/{document_id}/ai-doc")
+async def update_requirement_document_ai_read_access(
+    document_id: str,
+    payload: RequirementDocumentAIReadPatch,
+    user: CurrentUser = Depends(get_current_user),
+):
+    result = await update_requirement_document_ai_read(document_id, payload, user)
+    return envelope(result.data, revision=result.data["revision"])
 
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/lap-chi-muc-lai", status_code=202)

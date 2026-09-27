@@ -102,10 +102,12 @@ export const designTestingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  uploadRequirementDocument: (id, file, format) => {
+  uploadRequirementDocument: (id, file, format, access = {}) => {
     const body = new FormData();
     body.append("format", format);
     body.append("file", file);
+    body.append("visibility", access.visibility || "private");
+    body.append("shared_with", JSON.stringify(access.shared_with || []));
     return testingRequest(`/du-an/${id}/tai-lieu-yeu-cau/tai-len`, { method: "POST", body });
   },
   listRequirementDocuments: (id, query = "") =>
@@ -138,6 +140,16 @@ export const designTestingApi = {
   getRequirementDocument: (id) => testingRequest(`/tai-lieu-yeu-cau/${id}`),
   updateRequirementDocument: (id, payload) =>
     testingRequest(`/tai-lieu-yeu-cau/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  updateRequirementDocumentAccess: (id, payload) =>
+    testingRequest(`/tai-lieu-yeu-cau/${id}/quyen-truy-cap`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  updateRequirementDocumentAiRead: (id, payload) =>
+    testingRequest(`/tai-lieu-yeu-cau/${id}/ai-doc`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
