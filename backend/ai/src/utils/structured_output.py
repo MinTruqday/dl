@@ -84,7 +84,11 @@ def extract_json_value(text: Any) -> Any:
 def normalize_schema_collections(value: Any, schema: Type[Any]) -> Any:
     if not isinstance(value, dict) or not hasattr(schema, "model_fields"):
         return value
-    normalized = dict(value)
+    normalized = {
+        name: item
+        for name, item in value.items()
+        if name in schema.model_fields
+    }
     for name, field in schema.model_fields.items():
         if name not in normalized:
             continue
@@ -101,6 +105,16 @@ def normalize_annotation_value(value: Any, annotation: Any) -> Any:
         if isinstance(value, list) and arguments:
             return [normalize_annotation_value(item, arguments[0]) for item in value]
         return value
+    if origin is dict:
+        if not isinstance(value, dict) or len(arguments) != 2:
+            return value
+        value_annotation = arguments[1]
+        if value_annotation is Any:
+            return value
+        return {
+            key: normalize_annotation_value(item, value_annotation)
+            for key, item in value.items()
+        }
     if origin in {Union, UnionType}:
         for option in arguments:
             normalized = normalize_annotation_value(value, option)
