@@ -56,7 +56,7 @@ export default function RequirementsPage({ project, section }) {
   const [importValue, setImportValue] = useState({
     filename: "requirements.md",
     format: "md",
-    content: "",
+    content: textDoc(""),
     visibility: "private",
     shared_with: [],
     ai_enabled: false,
@@ -64,7 +64,11 @@ export default function RequirementsPage({ project, section }) {
   const [preview, setPreview] = useState(null);
   const [selectedIndexes, setSelectedIndexes] = useState([]);
   const [upload, setUpload] = useState(null);
-  const [uploadAccess, setUploadAccess] = useState({ visibility: "private", shared_with: [] });
+  const [uploadAccess, setUploadAccess] = useState({
+    visibility: "private",
+    shared_with: [],
+    ai_enabled: false,
+  });
   const [sourceDocument, setSourceDocument] = useState(null);
   const [sourceDocuments, setSourceDocuments] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -391,6 +395,10 @@ export default function RequirementsPage({ project, section }) {
   };
   const importPreview = async (event) => {
     event.preventDefault();
+    if (!docText(importValue.content).trim()) {
+      setError("Nhập nội dung tài liệu trước khi tạo bản xem trước");
+      return;
+    }
     try {
       const document = await testingApi.createRequirementDocument(project._id, importValue);
       setSourceDocument(document);

@@ -108,6 +108,7 @@ export const designTestingApi = {
     body.append("file", file);
     body.append("visibility", access.visibility || "private");
     body.append("shared_with", JSON.stringify(access.shared_with || []));
+    body.append("ai_enabled", String(Boolean(access.ai_enabled)));
     return testingRequest(`/du-an/${id}/tai-lieu-yeu-cau/tai-len`, { method: "POST", body });
   },
   listRequirementDocuments: (id, query = "") =>

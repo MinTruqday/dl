@@ -1,8 +1,97 @@
 import DataTable from "../../../components/DataTable";
 import { ErrorState } from "../../../components/WorkspacePrimitives";
-import { docText, textDoc, valueLabel } from "../../../lib/testing";
+import DocumentEditor from "../../../editor/DocumentEditor";
+import { docText, valueLabel } from "../../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 import { REQUIREMENT_IMPORT_FORMATS } from "./requirements.model";
+
+function DocumentAccessControl({ access, members, onChange, privateLabel, name }) {
+  const isPublic = access.visibility !== "private";
+  const updateSharedWith = (userId, checked) =>
+    onChange({
+      ...access,
+      shared_with: checked
+        ? [...access.shared_with, userId]
+        : access.shared_with.filter((value) => value !== userId),
+    });
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="field-label">Quyền xem tài liệu</legend>
+      <div className="flex flex-wrap gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            checked={!isPublic}
+            name={`${name}-visibility`}
+            type="radio"
+            onChange={() => onChange({ visibility: "private", shared_with: [] })}
+          />
+          {privateLabel}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            checked={isPublic}
+            name={`${name}-visibility`}
+            type="radio"
+            onChange={() =>
+              onChange({
+                visibility: access.visibility === "private" ? "project" : access.visibility,
+                shared_with: access.shared_with,
+              })
+            }
+          />
+          Công khai
+        </label>
+      </div>
+      {isPublic && (
+        <fieldset className="space-y-2 rounded-control border border-border bg-surface-quiet p-3">
+          <legend className="px-1 text-sm font-medium">Phạm vi công khai</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              checked={access.visibility === "project"}
+              name={`${name}-scope`}
+              type="radio"
+              onChange={() => onChange({ visibility: "project", shared_with: [] })}
+            />
+            Tất cả thành viên dự án
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              checked={access.visibility === "shared"}
+              name={`${name}-scope`}
+              type="radio"
+              onChange={() => onChange({ visibility: "shared", shared_with: access.shared_with })}
+            />
+            Cá nhân
+          </label>
+          {access.visibility === "shared" && (
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="text-sm font-medium">Chọn người được xem</p>
+              {members.map((member) => (
+                <label className="flex items-center gap-2 text-sm" key={member.user_id}>
+                  <input
+                    type="checkbox"
+                    checked={access.shared_with.includes(member.user_id)}
+                    onChange={(event) => updateSharedWith(member.user_id, event.target.checked)}
+                  />
+                  {member.user_label || member.user_id}
+                </label>
+              ))}
+            </div>
+          )}
+        </fieldset>
+      )}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={Boolean(access.ai_enabled)}
+          onChange={(event) => onChange({ ...access, ai_enabled: event.target.checked })}
+        />
+        Cho phép AI truy cập tài liệu này
+      </label>
+    </fieldset>
+  );
+}
 
 export default function RequirementImportModal({
   isOpen,
@@ -30,14 +119,6 @@ export default function RequirementImportModal({
   onRetrySource,
 }) {
   const updateImportValue = (patch) => setImportValue((value) => ({ ...value, ...patch }));
-  const updateSharedWith = (setAccess, access, userId, checked) => {
-    setAccess({
-      ...access,
-      shared_with: checked
-        ? [...access.shared_with, userId]
-        : access.shared_with.filter((value) => value !== userId),
-    });
-  };
 
   return (
     <Modal
@@ -60,43 +141,20 @@ export default function RequirementImportModal({
             onChange={(event) => setUpload(event.target.files?.[0] || null)}
           />
         </label>
-        <label className="field-label">
-          Quyền xem tài liệu
-          <select
-            className="apple-input mt-2"
-            value={uploadAccess.visibility}
-            onChange={(event) =>
-              setUploadAccess({ visibility: event.target.value, shared_with: [] })
-            }
-          >
-            <option value="private">Riêng tư chỉ người tải lên</option>
-            <option value="project">Toàn bộ thành viên dự án</option>
-            <option value="shared">Chọn thành viên dự án</option>
-          </select>
-        </label>
-        {uploadAccess.visibility === "shared" && (
-          <fieldset className="space-y-2">
-            <legend className="field-label">Thành viên được xem</legend>
-            {members.map((member) => (
-              <label className="flex items-center gap-2 text-sm" key={member.user_id}>
-                <input
-                  type="checkbox"
-                  checked={uploadAccess.shared_with.includes(member.user_id)}
-                  onChange={(event) =>
-                    updateSharedWith(
-                      setUploadAccess,
-                      uploadAccess,
-                      member.user_id,
-                      event.target.checked,
-                    )
-                  }
-                />
-                {member.user_label || member.user_id}
-              </label>
-            ))}
-          </fieldset>
-        )}
-        <button className="secondary-button" type="submit" disabled={!upload}>
+        <DocumentAccessControl
+          access={uploadAccess}
+          members={members}
+          name="upload-document"
+          privateLabel="Riêng tư chỉ người tải lên"
+          onChange={setUploadAccess}
+        />
+        <button
+          className="secondary-button"
+          type="submit"
+          disabled={
+            !upload || (uploadAccess.visibility === "shared" && !uploadAccess.shared_with.length)
+          }
+        >
           Tải lên và xem trước
         </button>
       </form>
@@ -109,41 +167,13 @@ export default function RequirementImportModal({
             onChange={(event) => updateImportValue({ filename: event.target.value })}
           />
         </label>
-        <label className="field-label">
-          Quyền xem tài liệu
-          <select
-            className="apple-input mt-2"
-            value={importValue.visibility}
-            onChange={(event) =>
-              updateImportValue({ visibility: event.target.value, shared_with: [] })
-            }
-          >
-            <option value="private">Riêng tư chỉ người tạo</option>
-            <option value="project">Toàn bộ thành viên dự án</option>
-            <option value="shared">Chọn thành viên dự án</option>
-          </select>
-        </label>
-        {importValue.visibility === "shared" && (
-          <fieldset className="space-y-2">
-            <legend className="field-label">Thành viên được xem</legend>
-            {members.map((member) => (
-              <label className="flex items-center gap-2 text-sm" key={member.user_id}>
-                <input
-                  type="checkbox"
-                  checked={importValue.shared_with.includes(member.user_id)}
-                  onChange={(event) =>
-                    updateImportValue({
-                      shared_with: event.target.checked
-                        ? [...importValue.shared_with, member.user_id]
-                        : importValue.shared_with.filter((value) => value !== member.user_id),
-                    })
-                  }
-                />
-                {member.user_label || member.user_id}
-              </label>
-            ))}
-          </fieldset>
-        )}
+        <DocumentAccessControl
+          access={importValue}
+          members={members}
+          name="manual-document"
+          privateLabel="Riêng tư chỉ người tạo"
+          onChange={updateImportValue}
+        />
         <label className="field-label">
           Định dạng
           <select
@@ -158,14 +188,23 @@ export default function RequirementImportModal({
         </label>
         <label className="field-label">
           Nội dung nguồn
-          <textarea
-            className="apple-input mt-2 min-h-48 font-mono"
-            required
-            value={importValue.content}
-            onChange={(event) => updateImportValue({ content: event.target.value })}
-          />
+          <div className="mt-2">
+            <DocumentEditor
+              label="nội dung nguồn"
+              minHeight="min-h-64"
+              value={importValue.content}
+              onChange={(content) => updateImportValue({ content })}
+            />
+          </div>
         </label>
-        <button className="secondary-button" type="submit">
+        <button
+          className="secondary-button"
+          type="submit"
+          disabled={
+            !docText(importValue.content) ||
+            (importValue.visibility === "shared" && !importValue.shared_with.length)
+          }
+        >
           Tạo bản xem trước
         </button>
       </form>
@@ -181,6 +220,11 @@ export default function RequirementImportModal({
               <p className="mt-1 text-[12px] text-ink-muted">
                 Đã chọn {selectedIndexes.length} trên {preview.preview.length} ứng viên
               </p>
+              {preview.status === "PREVIEW_READY" && (
+                <p className="mt-1 text-[12px] text-ink-muted">
+                  Có thể biên tập đầy đủ nội dung đã trích xuất trước khi xác nhận nhập
+                </p>
+              )}
             </div>
             {preview.status === "PREVIEW_READY" && (
               <div className="flex flex-wrap gap-2">
@@ -244,17 +288,17 @@ export default function RequirementImportModal({
                 key: "content_doc",
                 label: "Nội dung",
                 render: (item) => (
-                  <textarea
-                    aria-label={`Nội dung ứng viên ${item.candidateIndex + 1}`}
-                    className="apple-input min-h-20 min-w-72"
-                    value={docText(item.content_doc)}
-                    disabled={preview.status !== "PREVIEW_READY"}
-                    onChange={(event) =>
-                      onEditCandidate(item.candidateIndex, {
-                        content_doc: textDoc(event.target.value),
-                      })
-                    }
-                  />
+                  <div className="min-w-[36rem]">
+                    <DocumentEditor
+                      label={`nội dung ứng viên ${item.candidateIndex + 1}`}
+                      minHeight="min-h-40"
+                      readOnly={preview.status !== "PREVIEW_READY"}
+                      value={item.content_doc}
+                      onChange={(content_doc) =>
+                        onEditCandidate(item.candidateIndex, { content_doc })
+                      }
+                    />
+                  </div>
                 ),
               },
               {

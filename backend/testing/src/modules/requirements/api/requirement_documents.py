@@ -57,6 +57,7 @@ async def upload_requirement_document(
     format: str = Form(),
     visibility: str = Form(default="private"),
     shared_with: str = Form(default="[]"),
+    ai_enabled: bool = Form(default=False),
     file: UploadFile = File(),
     user: CurrentUser = Depends(get_current_user),
 ):
@@ -82,6 +83,7 @@ async def upload_requirement_document(
         user,
         visibility,
         recipients,
+        ai_enabled,
     )
     return envelope(
         result.data,

@@ -7,8 +7,6 @@ from src.clients.ai_assistance import ai_assistance_client
 from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
 
 
-
-
 stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
     "stream_sink", default=None
 )

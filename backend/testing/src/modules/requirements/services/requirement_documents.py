@@ -89,7 +89,7 @@ async def create_requirement_document_record(project_id, payload, user):
         "index_status": "NOT_REQUESTED",
         "visibility": payload.visibility,
         "shared_with": shared_with,
-        "ai_enabled": False,
+        "ai_enabled": payload.ai_enabled,
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -112,6 +112,16 @@ async def create_requirement_document_record(project_id, payload, user):
         project_id,
         {"content_hash": content_hash, "format": payload.format},
     )
+    if document.get("ai_enabled"):
+        indexed = await index_requirement_document(document)
+        if not indexed:
+            await requirement_document_repository.update(
+                document["_id"],
+                project_id,
+                {"ai_enabled": False, "updated_at": now()},
+            )
+            raise HTTPException(status_code=503, detail={"code": "KNOWLEDGE_INDEX_FAILED"})
+        document = await requirement_document_repository.find(document["_id"], project_id)
     return document
 
 
@@ -183,6 +193,7 @@ async def upload_requirement_document_record(
     user,
     visibility="private",
     shared_with=None,
+    ai_enabled=False,
 ):
     if format not in supported_requirement_formats():
         raise HTTPException(status_code=422, detail={"code": 'UNSUPPORTED_IMPORT_FORMAT'})
@@ -222,7 +233,7 @@ async def upload_requirement_document_record(
         "index_status": "NOT_REQUESTED",
         "visibility": visibility,
         "shared_with": shared_with,
-        "ai_enabled": False,
+        "ai_enabled": ai_enabled,
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -287,6 +298,9 @@ async def upload_requirement_document_record(
         increment_revision=True,
     )
     document = await requirement_document_repository.find(document_id, project_id)
+    if document.get("ai_enabled"):
+        await index_requirement_document(document)
+        document = await requirement_document_repository.find(document_id, project_id)
     return RequirementDocumentResult(document)
 
 
