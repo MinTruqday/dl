@@ -5,11 +5,10 @@ import zipfile
 from xml.sax.saxutils import escape
 
 from src.core.common import now
-from src.services.domain_policy import domain_policy
 
 
 def secret_pattern():
-    return re.compile(domain_policy("secret_detection")["field_name_pattern"], re.I)
+    return re.compile('token|secret|password|authorization|cookie|api[-_]?key', re.I)
 
 
 def public_api_import(value, include_preview=False):
@@ -83,13 +82,13 @@ def xlsx_column(index):
 
 
 def parse_openapi(value):
-    policy = domain_policy("api_artifact")
+    
     operations = []
     inherited_security = value.get("security", [])
     schemas = value.get("components", {}).get("schemas", {})
     for path, path_item in value.get("paths", {}).items():
         for method, operation in path_item.items():
-            if method.lower() not in set(policy["http_methods"]):
+            if method.lower() not in set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head']):
                 continue
             operations.append(
                 {
@@ -108,11 +107,11 @@ def parse_openapi(value):
                     "tags": operation.get("tags", []),
                 }
             )
-    return operations[: policy["maximum_operations"]]
+    return operations[: 5000]
 
 
 def parse_postman(value):
-    policy = domain_policy("api_artifact")
+    
     operations = []
     variable_names = [
         item.get("key")
@@ -135,10 +134,10 @@ def parse_postman(value):
                     "source_type": "postman",
                     "operation_id": node.get("id"),
                     "title": node.get("name")
-                    or f"{request.get('method', policy['default_http_method'])} {raw}",
+                    or f"{request.get('method', 'GET')} {raw}",
                     "folder": folder,
                     "path": raw.split("?", 1)[0],
-                    "method": request.get("method", policy["default_http_method"]).upper(),
+                    "method": request.get("method", "GET").upper(),
                     "header_names": [
                         item.get("key")
                         for item in request.get("header", [])
@@ -151,7 +150,7 @@ def parse_postman(value):
             )
 
     walk(value.get("item", []))
-    return operations[: policy["maximum_operations"]]
+    return operations[: 5000]
 
 
 def api_case_blueprints(operation):
@@ -221,8 +220,8 @@ def sanitize(value):
 
 
 def sanitize_postman(value):
-    policy = domain_policy("secret_detection")
-    api_policy = domain_policy("api_artifact")
+    
+    
     if isinstance(value, list):
         return [sanitize_postman(item) for item in value]
     if isinstance(value, dict):
@@ -233,34 +232,34 @@ def sanitize_postman(value):
             if sensitive_entry and key in {"value", "current", "initial"}:
                 suffix = (
                     re.sub(r"[^A-Za-z0-9]+", "_", marker).upper()
-                    or api_policy["secret_value_name"]
+                    or 'VALUE'
                 )
-                result[key] = f"{api_policy['secret_placeholder_prefix']}{suffix}}}}}"
+                result[key] = f"{'{{VERIQ_SECRET_'}{suffix}}}}}"
             elif secret_pattern().search(str(key)) and key not in {"key", "name"}:
-                result[key] = api_policy["secret_placeholder"]
+                result[key] = '{{VERIQ_SECRET_VALUE}}'
             else:
                 result[key] = sanitize_postman(item)
         return result
     if isinstance(value, str):
         sanitized = re.sub(
-            policy["url_value_pattern"],
-            api_policy["secret_header_replacement"],
+            '(?i)([?&](?:token|secret|password|api[-_]?key)=)(?!Đã%20ẩn|Đã ẩn)[^&#\\s]+',
+            '\\1{{VERIQ_SECRET_VALUE}}',
             value,
         )
         return re.sub(
-            policy["inline_value_pattern"],
-            api_policy["secret_assignment_replacement"],
+            '(?i)(authorization|token|secret|password|api[-_]?key)(\\s*[:=]\\s*)[\'"]?(?!Đã ẩn)[^\'"\\s;,&]+',
+            '\\1={{VERIQ_SECRET_VALUE}}',
             sanitized,
         )
     return value
 
 
 def terms(value):
-    policy = domain_policy("trace_recovery")
+    
     return {
         item
-        for item in re.findall(policy["term_pattern"], value.lower())
-        if len(item) >= policy["minimum_term_length"]
+        for item in re.findall('[a-zA-Z0-9_]+', value.lower())
+        if len(item) >= 3
     }
 
 

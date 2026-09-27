@@ -5,11 +5,10 @@ from fastapi import HTTPException
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project_entity, now
 from src.repositories.requirement import requirement_repository
-from src.services.domain_policy import domain_policy
 from src.modules.design.services.linters import requirement_findings
 from src.modules.requirements.services.requirement_indexing import index_requirement_version
 
-LIFECYCLE_POLICY = domain_policy("requirement_lifecycle")
+
 
 
 @dataclass(frozen=True)
@@ -20,14 +19,14 @@ class RequirementBaselineResult:
     @property
     def status(self):
         return (
-            LIFECYCLE_POLICY["success_status"]
+            'SUCCESS'
             if self.indexed
-            else LIFECYCLE_POLICY["degraded_status"]
+            else 'DEGRADED'
         )
 
     @property
     def degraded_mode(self):
-        return None if self.indexed else LIFECYCLE_POLICY["vector_degraded_mode"]
+        return None if self.indexed else 'DEGRADED_VECTOR'
 
 
 async def submit_requirement_for_review(
@@ -38,56 +37,56 @@ async def submit_requirement_for_review(
     user: CurrentUser,
 ):
     requirement = await get_project_entity(
-        LIFECYCLE_POLICY["requirement_collection"],
+        'requirements',
         requirement_id,
         user,
-        LIFECYCLE_POLICY["submit_permission"],
+        'requirement.submit_review',
     )
     if requirement["project_id"] != project_id:
         raise HTTPException(
             status_code=422,
-            detail={"code": LIFECYCLE_POLICY["project_mismatch_code"]},
+            detail={"code": 'PROJECT_MISMATCH'},
         )
     version = await requirement_repository.find_version(
         requirement["current_version_id"], project_id
     )
-    if version["status"] == LIFECYCLE_POLICY["review_status"]:
+    if version["status"] == 'IN_REVIEW':
         return version
-    if version["status"] != LIFECYCLE_POLICY["draft_status"]:
+    if version["status"] != 'DRAFT':
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]},
+            detail={"code": 'INVALID_STATE_TRANSITION'},
         )
     if version["revision"] != expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": LIFECYCLE_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": version["revision"],
             },
         )
     acceptance_criteria = await requirement_repository.list_acceptance_criteria(
-        version["_id"], LIFECYCLE_POLICY["acceptance_criteria_limit"]
+        version["_id"], 200
     )
     findings = requirement_findings(version, acceptance_criteria)
     project = await requirement_repository.find_project_settings(project_id)
     lint_blocking = (project.get("settings") or {}).get(
-        LIFECYCLE_POLICY["lint_setting"], LIFECYCLE_POLICY["lint_setting_default"]
+        'requirement_lint_blocking', True
     )
     if lint_blocking and any(
-        item["severity"] == LIFECYCLE_POLICY["lint_blocking_severity"] for item in findings
+        item["severity"] == 'error' for item in findings
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["lint_blocked_code"], "findings": findings},
+            detail={"code": 'REQUIREMENT_LINT_BLOCKED', "findings": findings},
         )
     timestamp = now()
     transitioned = await requirement_repository.transition_version(
         version["_id"],
         project_id,
         expected_revision,
-        LIFECYCLE_POLICY["draft_status"],
-        LIFECYCLE_POLICY["review_status"],
+        'DRAFT',
+        'IN_REVIEW',
         {
             "review_note": review_note,
             "review_submitted_by": user.id,
@@ -98,16 +97,16 @@ async def submit_requirement_for_review(
     if not transitioned:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     await requirement_repository.set_requirement_status(
-        requirement_id, project_id, LIFECYCLE_POLICY["review_status"], timestamp
+        requirement_id, project_id, 'IN_REVIEW', timestamp
     )
     version = await requirement_repository.find_version(version["_id"], project_id)
     await audit(
         user.id,
-        LIFECYCLE_POLICY["review_submitted_event"],
-        LIFECYCLE_POLICY["version_entity"],
+        'requirement_review_submitted',
+        'RequirementVersion',
         version["_id"],
         project_id,
         {"review_note": review_note},
@@ -123,29 +122,29 @@ async def return_requirement_for_changes(
     user: CurrentUser,
 ):
     requirement = await get_project_entity(
-        LIFECYCLE_POLICY["requirement_collection"],
+        'requirements',
         requirement_id,
         user,
-        LIFECYCLE_POLICY["review_permission"],
+        'requirement.review',
     )
     if requirement["project_id"] != project_id:
         raise HTTPException(
             status_code=422,
-            detail={"code": LIFECYCLE_POLICY["project_mismatch_code"]},
+            detail={"code": 'PROJECT_MISMATCH'},
         )
     version = await requirement_repository.find_version(
         requirement["current_version_id"], project_id
     )
-    if version["status"] != LIFECYCLE_POLICY["review_status"]:
+    if version["status"] != 'IN_REVIEW':
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]},
+            detail={"code": 'INVALID_STATE_TRANSITION'},
         )
     if version["revision"] != expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": LIFECYCLE_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": version["revision"],
             },
         )
@@ -154,8 +153,8 @@ async def return_requirement_for_changes(
         version["_id"],
         project_id,
         expected_revision,
-        LIFECYCLE_POLICY["review_status"],
-        LIFECYCLE_POLICY["draft_status"],
+        'IN_REVIEW',
+        'DRAFT',
         {
             "review_note": review_note,
             "changes_requested_by": user.id,
@@ -166,16 +165,16 @@ async def return_requirement_for_changes(
     if not transitioned:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     await requirement_repository.set_requirement_status(
-        requirement_id, project_id, LIFECYCLE_POLICY["draft_status"], timestamp
+        requirement_id, project_id, 'DRAFT', timestamp
     )
     version = await requirement_repository.find_version(version["_id"], project_id)
     await audit(
         user.id,
-        LIFECYCLE_POLICY["changes_requested_event"],
-        LIFECYCLE_POLICY["version_entity"],
+        'requirement_changes_requested',
+        'RequirementVersion',
         version["_id"],
         project_id,
         {"review_note": review_note},
@@ -190,49 +189,49 @@ async def baseline_requirement(
     user: CurrentUser,
 ):
     version = await get_project_entity(
-        LIFECYCLE_POLICY["version_collection"],
+        'requirement_versions',
         version_id,
         user,
-        LIFECYCLE_POLICY["approve_permission"],
+        'requirement.approve',
     )
-    if version["status"] == LIFECYCLE_POLICY["baselined_status"]:
+    if version["status"] == 'BASELINED':
         return RequirementBaselineResult(version, True)
-    if version["status"] != LIFECYCLE_POLICY["review_status"]:
+    if version["status"] != 'IN_REVIEW':
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]},
+            detail={"code": 'INVALID_STATE_TRANSITION'},
         )
     if version["revision"] != expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": LIFECYCLE_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": version["revision"],
             },
         )
     acceptance_criteria = await requirement_repository.list_acceptance_criteria(
-        version["_id"], LIFECYCLE_POLICY["acceptance_criteria_limit"]
+        version["_id"], 200
     )
     findings = requirement_findings(version, acceptance_criteria)
     project = await requirement_repository.find_project_settings(version["project_id"])
     lint_blocking = (project.get("settings") or {}).get(
-        LIFECYCLE_POLICY["lint_setting"], LIFECYCLE_POLICY["lint_setting_default"]
+        'requirement_lint_blocking', True
     )
     if lint_blocking and any(
-        item["severity"] == LIFECYCLE_POLICY["lint_blocking_severity"] for item in findings
+        item["severity"] == 'error' for item in findings
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["lint_blocked_code"], "findings": findings},
+            detail={"code": 'REQUIREMENT_LINT_BLOCKED', "findings": findings},
         )
     timestamp = now()
     version = await requirement_repository.baseline_version(
         version_id,
         version["project_id"],
         expected_revision,
-        LIFECYCLE_POLICY["review_status"],
+        'IN_REVIEW',
         {
-            "status": LIFECYCLE_POLICY["baselined_status"],
+            "status": 'BASELINED',
             "review_note": review_note,
             "baselined_at": timestamp,
             "baselined_by": user.id,
@@ -241,22 +240,22 @@ async def baseline_requirement(
     )
     if not version:
         current = await requirement_repository.find_version(version_id)
-        if current and current.get("status") == LIFECYCLE_POLICY["baselined_status"]:
+        if current and current.get("status") == 'BASELINED':
             return RequirementBaselineResult(current, True)
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     await requirement_repository.set_current_baseline(
         version["requirement_id"],
         version_id,
-        LIFECYCLE_POLICY["baselined_status"],
+        'BASELINED',
         timestamp,
     )
     await requirement_repository.approve_acceptance_criteria(
         version_id,
-        LIFECYCLE_POLICY["draft_criterion_status"],
-        LIFECYCLE_POLICY["approved_criterion_status"],
+        'draft',
+        'approved',
         timestamp,
         user.id,
     )
@@ -264,8 +263,8 @@ async def baseline_requirement(
     version = await requirement_repository.find_version(version_id)
     await audit(
         user.id,
-        LIFECYCLE_POLICY["baselined_event"],
-        LIFECYCLE_POLICY["version_entity"],
+        'requirement_version_baselined',
+        'RequirementVersion',
         version_id,
         version["project_id"],
     )
@@ -279,18 +278,18 @@ async def make_requirement_obsolete(
     user: CurrentUser,
 ):
     requirement = await get_project_entity(
-        LIFECYCLE_POLICY["requirement_collection"],
+        'requirements',
         requirement_id,
         user,
-        LIFECYCLE_POLICY["archive_permission"],
+        'requirement.archive',
     )
-    if requirement.get("status") == LIFECYCLE_POLICY["obsolete_status"]:
+    if requirement.get("status") == 'OBSOLETE':
         return requirement
     if requirement.get("current_version_id") != expected_current_version_id:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": LIFECYCLE_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_version_id": requirement.get("current_version_id"),
             },
         )
@@ -299,11 +298,11 @@ async def make_requirement_obsolete(
     )
     if (
         not current_version
-        or current_version.get("status") not in LIFECYCLE_POLICY["active_version_statuses"]
+        or current_version.get("status") not in ['DRAFT', 'IN_REVIEW', 'BASELINED']
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["version_conflict_code"]},
+            detail={"code": 'REQUIREMENT_VERSION_CONFLICT'},
         )
     version_status = current_version["status"]
     timestamp = now()
@@ -312,7 +311,7 @@ async def make_requirement_obsolete(
         requirement["project_id"],
         expected_current_version_id,
         requirement["status"],
-        LIFECYCLE_POLICY["obsolete_status"],
+        'OBSOLETE',
         reason,
         user.id,
         timestamp,
@@ -320,14 +319,14 @@ async def make_requirement_obsolete(
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     version_updated = await requirement_repository.mark_version_obsolete(
         expected_current_version_id,
         requirement["project_id"],
         requirement_id,
-        LIFECYCLE_POLICY["active_version_statuses"],
-        LIFECYCLE_POLICY["obsolete_status"],
+        ['DRAFT', 'IN_REVIEW', 'BASELINED'],
+        'OBSOLETE',
         version_status,
         reason,
         user.id,
@@ -337,19 +336,19 @@ async def make_requirement_obsolete(
         await requirement_repository.rollback_requirement_obsolete(
             requirement_id,
             requirement["project_id"],
-            LIFECYCLE_POLICY["obsolete_status"],
+            'OBSOLETE',
             timestamp,
             requirement["status"],
             now(),
         )
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["version_conflict_code"]},
+            detail={"code": 'REQUIREMENT_VERSION_CONFLICT'},
         )
     await audit(
         user.id,
-        LIFECYCLE_POLICY["obsolete_event"],
-        LIFECYCLE_POLICY["requirement_entity"],
+        'requirement_marked_obsolete',
+        'Requirement',
         requirement_id,
         requirement["project_id"],
         {"reason": reason, "version_id": expected_current_version_id},
@@ -367,21 +366,21 @@ async def restore_obsolete_requirement(
     user: CurrentUser,
 ):
     requirement = await get_project_entity(
-        LIFECYCLE_POLICY["requirement_collection"],
+        'requirements',
         requirement_id,
         user,
-        LIFECYCLE_POLICY["restore_permission"],
+        'requirement.restore',
     )
-    if requirement.get("status") != LIFECYCLE_POLICY["obsolete_status"]:
+    if requirement.get("status") != 'OBSOLETE':
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["not_obsolete_code"]},
+            detail={"code": 'REQUIREMENT_NOT_OBSOLETE'},
         )
     if requirement.get("current_version_id") != expected_current_version_id:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": LIFECYCLE_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_version_id": requirement.get("current_version_id"),
             },
         )
@@ -389,33 +388,33 @@ async def restore_obsolete_requirement(
         expected_current_version_id,
         requirement["project_id"],
         requirement_id,
-        LIFECYCLE_POLICY["obsolete_status"],
+        'OBSOLETE',
     )
     if not version:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["version_conflict_code"]},
+            detail={"code": 'REQUIREMENT_VERSION_CONFLICT'},
         )
     restored_status = requirement.get("status_before_obsolete") or (
-        LIFECYCLE_POLICY["baselined_status"]
+        'BASELINED'
         if version.get("baselined_at")
-        else LIFECYCLE_POLICY["draft_status"]
+        else 'DRAFT'
     )
     restored_version_status = version.get("status_before_obsolete") or restored_status
     if (
-        restored_status not in LIFECYCLE_POLICY["active_version_statuses"]
-        or restored_version_status not in LIFECYCLE_POLICY["active_version_statuses"]
+        restored_status not in ['DRAFT', 'IN_REVIEW', 'BASELINED']
+        or restored_version_status not in ['DRAFT', 'IN_REVIEW', 'BASELINED']
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["restore_state_invalid_code"]},
+            detail={"code": 'REQUIREMENT_RESTORE_STATE_INVALID'},
         )
     timestamp = now()
     version_restored = await requirement_repository.restore_version(
         version["_id"],
         requirement["project_id"],
         requirement_id,
-        LIFECYCLE_POLICY["obsolete_status"],
+        'OBSOLETE',
         restored_version_status,
         reason,
         user.id,
@@ -424,13 +423,13 @@ async def restore_obsolete_requirement(
     if not version_restored:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["version_conflict_code"]},
+            detail={"code": 'REQUIREMENT_VERSION_CONFLICT'},
         )
     updated = await requirement_repository.restore_requirement(
         requirement_id,
         requirement["project_id"],
         expected_current_version_id,
-        LIFECYCLE_POLICY["obsolete_status"],
+        'OBSOLETE',
         restored_status,
         reason,
         user.id,
@@ -440,18 +439,18 @@ async def restore_obsolete_requirement(
         await requirement_repository.rollback_version_restore(
             version["_id"],
             requirement["project_id"],
-            LIFECYCLE_POLICY["obsolete_status"],
+            'OBSOLETE',
             restored_version_status,
             now(),
         )
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     await audit(
         user.id,
-        LIFECYCLE_POLICY["restored_event"],
-        LIFECYCLE_POLICY["requirement_entity"],
+        'requirement_restored',
+        'Requirement',
         requirement_id,
         requirement["project_id"],
         {"reason": reason, "version_id": version["_id"]},

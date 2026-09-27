@@ -6,17 +6,16 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, new_id, now
 from src.repositories.test_completion import find_ai_result, insert_ai_result
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
-from src.services.domain_policy import domain_policy
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 async def completion_ai_result(report, payload, user, capability, result_type):
-    policy = COMPLETION_POLICY
-    if report["status"] != policy["statuses"]["draft"]:
+    
+    if report["status"] != 'DRAFT':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["immutable"]}
+            status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'}
         )
     existing = await find_ai_result(
         report["project_id"], payload.idempotency_key
@@ -28,14 +27,14 @@ async def completion_ai_result(report, payload, user, capability, result_type):
         ):
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["idempotency_reused"]},
+                detail={"code": 'IDEMPOTENCY_KEY_REUSED'},
             )
         return existing
     evidence = [
         {
-            "artifact_type": policy["ai"]["artifact_type"],
+            "artifact_type": 'test_completion_report',
             "artifact_id": report["_id"],
-            "authority": policy["ai"]["authority"],
+            "authority": 'PROJECT_RECORD',
             "text": json.dumps(
                 {
                     key: report.get(key)
@@ -64,7 +63,7 @@ async def completion_ai_result(report, payload, user, capability, result_type):
     )
     ai = await request_ai_assistance(capability, report["project_id"], instruction, evidence)
     result = {
-        "_id": new_id(policy["ai"]["result_id_prefix"]),
+        "_id": new_id('AIR'),
         "project_id": report["project_id"],
         "result_type": result_type,
         "subject_id": report["_id"],
@@ -83,7 +82,7 @@ async def completion_ai_result(report, payload, user, capability, result_type):
     await audit(
         user.id,
         f"{capability}_generated",
-        policy["ai"]["entity_type"],
+        'AIResult',
         result["_id"],
         report["project_id"],
         {"report_id": report["_id"], "candidate_count": len(result["suggestions"])},

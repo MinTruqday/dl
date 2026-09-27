@@ -8,16 +8,15 @@ from src.schemas.contracts.requirements import (
     ReviewCommentCreate,
     ReviewCommentPatch,
 )
-from src.services.domain_policy import domain_policy
 
 
-COMMENT_POLICY = domain_policy("review_comment")
+
 
 
 class ReviewCommentService:
     @staticmethod
     async def create(project_id: str, payload: ReviewCommentCreate, user: CurrentUser):
-        await get_project(project_id, user, COMMENT_POLICY["create_permission"])
+        await get_project(project_id, user, 'comment.create')
         if payload.parent_comment_id:
             parent = await review_repository.find_comment(
                 payload.parent_comment_id, project_id
@@ -25,22 +24,22 @@ class ReviewCommentService:
             if not parent:
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": COMMENT_POLICY["parent_not_found_code"]},
+                    detail={"code": 'PARENT_COMMENT_NOT_FOUND'},
                 )
         comment = {
-            "_id": new_id(COMMENT_POLICY["id_prefix"]),
+            "_id": new_id('RC'),
             "project_id": project_id,
             **payload.model_dump(),
             "author_id": user.id,
-            "status": COMMENT_POLICY["open_status"],
+            "status": 'OPEN',
             "created_at": now(),
             "updated_at": now(),
         }
         await review_repository.insert_comment(comment)
         await audit(
             user.id,
-            COMMENT_POLICY["created_event"],
-            COMMENT_POLICY["entity"],
+            'review_comment_created',
+            'ReviewComment',
             comment["_id"],
             project_id,
             {"artifact_type": payload.artifact_type, "artifact_id": payload.artifact_id},
@@ -55,13 +54,13 @@ class ReviewCommentService:
         status: str | None,
         user: CurrentUser,
     ):
-        await get_project(project_id, user, COMMENT_POLICY["read_permission"])
+        await get_project(project_id, user, 'comment.read')
         query = {"project_id": project_id}
         if artifact_type:
             query["artifact_type"] = artifact_type
         if artifact_id:
             query["artifact_id"] = artifact_id
-        query["status"] = status or COMMENT_POLICY["open_status"]
+        query["status"] = status or 'OPEN'
         return await review_repository.list_comments(query)
 
     @staticmethod
@@ -69,7 +68,7 @@ class ReviewCommentService:
         comment = await ReviewCommentService._get_for_change(comment_id, user)
         if comment.get("deleted_at"):
             raise HTTPException(
-                status_code=409, detail={"code": COMMENT_POLICY["deleted_code"]}
+                status_code=409, detail={"code": 'COMMENT_DELETED'}
             )
         timestamp = now()
         updated = await review_repository.update_comment(
@@ -79,8 +78,8 @@ class ReviewCommentService:
         )
         await audit(
             user.id,
-            COMMENT_POLICY["updated_event"],
-            COMMENT_POLICY["entity"],
+            'review_comment_updated',
+            'ReviewComment',
             comment_id,
             comment["project_id"],
         )
@@ -89,15 +88,15 @@ class ReviewCommentService:
     @staticmethod
     async def delete(comment_id: str, user: CurrentUser):
         comment = await get_project_entity(
-            COMMENT_POLICY["collection"],
+            'review_comments',
             comment_id,
             user,
-            COMMENT_POLICY["read_permission"],
+            'comment.read',
         )
         permission = (
-            COMMENT_POLICY["delete_own_permission"]
+            'comment.delete_own'
             if comment.get("author_id") == user.id
-            else COMMENT_POLICY["moderate_permission"]
+            else 'comment.moderate'
         )
         await get_project(comment["project_id"], user, permission)
         timestamp = now()
@@ -106,7 +105,7 @@ class ReviewCommentService:
             comment["project_id"],
             {
                 "body_doc": {"type": "doc", "content": []},
-                "status": COMMENT_POLICY["deleted_status"],
+                "status": 'DELETED',
                 "deleted_by": user.id,
                 "deleted_at": timestamp,
                 "updated_at": timestamp,
@@ -114,8 +113,8 @@ class ReviewCommentService:
         )
         await audit(
             user.id,
-            COMMENT_POLICY["deleted_event"],
-            COMMENT_POLICY["entity"],
+            'review_comment_deleted',
+            'ReviewComment',
             comment_id,
             comment["project_id"],
         )
@@ -127,10 +126,10 @@ class ReviewCommentService:
             comment_id,
             payload,
             user,
-            COMMENT_POLICY["open_status"],
-            COMMENT_POLICY["resolved_status"],
+            'OPEN',
+            'RESOLVED',
             "resolved",
-            COMMENT_POLICY["resolved_event"],
+            'review_comment_resolved',
         )
 
     @staticmethod
@@ -139,24 +138,24 @@ class ReviewCommentService:
             comment_id,
             payload,
             user,
-            COMMENT_POLICY["resolved_status"],
-            COMMENT_POLICY["open_status"],
+            'RESOLVED',
+            'OPEN',
             "reopened",
-            COMMENT_POLICY["reopened_event"],
+            'review_comment_reopened',
         )
 
     @staticmethod
     async def _get_for_change(comment_id: str, user: CurrentUser):
         comment = await get_project_entity(
-            COMMENT_POLICY["collection"],
+            'review_comments',
             comment_id,
             user,
-            COMMENT_POLICY["read_permission"],
+            'comment.read',
         )
         permission = (
-            COMMENT_POLICY["update_own_permission"]
+            'comment.update_own'
             if comment.get("author_id") == user.id
-            else COMMENT_POLICY["moderate_permission"]
+            else 'comment.moderate'
         )
         await get_project(comment["project_id"], user, permission)
         return comment
@@ -184,19 +183,19 @@ class ReviewCommentService:
                 f"{action}_by": user.id,
                 f"{action}_at": timestamp,
                 "resolution_reason"
-                if target == COMMENT_POLICY["resolved_status"]
+                if target == 'RESOLVED'
                 else "reopen_reason": payload.reason,
                 "updated_at": timestamp,
             },
         )
         if not updated:
             raise HTTPException(
-                status_code=409, detail={"code": COMMENT_POLICY["state_conflict_code"]}
+                status_code=409, detail={"code": 'COMMENT_STATE_CONFLICT'}
             )
         await audit(
             user.id,
             audit_action,
-            COMMENT_POLICY["entity"],
+            'ReviewComment',
             comment_id,
             comment["project_id"],
             {"reason": payload.reason},

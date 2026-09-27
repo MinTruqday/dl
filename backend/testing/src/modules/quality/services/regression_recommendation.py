@@ -2,31 +2,30 @@ from fastapi import HTTPException
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.repositories.regression_recommendation import regression_recommendation_repository
-from src.services.domain_policy import domain_policy
 
 
-REGRESSION_POLICY = domain_policy("regression_recommendation")
+
 
 
 async def recent_failure_versions(project_id):
-    policy = REGRESSION_POLICY
+    
     runs = await regression_recommendation_repository.list_recent_runs(
-        project_id, policy["recent_run_limit"]
+        project_id, 20
     )
     results = await regression_recommendation_repository.list_results_by_status(
         [item["_id"] for item in runs],
-        policy["failed_result_status"],
-        policy["recent_result_limit"],
+        'FAIL',
+        10000,
     )
     return {item["test_case_version_id"] for item in results}
 
 
 async def create_regression_recommendation_record(change_set_id, user):
-    policy = REGRESSION_POLICY
+    
     change_set = await get_project_entity(
-        policy["change_set_collection"], change_set_id, user, policy["generate_permission"]
+        'requirement_change_sets', change_set_id, user, 'regression.generate'
     )
-    await get_project(change_set["project_id"], user, policy["ai_generate_permission"])
+    await get_project(change_set["project_id"], user, 'ai.generate_regression')
     existing = await regression_recommendation_repository.find_by_change_set(change_set_id)
     if existing:
         return existing
@@ -34,9 +33,9 @@ async def create_regression_recommendation_record(change_set_id, user):
         change_set_id
     )
     if not analysis:
-        raise HTTPException(status_code=409, detail={"code": policy["impact_required_code"]})
-    if analysis.get("status") != policy["reviewed_impact_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["impact_review_required_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'IMPACT_ANALYSIS_REQUIRED'})
+    if analysis.get("status") != 'REVIEWED':
+        raise HTTPException(status_code=409, detail={"code": 'IMPACT_REVIEW_REQUIRED'})
     recent_failures = await recent_failure_versions(change_set["project_id"])
     items = []
     for impact in analysis.get("reviewed_affected_test_cases", analysis["affected_test_cases"]):
@@ -48,17 +47,17 @@ async def create_regression_recommendation_record(change_set_id, user):
         )
         direct_trace = any(item.get("direct_trace") for item in impact.get("evidence", []))
         level = (
-            policy["must_run_level"]
+            'MUST_RUN'
             if direct_trace
-            or impact["classification"] == policy["update_classification"]
+            or impact["classification"] == 'NEEDS_UPDATE'
             or current_version_id in recent_failures
-            else policy["should_run_level"]
-            if impact["classification"] == policy["potential_classification"]
-            else policy["optional_level"]
+            else 'SHOULD_RUN'
+            if impact["classification"] == 'POTENTIALLY_AFFECTED'
+            else 'OPTIONAL'
         )
         reasons = list(impact["reasons"])
         if current_version_id in recent_failures:
-            reasons.append(policy["recent_failure_reason"])
+            reasons.append('Test Case có kết quả FAIL gần đây')
         items.append(
             {
                 "test_case_id": impact["test_case_id"],
@@ -70,14 +69,14 @@ async def create_regression_recommendation_record(change_set_id, user):
             }
         )
     recommendation = {
-        "_id": new_id(policy["recommendation_id_prefix"]),
+        "_id": new_id('REG'),
         "project_id": change_set["project_id"],
         "change_set_id": change_set_id,
         "impact_analysis_id": analysis["_id"],
         "items": items,
-        "status": policy["pending_status"],
-        "revision": policy["initial_revision"],
-        "model_version": policy["model_version"],
+        "status": 'PENDING_APPROVAL',
+        "revision": 1,
+        "model_version": 'risk_scoring',
         "created_by": user.id,
         "created_at": now(),
         "updated_at": now(),
@@ -85,8 +84,8 @@ async def create_regression_recommendation_record(change_set_id, user):
     await regression_recommendation_repository.insert_recommendation(recommendation)
     await audit(
         user.id,
-        policy["created_event"],
-        policy["recommendation_entity"],
+        'regression_recommendation_created',
+        'RegressionRecommendation',
         recommendation["_id"],
         change_set["project_id"],
     )
@@ -95,16 +94,16 @@ async def create_regression_recommendation_record(change_set_id, user):
 
 async def get_change_set_regression_record(change_set_id, user):
     change_set = await get_project_entity(
-        REGRESSION_POLICY["change_set_collection"],
+        'requirement_change_sets',
         change_set_id,
         user,
-        REGRESSION_POLICY["read_permission"],
+        'regression.read',
     )
     recommendation = await regression_recommendation_repository.find_by_change_set(
         change_set_id, change_set["project_id"]
     )
     if not recommendation:
-        raise HTTPException(status_code=404, detail={"code": REGRESSION_POLICY["entity_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
     return recommendation
 
 
@@ -112,20 +111,20 @@ async def get_regression_recommendation_record(
     recommendation_id, user, permission=None
 ):
     return await get_project_entity(
-        REGRESSION_POLICY["recommendation_collection"],
+        'regression_recommendations',
         recommendation_id,
         user,
-        permission or REGRESSION_POLICY["read_permission"],
+        permission or 'regression.read',
     )
 
 
 async def edit_regression_recommendation_record(recommendation_id, payload, user):
-    policy = REGRESSION_POLICY
+    
     recommendation = await get_regression_recommendation_record(
-        recommendation_id, user, policy["generate_permission"]
+        recommendation_id, user, 'regression.generate'
     )
-    if recommendation.get("status") != policy["pending_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if recommendation.get("status") != 'PENDING_APPROVAL':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     selected = payload.selected_test_case_version_ids
     items = recommendation.get("items", [])
     if selected is not None:
@@ -135,7 +134,7 @@ async def edit_regression_recommendation_record(recommendation_id, payload, user
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "code": policy["invalid_scope_code"],
+                    "code": 'INVALID_REGRESSION_SCOPE',
                     "test_case_version_ids": sorted(unknown),
                 },
             )
@@ -145,7 +144,7 @@ async def edit_regression_recommendation_record(recommendation_id, payload, user
         {
             "_id": recommendation_id,
             "project_id": recommendation["project_id"],
-            "status": policy["pending_status"],
+            "status": 'PENDING_APPROVAL',
             "revision": payload.expected_revision,
         },
         {
@@ -158,11 +157,11 @@ async def edit_regression_recommendation_record(recommendation_id, payload, user
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["edited_event"],
-        policy["recommendation_entity"],
+        'regression_recommendation_edited',
+        'RegressionRecommendation',
         recommendation_id,
         recommendation["project_id"],
     )
@@ -170,23 +169,23 @@ async def edit_regression_recommendation_record(recommendation_id, payload, user
 
 
 async def approve_regression_recommendation_record(recommendation_id, payload, user):
-    policy = REGRESSION_POLICY
+    
     recommendation = await get_regression_recommendation_record(
-        recommendation_id, user, policy["approve_permission"]
+        recommendation_id, user, 'regression.approve'
     )
-    if recommendation.get("status") == policy["approved_status"] and recommendation.get(
+    if recommendation.get("status") == 'APPROVED' and recommendation.get(
         "test_suite_id"
     ):
         suite = await regression_recommendation_repository.find_suite(
             recommendation["test_suite_id"], recommendation["project_id"]
         )
         return {"recommendation": recommendation, "test_suite": suite}
-    if recommendation.get("status") != policy["pending_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if recommendation.get("status") != 'PENDING_APPROVAL':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if recommendation["revision"] != payload.expected_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["revision_conflict_code"], "current_revision": recommendation["revision"]},
+            detail={"code": 'REVISION_CONFLICT', "current_revision": recommendation["revision"]},
         )
     recommended_ids = {item["test_case_version_id"] for item in recommendation["items"]}
     selected_ids = payload.selected_test_case_version_ids
@@ -194,32 +193,32 @@ async def approve_regression_recommendation_record(recommendation_id, payload, u
         selected_ids = [
             item["test_case_version_id"]
             for item in recommendation["items"]
-            if item["level"] in policy["default_selected_levels"]
+            if item["level"] in ['MUST_RUN', 'SHOULD_RUN']
         ]
     selected_ids = list(dict.fromkeys(selected_ids))
     if not selected_ids or not set(selected_ids) <= recommended_ids:
-        raise HTTPException(status_code=422, detail={"code": policy["selection_invalid_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'REGRESSION_SELECTION_INVALID'})
     test_cases = await regression_recommendation_repository.list_active_test_cases(
         recommendation["project_id"],
         selected_ids,
-        policy["active_test_case_status"],
+        'ACTIVE',
         len(selected_ids),
     )
     if {item["current_version_id"] for item in test_cases} != set(selected_ids):
-        raise HTTPException(status_code=409, detail={"code": policy["stale_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REGRESSION_RECOMMENDATION_STALE'})
     timestamp = now()
     suite = {
-        "_id": new_id(policy["suite_id_prefix"]),
+        "_id": new_id('TSU'),
         "project_id": recommendation["project_id"],
         "name": payload.name
-        or policy["suite_name_template"].format(
+        or 'Regression {change_set_id}'.format(
             change_set_id=recommendation["change_set_id"]
         ),
-        "suite_type": policy["suite_type"],
+        "suite_type": 'regression',
         "test_case_version_ids": selected_ids,
         "source_regression_recommendation_id": recommendation_id,
-        "status": policy["approved_status"],
-        "revision": policy["initial_revision"],
+        "status": 'APPROVED',
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -230,10 +229,10 @@ async def approve_regression_recommendation_record(recommendation_id, payload, u
             "_id": recommendation_id,
             "project_id": recommendation["project_id"],
             "revision": payload.expected_revision,
-            "status": policy["pending_status"],
+            "status": 'PENDING_APPROVAL',
         },
         {
-            "status": policy["approved_status"],
+            "status": 'APPROVED',
             "test_suite_id": suite["_id"],
             "review_note": payload.review_note,
             "approved_by": user.id,
@@ -245,19 +244,19 @@ async def approve_regression_recommendation_record(recommendation_id, payload, u
         await regression_recommendation_repository.delete_suite(
             suite["_id"], suite["project_id"]
         )
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["approved_event"],
-        policy["recommendation_entity"],
+        'regression_approved',
+        'RegressionRecommendation',
         recommendation_id,
         recommendation["project_id"],
         {"test_suite_id": suite["_id"], "test_count": len(selected_ids)},
     )
     await audit(
         user.id,
-        policy["suite_created_event"],
-        policy["suite_entity"],
+        'test_suite_created',
+        'TestSuite',
         suite["_id"],
         recommendation["project_id"],
         {"source_regression_recommendation_id": recommendation_id},

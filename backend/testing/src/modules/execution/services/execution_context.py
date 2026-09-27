@@ -5,27 +5,26 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
 from src.repositories.execution_context import execution_context_repository
-from src.services.domain_policy import domain_policy
 
 
-CONTEXT_POLICY = domain_policy("execution_context")
+
 
 
 async def ensure_release_completion_gate(project_id: str, release_id: str):
-    policy = CONTEXT_POLICY
+    
     project = await execution_context_repository.project_settings(project_id)
     if (
         not (project or {})
         .get("settings", {})
-        .get(policy["completion_gate_setting"], policy["completion_gate_default"])
+        .get('require_completion_report_before_release_close', False)
     ):
         return False
     if not await execution_context_repository.approved_completion_exists(
-        project_id, release_id, policy["completion_approved_statuses"]
+        project_id, release_id, ['APPROVED', 'CLOSED']
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["completion_gate_failed"]},
+            detail={"code": 'RELEASE_COMPLETION_GATE_FAILED'},
         )
     return True
 
@@ -41,49 +40,49 @@ async def resolve_execution_context(
     build: str = "",
     environment: str = "",
 ):
-    policy = CONTEXT_POLICY
-    collections = policy["collections"]
-    permissions = policy["permissions"]
-    codes = policy["error_codes"]
-    archived_status = policy["statuses"]["archived"]
+    
+    
+    
+    
+    
     release_entity = None
     build_entity = None
     environment_entity = None
     if release_id:
         release_entity = await get_project_entity(
-            collections["release"], release_id, user, permissions["release_read"]
+            'releases', release_id, user, 'release.read'
         )
         if release_entity.get("project_id") != project_id:
-            raise HTTPException(status_code=422, detail={"code": codes["project_mismatch"]})
-        if release_entity.get("status") == archived_status:
-            raise HTTPException(status_code=422, detail={"code": codes["release_archived"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+        if release_entity.get("status") == 'ARCHIVED':
+            raise HTTPException(status_code=422, detail={"code": 'RELEASE_ARCHIVED'})
     if build_id:
         build_entity = await get_project_entity(
-            collections["build"], build_id, user, permissions["build_read"]
+            'builds', build_id, user, 'build.read'
         )
         if build_entity.get("project_id") != project_id:
-            raise HTTPException(status_code=422, detail={"code": codes["project_mismatch"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
         linked_release_id = build_entity.get("release_id")
         if release_id and linked_release_id and linked_release_id != release_id:
-            raise HTTPException(status_code=422, detail={"code": codes["build_release_mismatch"]})
+            raise HTTPException(status_code=422, detail={"code": 'BUILD_RELEASE_MISMATCH'})
         if not release_id and linked_release_id:
             release_id = linked_release_id
             release_entity = await get_project_entity(
-                collections["release"], release_id, user, permissions["release_read"]
+                'releases', release_id, user, 'release.read'
             )
-            if release_entity.get("status") == archived_status:
-                raise HTTPException(status_code=422, detail={"code": codes["release_archived"]})
+            if release_entity.get("status") == 'ARCHIVED':
+                raise HTTPException(status_code=422, detail={"code": 'RELEASE_ARCHIVED'})
     if environment_id:
         environment_entity = await get_project_entity(
-            collections["environment"],
+            'test_environments',
             environment_id,
             user,
-            permissions["environment_read"],
+            'environment.read',
         )
         if environment_entity.get("project_id") != project_id:
-            raise HTTPException(status_code=422, detail={"code": codes["project_mismatch"]})
-        if environment_entity.get("status") == archived_status:
-            raise HTTPException(status_code=422, detail={"code": codes["environment_archived"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+        if environment_entity.get("status") == 'ARCHIVED':
+            raise HTTPException(status_code=422, detail={"code": 'ENVIRONMENT_ARCHIVED'})
     return {
         "release_id": release_id,
         "build_id": build_id,
@@ -105,7 +104,7 @@ class ExecutionContextService:
     @staticmethod
     async def list_releases(project_id, status, user):
         await get_project(
-            project_id, user, CONTEXT_POLICY["permissions"]["release_read"]
+            project_id, user, 'release.read'
         )
         query = {"project_id": project_id}
         if status:
@@ -114,25 +113,25 @@ class ExecutionContextService:
 
     @staticmethod
     async def get_release(release_id, user):
-        policy = CONTEXT_POLICY
+        
         return await get_project_entity(
-            policy["collections"]["release"],
+            'releases',
             release_id,
             user,
-            policy["permissions"]["release_read"],
+            'release.read',
         )
 
     @staticmethod
     async def create_release(project_id, payload, user):
-        policy = CONTEXT_POLICY
-        await get_project(project_id, user, policy["permissions"]["release_create"])
+        
+        await get_project(project_id, user, 'release.create')
         timestamp = now()
         release = {
-            "_id": new_id(policy["id_prefixes"]["release"]),
+            "_id": new_id('REL'),
             "project_id": project_id,
             **payload.model_dump(),
-            "status": policy["statuses"]["planned"],
-            "revision": policy["initial_revision"],
+            "status": 'PLANNED',
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -142,12 +141,12 @@ class ExecutionContextService:
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["release_key_exists"]},
+                detail={"code": 'RELEASE_KEY_EXISTS'},
             )
         await audit(
             user.id,
-            policy["events"]["release_created"],
-            policy["entity_types"]["release"],
+            'release_created',
+            'Release',
             release["_id"],
             project_id,
         )
@@ -155,20 +154,20 @@ class ExecutionContextService:
 
     @staticmethod
     async def update_release(release_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         release = await get_project_entity(
-            policy["collections"]["release"],
+            'releases',
             release_id,
             user,
-            policy["permissions"]["release_update"],
+            'release.update',
         )
-        if release.get("status") not in set(policy["release_editable_statuses"]):
+        if release.get("status") not in set(['PLANNED', 'ACTIVE']):
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["release_state_invalid"]},
+                detail={"code": 'RELEASE_STATE_INVALID'},
             )
         updated = await optimistic_patch(
-            policy["collections"]["release"],
+            'releases',
             release_id,
             release["project_id"],
             payload.expected_revision,
@@ -176,8 +175,8 @@ class ExecutionContextService:
         )
         await audit(
             user.id,
-            policy["events"]["release_updated"],
-            policy["entity_types"]["release"],
+            'release_updated',
+            'Release',
             release_id,
             release["project_id"],
         )
@@ -185,11 +184,22 @@ class ExecutionContextService:
 
     @staticmethod
     async def transition_release(release_id, payload, user, transition_action):
-        policy = CONTEXT_POLICY
-        transition = policy["release_transitions"][transition_action]
+        
+        transition = {'activate': {'target': 'ACTIVE',
+              'sources': ['PLANNED'],
+              'permission': 'release.manage',
+              'event': 'release_activated'},
+ 'close': {'target': 'CLOSED',
+           'sources': ['ACTIVE'],
+           'permission': 'release.close',
+           'event': 'release_closed'},
+ 'archive': {'target': 'ARCHIVED',
+             'sources': ['CLOSED', 'PLANNED'],
+             'permission': 'release.archive',
+             'event': 'release_archived'}}[transition_action]
         target = transition["target"]
         release = await get_project_entity(
-            policy["collections"]["release"],
+            'releases',
             release_id,
             user,
             transition["permission"],
@@ -200,27 +210,27 @@ class ExecutionContextService:
             raise HTTPException(
                 status_code=409,
                 detail={
-                    "code": policy["error_codes"]["release_state_invalid"],
+                    "code": 'RELEASE_STATE_INVALID',
                     "current_status": release.get("status"),
                     "target_status": target,
                 },
             )
         completion_gate_applied = False
-        if target == policy["statuses"]["closed"]:
+        if target == 'CLOSED':
             try:
                 completion_gate_applied = await ensure_release_completion_gate(release["project_id"], release_id)
             except HTTPException:
                 await audit(
                     user.id,
-                    policy["events"]["release_close_blocked"],
-                    policy["entity_types"]["release"],
+                    'release_close_blocked',
+                    'Release',
                     release_id,
                     release["project_id"],
                     {"reason": payload.reason},
                 )
                 raise
         updated = await optimistic_patch(
-            policy["collections"]["release"],
+            'releases',
             release_id,
             release["project_id"],
             payload.expected_revision,
@@ -231,20 +241,20 @@ class ExecutionContextService:
                 "transition_reason": payload.reason,
             },
         )
-        if target == policy["statuses"]["active"]:
+        if target == 'ACTIVE':
             await execution_context_repository.set_current_release(
-                release["project_id"], release_id, policy["statuses"]["active"]
+                release["project_id"], release_id, 'ACTIVE'
             )
             updated["is_current"] = True
         event = (
-            policy["events"]["release_closed_after_completion"]
+            'release_closed_after_completion'
             if completion_gate_applied
             else transition["event"]
         )
         await audit(
             user.id,
             event,
-            policy["entity_types"]["release"],
+            'Release',
             release_id,
             release["project_id"],
             {"reason": payload.reason},
@@ -253,7 +263,7 @@ class ExecutionContextService:
 
     @staticmethod
     async def list_builds(project_id, release_id, user):
-        await get_project(project_id, user, CONTEXT_POLICY["permissions"]["build_read"])
+        await get_project(project_id, user, 'build.read')
         query = {"project_id": project_id}
         if release_id:
             query["release_id"] = release_id
@@ -261,25 +271,25 @@ class ExecutionContextService:
 
     @staticmethod
     async def get_build(build_id, user):
-        policy = CONTEXT_POLICY
+        
         return await get_project_entity(
-            policy["collections"]["build"],
+            'builds',
             build_id,
             user,
-            policy["permissions"]["build_read"],
+            'build.read',
         )
 
     @staticmethod
     async def create_build(project_id, payload, user):
-        policy = CONTEXT_POLICY
-        await get_project(project_id, user, policy["permissions"]["build_create"])
+        
+        await get_project(project_id, user, 'build.create')
         timestamp = now()
         build = {
-            "_id": new_id(policy["id_prefixes"]["build"]),
+            "_id": new_id('BLD'),
             "project_id": project_id,
             **payload.model_dump(),
-            "status": policy["statuses"]["active"],
-            "revision": policy["initial_revision"],
+            "status": 'ACTIVE',
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -289,12 +299,12 @@ class ExecutionContextService:
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["build_identifier_exists"]},
+                detail={"code": 'BUILD_IDENTIFIER_EXISTS'},
             )
         await audit(
             user.id,
-            policy["events"]["build_created"],
-            policy["entity_types"]["build"],
+            'build_created',
+            'Build',
             build["_id"],
             project_id,
         )
@@ -302,15 +312,15 @@ class ExecutionContextService:
 
     @staticmethod
     async def update_build(build_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         build = await get_project_entity(
-            policy["collections"]["build"],
+            'builds',
             build_id,
             user,
-            policy["permissions"]["build_manage"],
+            'build.manage',
         )
         updated = await optimistic_patch(
-            policy["collections"]["build"],
+            'builds',
             build_id,
             build["project_id"],
             payload.expected_revision,
@@ -318,8 +328,8 @@ class ExecutionContextService:
         )
         await audit(
             user.id,
-            policy["events"]["build_updated"],
-            policy["entity_types"]["build"],
+            'build_updated',
+            'Build',
             build_id,
             build["project_id"],
         )
@@ -327,15 +337,15 @@ class ExecutionContextService:
 
     @staticmethod
     async def set_current_build(build_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         build = await get_project_entity(
-            policy["collections"]["build"],
+            'builds',
             build_id,
             user,
-            policy["permissions"]["build_manage"],
+            'build.manage',
         )
         updated = await optimistic_patch(
-            policy["collections"]["build"],
+            'builds',
             build_id,
             build["project_id"],
             payload.expected_revision,
@@ -344,8 +354,8 @@ class ExecutionContextService:
         await execution_context_repository.set_current_build(build["project_id"], build_id)
         await audit(
             user.id,
-            policy["events"]["build_set_current"],
-            policy["entity_types"]["build"],
+            'build_set_current',
+            'Build',
             build_id,
             build["project_id"],
         )
@@ -353,35 +363,35 @@ class ExecutionContextService:
 
     @staticmethod
     async def list_environments(project_id, user):
-        policy = CONTEXT_POLICY
-        await get_project(project_id, user, policy["permissions"]["environment_read"])
+        
+        await get_project(project_id, user, 'environment.read')
         items = await execution_context_repository.list_active_environments(
-            project_id, policy["statuses"]["archived"]
+            project_id, 'ARCHIVED'
         )
         return [clean_secret_fields(item) for item in items]
 
     @staticmethod
     async def get_environment(environment_id, user):
-        policy = CONTEXT_POLICY
+        
         environment = await get_project_entity(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             user,
-            policy["permissions"]["environment_read"],
+            'environment.read',
         )
         return clean_secret_fields(environment)
 
     @staticmethod
     async def create_environment(project_id, payload, user):
-        policy = CONTEXT_POLICY
-        await get_project(project_id, user, policy["permissions"]["environment_create"])
+        
+        await get_project(project_id, user, 'environment.create')
         timestamp = now()
         environment = {
-            "_id": new_id(policy["id_prefixes"]["environment"]),
+            "_id": new_id('ENV'),
             "project_id": project_id,
             **payload.model_dump(),
-            "status": policy["statuses"]["active"],
-            "revision": policy["initial_revision"],
+            "status": 'ACTIVE',
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -391,12 +401,12 @@ class ExecutionContextService:
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["environment_name_exists"]},
+                detail={"code": 'ENVIRONMENT_NAME_EXISTS'},
             )
         await audit(
             user.id,
-            policy["events"]["environment_created"],
-            policy["entity_types"]["environment"],
+            'environment_created',
+            'TestEnvironment',
             environment["_id"],
             project_id,
         )
@@ -404,15 +414,15 @@ class ExecutionContextService:
 
     @staticmethod
     async def update_environment(environment_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         environment = await get_project_entity(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             user,
-            policy["permissions"]["environment_update"],
+            'environment.update',
         )
         updated = await optimistic_patch(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             environment["project_id"],
             payload.expected_revision,
@@ -420,8 +430,8 @@ class ExecutionContextService:
         )
         await audit(
             user.id,
-            policy["events"]["environment_updated"],
-            policy["entity_types"]["environment"],
+            'environment_updated',
+            'TestEnvironment',
             environment_id,
             environment["project_id"],
         )
@@ -429,15 +439,15 @@ class ExecutionContextService:
 
     @staticmethod
     async def update_environment_secrets(environment_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         environment = await get_project_entity(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             user,
-            policy["permissions"]["environment_secrets"],
+            'environment.secret_ref.manage',
         )
         updated = await optimistic_patch(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             environment["project_id"],
             payload.expected_revision,
@@ -445,8 +455,8 @@ class ExecutionContextService:
         )
         await audit(
             user.id,
-            policy["events"]["environment_secrets_updated"],
-            policy["entity_types"]["environment"],
+            'environment_secret_refs_updated',
+            'TestEnvironment',
             environment_id,
             environment["project_id"],
             {"names": sorted(payload.secret_refs)},
@@ -455,20 +465,20 @@ class ExecutionContextService:
 
     @staticmethod
     async def archive_environment(environment_id, payload, user):
-        policy = CONTEXT_POLICY
+        
         environment = await get_project_entity(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             user,
-            policy["permissions"]["environment_archive"],
+            'environment.archive',
         )
         updated = await optimistic_patch(
-            policy["collections"]["environment"],
+            'test_environments',
             environment_id,
             environment["project_id"],
             payload.expected_revision,
             {
-                "status": policy["statuses"]["archived"],
+                "status": 'ARCHIVED',
                 "archive_reason": payload.reason,
                 "archived_at": now(),
                 "archived_by": user.id,
@@ -476,8 +486,8 @@ class ExecutionContextService:
         )
         await audit(
             user.id,
-            policy["events"]["environment_archived"],
-            policy["entity_types"]["environment"],
+            'environment_archived',
+            'TestEnvironment',
             environment_id,
             environment["project_id"],
             {"reason": payload.reason},

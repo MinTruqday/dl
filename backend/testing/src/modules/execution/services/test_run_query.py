@@ -12,7 +12,6 @@ from src.core.common import (
     sort_spec,
 )
 from src.repositories.test_run import test_run_repository
-from src.services.domain_policy import domain_policy
 
 
 async def list_test_run_records(
@@ -31,7 +30,7 @@ async def list_test_run_records(
     page_size=50,
     sort="-updated_at",
 ):
-    policy = domain_policy("test_run")
+    
     await get_project(project_id, user, "testrun.read")
     query = {"project_id": project_id}
     if name:
@@ -51,7 +50,7 @@ async def list_test_run_records(
             query[field] = value
     sort_field, direction = sort_spec(
         sort,
-        set(policy["sort_fields"]),
+        set(['name', 'release', 'build', 'environment', 'status', 'created_by', 'created_at', 'updated_at']),
     )
     total = await test_run_repository.count_runs(query)
     items = await test_run_repository.list_runs(
@@ -61,51 +60,63 @@ async def list_test_run_records(
 
 
 async def list_test_result_records(project_id, user, status=""):
-    policy = domain_policy("test_run")
+    
     await get_project(project_id, user, "testrun.read")
     query = {"project_id": project_id}
     statuses = [value.strip() for value in status.split(",") if value.strip()]
     if statuses:
-        allowed = set(policy["result_statuses"])
+        allowed = set(['NOT_RUN', 'IN_PROGRESS', 'PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE'])
         if not set(statuses) <= allowed:
             raise HTTPException(
-                status_code=422, detail={"code": policy["invalid_result_status_code"]}
+                status_code=422, detail={"code": 'INVALID_TEST_RESULT_STATUS'}
             )
         query["status"] = {"$in": statuses}
     return await test_run_repository.list_results(
-        query, policy["result_list_limit"], "updated_at", -1
+        query, 5000, "updated_at", -1
     )
 
 
 async def get_test_run_record(run_id, user):
-    policy = domain_policy("test_run")
+    
     run = await get_project_entity("test_runs", run_id, user, "testrun.read")
     versions = await test_run_repository.list_versions(
-        run["test_case_version_ids"], policy["detail_limit"]
+        run["test_case_version_ids"], 10000
     )
     results = await test_run_repository.list_results(
-        {"test_run_id": run_id}, policy["detail_limit"]
+        {"test_run_id": run_id}, 10000
     )
     defects = await test_run_repository.list_defects_for_results(
-        run["project_id"], [item["_id"] for item in results], policy["detail_limit"]
+        run["project_id"], [item["_id"] for item in results], 10000
     )
     return {**run, "test_case_versions": versions, "results": results, "defects": defects}
 
 
 async def build_test_run_report(run_id, user):
-    policy = domain_policy("test_run")
+    
     run = await get_project_entity("test_runs", run_id, user, "report.export")
     versions = await test_run_repository.list_versions(
-        run["test_case_version_ids"], policy["detail_limit"]
+        run["test_case_version_ids"], 10000
     )
     results = await test_run_repository.list_results(
-        {"test_run_id": run_id}, policy["detail_limit"]
+        {"test_run_id": run_id}, 10000
     )
     by_result = {item["test_case_version_id"]: item for item in results}
     identities = await load_user_identities(item.get("executed_by") for item in results)
-    fields = policy["report_fields"]
+    
     stream = io.StringIO()
-    writer = csv.DictWriter(stream, fieldnames=fields)
+    writer = csv.DictWriter(stream, fieldnames=['run_id',
+ 'run_name',
+ 'environment',
+ 'build',
+ 'test_case_key',
+ 'test_case_version',
+ 'title',
+ 'result',
+ 'executed_by',
+ 'executed_by_name',
+ 'executed_by_email',
+ 'executed_at',
+ 'note'])
     writer.writeheader()
     for version in versions:
         result = by_result.get(version["_id"], {})
@@ -119,7 +130,7 @@ async def build_test_run_report(run_id, user):
                 "test_case_key": version.get("test_case_key"),
                 "test_case_version": version.get("version"),
                 "title": version.get("title"),
-                "result": result.get("status", policy["not_run_status"]),
+                "result": result.get("status", 'NOT_RUN'),
                 "executed_by": result.get("executed_by"),
                 "executed_by_name": identity.get("full_name"),
                 "executed_by_email": identity.get("email"),

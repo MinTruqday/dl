@@ -34,7 +34,15 @@ class AIStreamingMiddleware:
             try:
                 await self.app(scope, receive, capture)
             except Exception as error:
-                await queue.put({"type": "error", "code": type(error).__name__})
+                code = type(error).__name__
+                await queue.put(
+                    {
+                        "type": "error",
+                        "code": code,
+                        "status": 500,
+                        "data": {"error": {"code": code, "message": code}},
+                    }
+                )
             finally:
                 stream_sink.reset(token)
                 await queue.put(None)

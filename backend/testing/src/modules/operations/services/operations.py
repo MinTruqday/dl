@@ -6,38 +6,37 @@ from src.clients.worker import WorkerClientError, worker_client
 from src.core.auth import CurrentUser
 from src.core.common import load_user_identities, now
 from src.repositories.operations import operations_repository
-from src.services.domain_policy import domain_policy
 
 
 class OperationsService:
     @staticmethod
     async def overview(limit, audit_q, audit_event, audit_project_id, user: CurrentUser):
-        policy = domain_policy("operations")
+        
         OperationsService._require_system_admin(user)
         failed_ingestion = await operations_repository.list_records(
             "import_jobs",
-            {"status": {"$in": policy["failed_ingestion_statuses"]}},
+            {"status": {"$in": ['FAILED', 'PARSE_FAILED']}},
             "created_at",
             limit,
         )
         failed_impact = await operations_repository.list_records(
             "impact_analyses",
-            {"status": {"$in": policy["failed_impact_statuses"]}},
+            {"status": {"$in": ['FAILED', 'DEGRADED']}},
             "updated_at",
             limit,
         )
         worker_failures = await operations_repository.list_records(
             "worker_events",
-            {"status": policy["failed_worker_status"]},
+            {"status": 'FAILED'},
             "completed_at",
             limit,
         )
         indexing_backlog = await operations_repository.count_records(
             "requirement_versions",
-            {"index_status": {"$in": policy["index_backlog_statuses"]}},
+            {"index_status": {"$in": ['PENDING', 'FAILED']}},
         ) + await operations_repository.count_records(
             "test_case_versions",
-            {"index_status": {"$in": policy["index_backlog_statuses"]}},
+            {"index_status": {"$in": ['PENDING', 'FAILED']}},
         )
         audit_events = await OperationsService._audit_events(
             limit, audit_q, audit_event, audit_project_id
@@ -50,39 +49,41 @@ class OperationsService:
             "storage_usage": await OperationsService._storage_usage(),
             "audit_events": audit_events,
             "knowledge_indexing_backlog": indexing_backlog,
-            "ai_models": policy["model_names"],
+            "ai_models": {'impact_analysis': 'evidence_impact_analysis',
+ 'maintenance_proposal': 'maintenance_analysis',
+ 'regression': 'risk_scoring'},
             "ai_request_metrics": await OperationsService._ai_request_metrics(),
         }
 
     @staticmethod
     async def retry_failed_job(job_id: str, user: CurrentUser):
-        policy = domain_policy("operations")
+        
         OperationsService._require_system_admin(user)
         try:
             return await worker_client.retry(job_id)
         except WorkerClientError as error:
             if error.status_code is None:
                 raise HTTPException(
-                    status_code=503, detail={"code": policy["worker_unavailable_code"]}
+                    status_code=503, detail={"code": 'WORKER_UNAVAILABLE'}
                 ) from error
             codes = {
-                404: policy["job_not_found_code"],
-                409: policy["job_retry_not_allowed_code"],
+                404: 'JOB_NOT_FOUND',
+                409: 'JOB_RETRY_NOT_ALLOWED',
             }
             raise HTTPException(
                 status_code=error.status_code,
-                detail={"code": codes.get(error.status_code, policy["worker_retry_failed_code"])},
+                detail={"code": codes.get(error.status_code, 'WORKER_RETRY_FAILED')},
             ) from error
 
     @staticmethod
     def _require_system_admin(user: CurrentUser):
-        policy = domain_policy("operations")
+        
         if not user.is_system_admin:
-            raise HTTPException(status_code=403, detail={"code": policy["platform_admin_required_code"]})
+            raise HTTPException(status_code=403, detail={"code": 'PLATFORM_ADMIN_REQUIRED'})
 
     @staticmethod
     def _attachment_size(value):
-        size_keys = set(domain_policy("operations")["storage_size_keys"])
+        size_keys = set(['size', 'size_bytes', 'bytes', 'byte_size'])
         if isinstance(value, dict):
             total = 0
             for key, item in value.items():
@@ -99,24 +100,28 @@ class OperationsService:
 
     @staticmethod
     async def _storage_usage():
-        policy = domain_policy("operations")
+        
         projects = await operations_repository.list_records(
             "projects",
             {},
             "updated_at",
-            policy["storage_project_limit"],
+            10000,
             {"_id": 1, "key": 1, "name": 1},
         )
         usage = []
         for project in projects:
             total = 0
             file_count = 0
-            for collection_name, field in policy["storage_fields"]:
+            for collection_name, field in [['requirement_documents', 'raw_source'],
+ ['test_case_drafts', 'attachments'],
+ ['test_case_versions', 'attachments'],
+ ['test_results', 'attachments'],
+ ['defects', 'attachments']]:
                 rows = await operations_repository.list_project_storage_values(
                     collection_name,
                     project["_id"],
                     field,
-                    policy["storage_record_limit"],
+                    10000,
                 )
                 for row in rows:
                     value = row.get(field)
@@ -139,13 +144,13 @@ class OperationsService:
 
     @staticmethod
     async def _ai_request_metrics():
-        policy = domain_policy("operations")
+        
         impact_total = await operations_repository.count_records("impact_analyses", {})
         impact_success = await operations_repository.count_records(
-            "impact_analyses", {"ai_result.status": policy["success_ai_status"]}
+            "impact_analyses", {"ai_result.status": 'SUCCESS'}
         )
         impact_degraded = await operations_repository.count_records(
-            "impact_analyses", {"ai_result.status": policy["degraded_ai_status"]}
+            "impact_analyses", {"ai_result.status": 'DEGRADED'}
         )
         latency_rows = await operations_repository.average_impact_latency()
         measured = impact_success + impact_degraded

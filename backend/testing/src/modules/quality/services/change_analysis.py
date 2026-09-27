@@ -1,57 +1,56 @@
 import re
 from difflib import SequenceMatcher
 
-from src.services.domain_policy import domain_policy
 
 
 def semantic_candidate_score(requirement_text, test_text):
-    pattern = domain_policy("text_processing")["token_pattern"]
-    requirement_tokens = set(re.findall(pattern, requirement_text.casefold()))
-    test_tokens = set(re.findall(pattern, test_text.casefold()))
+    
+    requirement_tokens = set(re.findall('[\\w-]+', requirement_text.casefold()))
+    test_tokens = set(re.findall('[\\w-]+', test_text.casefold()))
     if not requirement_tokens or not test_tokens:
         return 0.0
     return len(requirement_tokens & test_tokens) / max(1, len(requirement_tokens))
 
 
 def semantic_changes(before, after):
-    policy = domain_policy("change_analysis")
+    
     before_text = before.get("plain_text_projection", "")
     after_text = after.get("plain_text_projection", "")
-    tracked_fields = policy["tracked_fields"]
-    changed_fields = [field for field in tracked_fields if before.get(field) != after.get(field)]
+    
+    changed_fields = [field for field in ['title', 'actors', 'business_rules', 'dependencies'] if before.get(field) != after.get(field)]
     content_changed = before_text.strip() != after_text.strip()
     if not content_changed and not changed_fields:
         return []
     ratio = SequenceMatcher(None, before_text.lower(), after_text.lower()).ratio()
     return [
         {
-            "type": policy["modified_input_type"]
+            "type": 'MODIFIED_INPUT'
             if content_changed
-            else policy["text_only_type"],
+            else 'TEXT_ONLY',
             "subject": "content" if content_changed else ",".join(changed_fields),
             "before": {
-                "text": before_text[: policy["evidence_text_limit"]],
+                "text": before_text[: 500],
                 "fields": {field: before.get(field) for field in changed_fields},
             },
             "after": {
-                "text": after_text[: policy["evidence_text_limit"]],
+                "text": after_text[: 500],
                 "fields": {field: after.get(field) for field in changed_fields},
             },
             "confidence": round(
                 max(
-                    policy["content_confidence_minimum"],
-                    1 - ratio / policy["content_confidence_ratio_divisor"],
+                    0.55,
+                    1 - ratio / 2.0,
                 ),
                 4,
             ),
             "evidence": [
                 {
                     "artifact_version_id": before["_id"],
-                    "text": before_text[: policy["evidence_text_limit"]],
+                    "text": before_text[: 500],
                 },
                 {
                     "artifact_version_id": after["_id"],
-                    "text": after_text[: policy["evidence_text_limit"]],
+                    "text": after_text[: 500],
                 },
             ],
         }
@@ -59,16 +58,16 @@ def semantic_changes(before, after):
 
 
 def classify_test_impact(test_version, changes, direct_trace):
-    policy = domain_policy("change_analysis")
+    
     classification = (
-        policy["potentially_affected_classification"]
+        'POTENTIALLY_AFFECTED'
         if direct_trace
-        else policy["still_valid_classification"]
+        else 'STILL_VALID'
     )
     confidence = (
-        policy["direct_trace_confidence"]
+        0.78
         if direct_trace
-        else policy["indirect_trace_confidence"]
+        else 0.45
     )
     reasons = [
         "Có liên kết truy vết trực tiếp tới Requirement thay đổi"

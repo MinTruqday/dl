@@ -4,7 +4,6 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, get_project_entity, new_id, now, validate_doc
 from src.schemas.contracts.requirements import RequirementCreate
 from src.repositories.requirement_import import requirement_import_repository
-from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_import import atomic_requirement_candidates, parse_requirement_import
 from src.modules.requirements.services.requirement_indexing import validate_requirement_sources
 from src.modules.requirements.services.requirement_records import create_requirement_record
@@ -14,26 +13,26 @@ from src.modules.requirements.services.requirement_workflow import (
     prepare_requirement_candidates,
 )
 
-IMPORT_POLICY = domain_policy("requirement_import")
+
 
 
 async def extract_requirement_candidates(document_id, payload, user):
-    policy = IMPORT_POLICY
+    
     document = await get_project_entity(
-        policy["document_collection"],
+        'requirement_documents',
         document_id,
         user,
-        policy["permissions"]["extract"],
+        'requirement_document.extract',
     )
-    if document.get("status") == policy["archived_document_status"]:
+    if document.get("status") == 'ARCHIVED':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["document_archived"]}
+            status_code=409, detail={"code": 'DOCUMENT_ARCHIVED'}
         )
     if document.get("normalized_content") is None:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["error_codes"]["document_parse_required"],
+                "code": 'DOCUMENT_PARSE_REQUIRED',
                 "status": document.get("status"),
             },
         )
@@ -42,12 +41,12 @@ async def extract_requirement_candidates(document_id, payload, user):
         return existing
     await audit(
         user.id,
-        policy["events"]["extraction_requested"],
-        policy["document_entity_type"],
+        'requirement_extraction_requested',
+        'RequirementDocument',
         document_id,
         document["project_id"],
     )
-    job_id = new_id(policy["job_id_prefix"])
+    job_id = new_id('RIMP')
     candidates = prepare_requirement_candidates(job_id, atomic_requirement_candidates(document))
     job = {
         "_id": job_id,
@@ -56,12 +55,12 @@ async def extract_requirement_candidates(document_id, payload, user):
         "source_content_hash": document["content_hash"],
         "filename": document["filename"],
         "format": document["format"],
-        "status": policy["preview_status"],
+        "status": 'PREVIEW_READY',
         "preview": candidates,
         "candidate_count": len(candidates),
-        "extraction_mode": policy["deterministic_mode"],
+        "extraction_mode": 'DETERMINISTIC',
         "idempotency_key": payload.idempotency_key,
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": now(),
     }
@@ -72,14 +71,14 @@ async def extract_requirement_candidates(document_id, payload, user):
     await requirement_import_repository.mark_document_extracted(
         document_id,
         document["project_id"],
-        policy["extracted_document_status"],
+        'EXTRACTED',
         job["_id"],
         now(),
     )
     await audit(
         user.id,
-        policy["events"]["extraction_completed"],
-        policy["document_entity_type"],
+        'requirement_extraction_completed',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"job_id": job["_id"], "candidate_count": len(candidates)},
@@ -88,9 +87,9 @@ async def extract_requirement_candidates(document_id, payload, user):
 
 
 async def create_requirement_import_job(project_id, payload, user):
-    policy = IMPORT_POLICY
-    await get_project(project_id, user, policy["permissions"]["requirement_create"])
-    job_id = new_id(policy["job_id_prefix"])
+    
+    await get_project(project_id, user, 'requirement.create')
+    job_id = new_id('RIMP')
     previews = prepare_requirement_candidates(
         job_id,
         parse_requirement_import(payload.content, payload.format),
@@ -100,18 +99,18 @@ async def create_requirement_import_job(project_id, payload, user):
         "project_id": project_id,
         "filename": payload.filename,
         "format": payload.format,
-        "status": policy["preview_status"],
+        "status": 'PREVIEW_READY',
         "preview": previews,
         "candidate_count": len(previews),
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": now(),
     }
     await requirement_import_repository.insert(job)
     await audit(
         user.id,
-        policy["events"]["previewed"],
-        policy["job_entity_type"],
+        'requirement_import_previewed',
+        'RequirementImport',
         job["_id"],
         project_id,
         {"count": len(previews)},
@@ -120,15 +119,15 @@ async def create_requirement_import_job(project_id, payload, user):
 
 
 async def review_requirement_import_job(job_id, payload, user):
-    policy = IMPORT_POLICY
+    
     job = await get_project_entity(
-        policy["job_collection"], job_id, user, policy["permissions"]["review"]
+        'import_jobs', job_id, user, 'requirement_document.review_extraction'
     )
-    if job.get("status") != policy["preview_status"]:
+    if job.get("status") != 'PREVIEW_READY':
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["error_codes"]["preview_not_editable"],
+                "code": 'IMPORT_PREVIEW_NOT_EDITABLE',
                 "status": job.get("status"),
             },
         )
@@ -143,13 +142,13 @@ async def review_requirement_import_job(job_id, payload, user):
     submitted_by_id = {item.get("candidate_id"): item for item in submitted}
     if None in submitted_by_id or set(submitted_by_id) != set(current_by_id):
         raise HTTPException(
-            status_code=422, detail={"code": policy["error_codes"]["candidate_set_changed"]}
+            status_code=422, detail={"code": 'CANDIDATE_SET_CHANGED'}
         )
     preview = []
     for current in current_preview:
         candidate = submitted_by_id[current["candidate_id"]]
         candidate["source_refs"] = current.get("source_refs", [])
-        candidate["candidate_status"] = policy["active_candidate_status"]
+        candidate["candidate_status"] = 'ACTIVE'
         candidate["candidate_revision"] = int(current.get("candidate_revision", 1)) + 1
         candidate["candidate_relation"] = current.get("candidate_relation")
         candidate["parent_candidate_ids"] = current.get("parent_candidate_ids", [])
@@ -160,7 +159,7 @@ async def review_requirement_import_job(job_id, payload, user):
     updated = await requirement_import_repository.update_preview(
         job_id,
         job["project_id"],
-        policy["preview_status"],
+        'PREVIEW_READY',
         payload.expected_revision,
         preview,
         user.id,
@@ -169,12 +168,12 @@ async def review_requirement_import_job(job_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["events"]["reviewed"],
-        policy["job_entity_type"],
+        'requirement_import_reviewed',
+        'RequirementImport',
         job_id,
         job["project_id"],
         {"candidate_count": len(preview), "review_note": payload.review_note},
@@ -183,24 +182,24 @@ async def review_requirement_import_job(job_id, payload, user):
 
 
 async def merge_requirement_import_candidates(job_id, payload, user):
-    policy = IMPORT_POLICY
+    
     job = await get_project_entity(
-        policy["job_collection"], job_id, user, policy["permissions"]["review"]
+        'import_jobs', job_id, user, 'requirement_document.review_extraction'
     )
-    if job.get("status") != policy["preview_status"]:
+    if job.get("status") != 'PREVIEW_READY':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["preview_not_editable"]}
+            status_code=409, detail={"code": 'IMPORT_PREVIEW_NOT_EDITABLE'}
         )
     candidate_ids = list(dict.fromkeys(payload.candidate_ids))
     if len(candidate_ids) != len(payload.candidate_ids):
         raise HTTPException(
-            status_code=422, detail={"code": policy["error_codes"]["duplicate_candidate"]}
+            status_code=422, detail={"code": 'DUPLICATE_CANDIDATE_ID'}
         )
     preview = prepare_requirement_candidates(job_id, job.get("preview", []))
     by_id = {item["candidate_id"]: item for item in preview}
     if not set(candidate_ids) <= set(by_id):
         raise HTTPException(
-            status_code=404, detail={"code": policy["error_codes"]["candidate_not_found"]}
+            status_code=404, detail={"code": 'CANDIDATE_NOT_FOUND'}
         )
     parents = [by_id[item] for item in candidate_ids]
     merged = payload.merged.model_dump()
@@ -212,13 +211,13 @@ async def merge_requirement_import_candidates(job_id, payload, user):
         + merged.get("source_refs", [])
     )
     await validate_requirement_sources(job["project_id"], merged["source_refs"])
-    merged_id = new_id(policy["candidate_id_prefix"])
+    merged_id = new_id('RCAND')
     merged.update(
         {
             "candidate_id": merged_id,
-            "candidate_status": policy["active_candidate_status"],
-            "candidate_revision": policy["initial_revision"],
-            "candidate_relation": policy["merged_relation"],
+            "candidate_status": 'ACTIVE',
+            "candidate_revision": 1,
+            "candidate_relation": 'merged',
             "parent_candidate_ids": candidate_ids,
             "extraction_confidence": min(
                 (float(item.get("extraction_confidence", 1)) for item in parents),
@@ -232,8 +231,8 @@ async def merge_requirement_import_candidates(job_id, payload, user):
     next_preview = [item for item in preview if item["candidate_id"] not in candidate_ids]
     next_preview.insert(first_index, merged)
     event = {
-        "_id": new_id(policy["operation_id_prefix"]),
-        "type": policy["merge_operation"],
+        "_id": new_id('RCOP'),
+        "type": 'MERGE',
         "parent_candidate_ids": candidate_ids,
         "result_candidate_ids": [merged_id],
         "parent_fingerprints": [candidate_fingerprint(item) for item in parents],
@@ -245,7 +244,7 @@ async def merge_requirement_import_candidates(job_id, payload, user):
     updated = await requirement_import_repository.update_preview(
         job_id,
         job["project_id"],
-        policy["preview_status"],
+        'PREVIEW_READY',
         payload.expected_revision,
         next_preview,
         user.id,
@@ -255,12 +254,12 @@ async def merge_requirement_import_candidates(job_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["events"]["merged"],
-        policy["job_entity_type"],
+        'requirement_candidates_merged',
+        'RequirementImport',
         job_id,
         job["project_id"],
         {
@@ -273,23 +272,23 @@ async def merge_requirement_import_candidates(job_id, payload, user):
 
 
 async def split_requirement_import_candidate(job_id, candidate_id, payload, user):
-    policy = IMPORT_POLICY
+    
     job = await get_project_entity(
-        policy["job_collection"], job_id, user, policy["permissions"]["review"]
+        'import_jobs', job_id, user, 'requirement_document.review_extraction'
     )
-    if job.get("status") != policy["preview_status"]:
+    if job.get("status") != 'PREVIEW_READY':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["preview_not_editable"]}
+            status_code=409, detail={"code": 'IMPORT_PREVIEW_NOT_EDITABLE'}
         )
     preview = prepare_requirement_candidates(job_id, job.get("preview", []))
     parent = next((item for item in preview if item["candidate_id"] == candidate_id), None)
     if not parent:
         raise HTTPException(
-            status_code=404, detail={"code": policy["error_codes"]["candidate_not_found"]}
+            status_code=404, detail={"code": 'CANDIDATE_NOT_FOUND'}
         )
-    if len(preview) - 1 + len(payload.drafts) > policy["candidate_limit"]:
+    if len(preview) - 1 + len(payload.drafts) > 500:
         raise HTTPException(
-            status_code=422, detail={"code": policy["error_codes"]["candidate_limit"]}
+            status_code=422, detail={"code": 'CANDIDATE_LIMIT_EXCEEDED'}
         )
     children = []
     for index, draft in enumerate(payload.drafts):
@@ -303,10 +302,10 @@ async def split_requirement_import_candidate(job_id, candidate_id, payload, user
         await validate_requirement_sources(job["project_id"], child["source_refs"])
         child.update(
             {
-                "candidate_id": new_id(policy["candidate_id_prefix"]),
-                "candidate_status": policy["active_candidate_status"],
-                "candidate_revision": policy["initial_revision"],
-                "candidate_relation": f"{policy['split_relation_prefix']}-{index + 1}",
+                "candidate_id": new_id('RCAND'),
+                "candidate_status": 'ACTIVE',
+                "candidate_revision": 1,
+                "candidate_relation": f"{'split'}-{index + 1}",
                 "parent_candidate_ids": [candidate_id],
                 "extraction_confidence": float(parent.get("extraction_confidence", 1)),
             }
@@ -318,8 +317,8 @@ async def split_requirement_import_candidate(job_id, candidate_id, payload, user
     next_preview = list(preview)
     next_preview[parent_index : parent_index + 1] = children
     event = {
-        "_id": new_id(policy["operation_id_prefix"]),
-        "type": policy["split_operation"],
+        "_id": new_id('RCOP'),
+        "type": 'SPLIT',
         "parent_candidate_ids": [candidate_id],
         "result_candidate_ids": [item["candidate_id"] for item in children],
         "parent_fingerprints": [candidate_fingerprint(parent)],
@@ -331,7 +330,7 @@ async def split_requirement_import_candidate(job_id, candidate_id, payload, user
     updated = await requirement_import_repository.update_preview(
         job_id,
         job["project_id"],
-        policy["preview_status"],
+        'PREVIEW_READY',
         payload.expected_revision,
         next_preview,
         user.id,
@@ -341,12 +340,12 @@ async def split_requirement_import_candidate(job_id, candidate_id, payload, user
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["events"]["split"],
-        policy["job_entity_type"],
+        'requirement_candidate_split',
+        'RequirementImport',
         job_id,
         job["project_id"],
         {
@@ -359,13 +358,13 @@ async def split_requirement_import_candidate(job_id, candidate_id, payload, user
 
 
 async def reject_requirement_import_candidate(job_id, candidate_id, payload, user):
-    policy = IMPORT_POLICY
+    
     job = await get_project_entity(
-        policy["job_collection"], job_id, user, policy["permissions"]["review"]
+        'import_jobs', job_id, user, 'requirement_document.review_extraction'
     )
-    if job.get("status") != policy["preview_status"]:
+    if job.get("status") != 'PREVIEW_READY':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["preview_not_editable"]}
+            status_code=409, detail={"code": 'IMPORT_PREVIEW_NOT_EDITABLE'}
         )
     preview = prepare_requirement_candidates(job_id, job.get("preview", []))
     candidate = next((item for item in preview if item["candidate_id"] == candidate_id), None)
@@ -381,11 +380,11 @@ async def reject_requirement_import_candidate(job_id, candidate_id, payload, use
         if rejected:
             return job
         raise HTTPException(
-            status_code=404, detail={"code": policy["error_codes"]["candidate_not_found"]}
+            status_code=404, detail={"code": 'CANDIDATE_NOT_FOUND'}
         )
     rejected = {
         **candidate,
-        "candidate_status": policy["rejected_candidate_status"],
+        "candidate_status": 'REJECTED',
         "candidate_revision": int(candidate.get("candidate_revision", 1)) + 1,
         "rejection_reason": payload.reason,
         "rejected_by": user.id,
@@ -395,7 +394,7 @@ async def reject_requirement_import_candidate(job_id, candidate_id, payload, use
     updated = await requirement_import_repository.update_preview(
         job_id,
         job["project_id"],
-        policy["preview_status"],
+        'PREVIEW_READY',
         payload.expected_revision,
         next_preview,
         user.id,
@@ -405,12 +404,12 @@ async def reject_requirement_import_candidate(job_id, candidate_id, payload, use
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["events"]["rejected"],
-        policy["job_entity_type"],
+        'requirement_candidate_rejected',
+        'RequirementImport',
         job_id,
         job["project_id"],
         {"candidate_id": candidate_id, "reason": payload.reason},
@@ -419,12 +418,12 @@ async def reject_requirement_import_candidate(job_id, candidate_id, payload, use
 
 
 async def confirm_requirement_import_job(job_id, payload, user):
-    policy = IMPORT_POLICY
+    
     job = await get_project_entity(
-        policy["job_collection"], job_id, user, policy["permissions"]["confirm"]
+        'import_jobs', job_id, user, 'requirement_document.confirm_extraction'
     )
-    await get_project(job["project_id"], user, policy["permissions"]["requirement_create"])
-    if job["status"] == policy["confirmed_status"]:
+    await get_project(job["project_id"], user, 'requirement.create')
+    if job["status"] == 'CONFIRMED':
         return {"job": job, "requirements": None}
     indexes = payload.selected_indexes or list(range(len(job["preview"])))
     indexes = list(dict.fromkeys(indexes))
@@ -432,24 +431,24 @@ async def confirm_requirement_import_job(job_id, payload, user):
         if index < 0 or index >= len(job["preview"]):
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["error_codes"]["invalid_preview_index"]},
+                detail={"code": 'INVALID_PREVIEW_INDEX'},
             )
     claimed = await requirement_import_repository.claim_confirmation(
         job_id,
         job["project_id"],
-        policy["preview_status"],
-        policy["confirming_status"],
+        'PREVIEW_READY',
+        'CONFIRMING',
         user.id,
         now(),
         payload.expected_revision,
     )
     if not claimed:
         current = await requirement_import_repository.find(job_id, job["project_id"])
-        if current and current.get("status") == policy["confirmed_status"]:
+        if current and current.get("status") == 'CONFIRMED':
             return {"job": current, "requirements": None}
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["confirmation_in_progress"]},
+            detail={"code": 'IMPORT_CONFIRM_IN_PROGRESS'},
         )
     created = []
     try:
@@ -460,7 +459,7 @@ async def confirm_requirement_import_job(job_id, payload, user):
                     job["project_id"],
                     RequirementCreate(**item),
                     user,
-                    origin=policy["import_origin"],
+                    origin='import',
                 )
             )
     except Exception:
@@ -472,14 +471,14 @@ async def confirm_requirement_import_job(job_id, payload, user):
         await requirement_import_repository.reset_confirmation(
             job_id,
             job["project_id"],
-            policy["confirming_status"],
-            policy["preview_status"],
+            'CONFIRMING',
+            'PREVIEW_READY',
             now(),
         )
         await audit(
             user.id,
-            policy["events"]["confirmation_failed"],
-            policy["job_entity_type"],
+            'requirement_import_confirmation_failed',
+            'RequirementImport',
             job_id,
             job["project_id"],
         )
@@ -488,8 +487,8 @@ async def confirm_requirement_import_job(job_id, payload, user):
     await requirement_import_repository.confirm(
         job_id,
         job["project_id"],
-        policy["confirming_status"],
-        policy["confirmed_status"],
+        'CONFIRMING',
+        'CONFIRMED',
         [item["_id"] for item in created],
         indexes,
         rejected_indexes,
@@ -500,13 +499,13 @@ async def confirm_requirement_import_job(job_id, payload, user):
         await requirement_import_repository.confirm_document(
             job["source_document_id"],
             job["project_id"],
-            policy["confirmed_status"],
+            'CONFIRMED',
             now(),
         )
     await audit(
         user.id,
-        policy["events"]["confirmed"],
-        policy["job_entity_type"],
+        'requirement_import_confirmed',
+        'RequirementImport',
         job_id,
         job["project_id"],
         {

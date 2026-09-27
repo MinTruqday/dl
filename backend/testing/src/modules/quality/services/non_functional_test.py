@@ -3,31 +3,36 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.repositories.non_functional_test import non_functional_test_repository
-from src.services.domain_policy import domain_policy
 
 
-NON_FUNCTIONAL_TEST_POLICY = domain_policy("non_functional_test")
+
 
 
 def normalize_plan(value):
     if value is None:
         return value
     normalized = dict(value)
-    for target, source in NON_FUNCTIONAL_TEST_POLICY["field_aliases"].items():
+    for target, source in {'test_conditions': 'test_condition_ids',
+ 'test_cases': 'test_case_version_ids',
+ 'requirement_refs': 'requirement_version_ids',
+ 'tool_refs': 'tools'}.items():
         normalized[target] = normalized.get(target, normalized.get(source, []))
     return normalized
 
 
 async def validate_refs(project_id, values):
-    mappings = NON_FUNCTIONAL_TEST_POLICY["reference_collections"]
-    for field, collection_name in mappings.items():
+    
+    for field, collection_name in {'test_conditions': 'test_conditions',
+ 'test_cases': 'test_case_versions',
+ 'requirement_refs': 'requirement_versions',
+ 'source_ai_result_ids': 'ai_results'}.items():
         ids = list(dict.fromkeys(values.get(field) or []))
         if ids and await non_functional_test_repository.count_project_entities(
             collection_name, project_id, ids
         ) != len(ids):
             raise HTTPException(
                 status_code=422,
-                detail={"code": NON_FUNCTIONAL_TEST_POLICY["trace_not_in_project_code"], "field": field},
+                detail={"code": 'NFR_TRACE_NOT_IN_PROJECT', "field": field},
             )
 
 
@@ -36,7 +41,7 @@ async def get_plan(plan_id, user, permission="nfrtest.read"):
     if not value:
         raise HTTPException(
             status_code=404,
-            detail={"code": NON_FUNCTIONAL_TEST_POLICY["entity_not_found_code"]},
+            detail={"code": 'ENTITY_NOT_FOUND'},
         )
     await get_project(value["project_id"], user, permission)
     return normalize_plan(value)
@@ -50,14 +55,14 @@ async def list_plans(project_id, plan_type, user):
     items = [
         normalize_plan(item)
         for item in await non_functional_test_repository.list_plans(
-            query, domain_policy("non_functional_test")["list_limit"]
+            query, 1000
         )
     ]
     return {"items": items, "total": len(items)}
 
 
 async def create_plan(project_id, payload, user):
-    policy = domain_policy("non_functional_test")
+    
     await get_project(project_id, user, "nfrtest.manage")
     await validate_refs(project_id, payload.model_dump())
     if payload.idempotency_key:
@@ -70,16 +75,16 @@ async def create_plan(project_id, payload, user):
                 or existing.get("name") != payload.name
             ):
                 raise HTTPException(
-                    status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                    status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
                 )
             return existing
     timestamp = now()
     value = {
-        "_id": new_id(policy["plan_id_prefix"]),
+        "_id": new_id('NFR'),
         "project_id": project_id,
         **payload.model_dump(),
         "external_evidence_ids": [],
-        "status": policy["draft_status"],
+        "status": 'DRAFT',
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -105,22 +110,22 @@ async def create_plan(project_id, payload, user):
 
 
 async def update_plan(plan_id, payload, user):
-    policy = domain_policy("non_functional_test")
+    
     value = await get_plan(plan_id, user, "nfrtest.manage")
-    if value["status"] not in policy["editable_statuses"]:
-        raise HTTPException(status_code=409, detail={"code": policy["approved_immutable_code"]})
+    if value["status"] not in ['DRAFT', 'IN_REVIEW']:
+        raise HTTPException(status_code=409, detail={"code": 'APPROVED_NFR_PLAN_IMMUTABLE'})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     await validate_refs(value["project_id"], changes)
     merged = normalize_plan({**value, **changes})
     if not merged.get("test_conditions") and not merged.get("test_cases"):
-        raise HTTPException(status_code=422, detail={"code": policy["trace_required_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'NFR_TRACE_REQUIRED'})
     changes["updated_at"] = now()
     updated = await non_functional_test_repository.update_plan(
-        plan_id, payload.expected_revision, policy["editable_statuses"], changes
+        plan_id, payload.expected_revision, ['DRAFT', 'IN_REVIEW'], changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
         "nfr_test_plan_updated",
@@ -133,13 +138,14 @@ async def update_plan(plan_id, payload, user):
 
 
 async def transition_plan(plan_id, payload, user, approve=False):
-    policy = domain_policy("non_functional_test")
+    
     permission = "nfrtest.approve" if approve else "nfrtest.review"
     value = await get_plan(plan_id, user, permission)
-    transition = policy["transitions"]["approve" if approve else "submit"]
+    transition = {'submit': {'source': 'DRAFT', 'target': 'IN_REVIEW'},
+ 'approve': {'source': 'IN_REVIEW', 'target': 'APPROVED'}}["approve" if approve else "submit"]
     source, target = transition["source"], transition["target"]
     if value["status"] != source:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_NFR_PLAN_TRANSITION'})
     timestamp = now()
     changes = {"status": target, "updated_at": timestamp, "transition_note": payload.note}
     if approve:
@@ -150,7 +156,7 @@ async def transition_plan(plan_id, payload, user, approve=False):
         plan_id, payload.expected_revision, source, changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
         "nfr_test_plan_approved" if approve else "nfr_test_plan_submitted",
@@ -163,7 +169,7 @@ async def transition_plan(plan_id, payload, user, approve=False):
 
 
 async def import_evidence(plan_id, payload, user):
-    policy = domain_policy("non_functional_test")
+    
     value = await get_plan(plan_id, user, "nfrtest.evidence.import")
     existing = await non_functional_test_repository.find_evidence_by_idempotency_key(
         value["project_id"], payload.idempotency_key
@@ -171,12 +177,12 @@ async def import_evidence(plan_id, payload, user):
     if existing:
         if existing["plan_id"] != plan_id or existing["raw_result_hash"] != payload.raw_result_hash:
             raise HTTPException(
-                status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
             )
         return existing
     timestamp = now()
     evidence = {
-        "_id": new_id(policy["evidence_id_prefix"]),
+        "_id": new_id('NFREVD'),
         "project_id": value["project_id"],
         "plan_id": plan_id,
         **payload.model_dump(),
@@ -220,7 +226,7 @@ class NonFunctionalTestService:
     async def get(plan_id, user):
         value = await get_plan(plan_id, user)
         value["external_evidence"] = await non_functional_test_repository.list_evidence(
-            plan_id, domain_policy("non_functional_test")["evidence_list_limit"]
+            plan_id, 1000
         )
         return value
 

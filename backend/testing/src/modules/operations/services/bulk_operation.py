@@ -4,13 +4,12 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, new_id, now
 from src.schemas.contracts.design import ProposalAction
 from src.repositories.bulk_operation import bulk_operation_repository
-from src.services.domain_policy import domain_policy
 from src.modules.quality.services.maintenance_proposal import create_maintenance_proposal_records
 from src.modules.quality.services.proposal_application import apply_maintenance_proposal
 
 
 def operation_key(payload):
-    return payload.idempotency_key or new_id(domain_policy("bulk_operation")["request_id_prefix"])
+    return payload.idempotency_key or new_id('OP')
 
 
 def item_result(item_id, status, code=None, **details):
@@ -34,7 +33,6 @@ class BulkOperationService:
         results=None,
         details=None,
     ):
-        policy = domain_policy("bulk_operation")
         if idempotency_key:
             existing = await bulk_operation_repository.find_operation(
                 project_id, idempotency_key
@@ -42,8 +40,8 @@ class BulkOperationService:
             if existing:
                 return existing["response"]
         operation = {
-            "_id": new_id(policy["record_id_prefix"]),
-            "operation_id": new_id(policy["operation_id_prefix"]),
+            "_id": new_id('OP'),
+            "operation_id": new_id('OPR'),
             "project_id": project_id,
             "operation_type": operation_type,
             "succeeded": succeeded,
@@ -56,7 +54,7 @@ class BulkOperationService:
         response = {
             "operation_id": operation["operation_id"],
             "operation_type": operation_type,
-            "status": policy["preview_status"] if preview else policy["completed_status"],
+            "status": 'PREVIEW' if preview else 'COMPLETED',
             "preview": preview,
             "succeeded": succeeded,
             "failed": failed,
@@ -93,8 +91,7 @@ class BulkOperationService:
 
     @staticmethod
     async def fresh_proposal(proposal):
-        policy = domain_policy("bulk_operation")
-        if proposal.get("proposal_type") not in policy["version_bound_proposal_types"]:
+        if proposal.get("proposal_type") not in ['UPDATE_TEST_CASE', 'MARK_OBSOLETE']:
             return True
         target = await bulk_operation_repository.find_case_version_identity(
             proposal.get("target_artifact_id"), proposal["project_id"]
@@ -103,8 +100,7 @@ class BulkOperationService:
 
     @classmethod
     async def tags(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        permission = policy["tag_permissions"][payload.artifact_type]
+        permission = {'requirement': 'requirement.update', 'test_case': 'testcase.bulk.update'}[payload.artifact_type]
         await get_project(project_id, user, permission)
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
@@ -114,10 +110,10 @@ class BulkOperationService:
         remove_tags = {value.strip() for value in payload.remove_tags if value.strip()}
         if not add_tags and not remove_tags:
             raise HTTPException(
-                status_code=422, detail={"code": policy["empty_operation_code"]}
+                status_code=422, detail={"code": 'EMPTY_BULK_OPERATION'}
             )
-        if any(len(value) > policy["maximum_tag_length"] for value in add_tags | remove_tags):
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_tag_code"]})
+        if any(len(value) > 100 for value in add_tags | remove_tags):
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TAG'})
         succeeded = []
         failed = []
         results = []
@@ -126,30 +122,30 @@ class BulkOperationService:
                 payload.artifact_type, artifact_id, project_id
             )
             if not artifact:
-                failed.append({"id": artifact_id, "code": policy["entity_not_found_code"]})
+                failed.append({"id": artifact_id, "code": 'ENTITY_NOT_FOUND'})
                 results.append(
                     item_result(
-                        artifact_id, policy["failed_status"], policy["entity_not_found_code"]
+                        artifact_id, 'FAILED', 'ENTITY_NOT_FOUND'
                     )
                 )
                 continue
             tags = (set(artifact.get("tags", [])) | add_tags) - remove_tags
             if payload.preview:
                 succeeded.append(artifact_id)
-                results.append(item_result(artifact_id, policy["preview_status"], before_tags=sorted(artifact.get("tags", [])), after_tags=sorted(tags)))
+                results.append(item_result(artifact_id, 'PREVIEW', before_tags=sorted(artifact.get("tags", [])), after_tags=sorted(tags)))
                 continue
             result = await bulk_operation_repository.update_artifact_tags(
                 payload.artifact_type, artifact_id, project_id, sorted(tags), now()
             )
             if result.matched_count:
                 succeeded.append(artifact_id)
-                results.append(item_result(artifact_id, policy["succeeded_status"], tags=sorted(tags)))
+                results.append(item_result(artifact_id, 'SUCCEEDED', tags=sorted(tags)))
             else:
-                failed.append({"id": artifact_id, "code": policy["revision_conflict_code"]})
-                results.append(item_result(artifact_id, policy["failed_status"], policy["revision_conflict_code"]))
+                failed.append({"id": artifact_id, "code": 'REVISION_CONFLICT'})
+                results.append(item_result(artifact_id, 'FAILED', 'REVISION_CONFLICT'))
         return await cls.finish(
             project_id,
-            policy["tag_operation_type"],
+            'BULK_TAGS',
             succeeded,
             failed,
             user,
@@ -161,8 +157,7 @@ class BulkOperationService:
 
     @classmethod
     async def add_to_suite(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        await get_project(project_id, user, policy["test_case_bulk_permission"])
+        await get_project(project_id, user, 'testcase.bulk.update')
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
         if replay:
@@ -170,11 +165,11 @@ class BulkOperationService:
         suite = await bulk_operation_repository.find_suite(payload.suite_id, project_id)
         if not suite:
             raise HTTPException(
-                status_code=404, detail={"code": policy["entity_not_found_code"]}
+                status_code=404, detail={"code": 'ENTITY_NOT_FOUND'}
             )
         if suite.get("revision", 1) != payload.expected_revision:
             raise HTTPException(
-                status_code=409, detail={"code": policy["revision_conflict_code"]}
+                status_code=409, detail={"code": 'REVISION_CONFLICT'}
             )
         succeeded = []
         failed = []
@@ -182,15 +177,15 @@ class BulkOperationService:
         version_ids = set(suite.get("test_case_version_ids", []))
         for test_case_id in dict.fromkeys(payload.test_case_ids):
             test_case = await bulk_operation_repository.find_current_case(
-                test_case_id, project_id, policy["obsolete_status"]
+                test_case_id, project_id, 'OBSOLETE'
             )
             if not test_case or not test_case.get("current_version_id"):
-                failed.append({"id": test_case_id, "code": policy["entity_not_found_code"]})
-                results.append(item_result(test_case_id, policy["failed_status"], policy["entity_not_found_code"]))
+                failed.append({"id": test_case_id, "code": 'ENTITY_NOT_FOUND'})
+                results.append(item_result(test_case_id, 'FAILED', 'ENTITY_NOT_FOUND'))
                 continue
             version_ids.add(test_case["current_version_id"])
             succeeded.append(test_case_id)
-            results.append(item_result(test_case_id, policy["preview_status"] if payload.preview else policy["succeeded_status"], version_id=test_case["current_version_id"]))
+            results.append(item_result(test_case_id, 'PREVIEW' if payload.preview else 'SUCCEEDED', version_id=test_case["current_version_id"]))
         if not payload.preview:
             updated = await bulk_operation_repository.update_suite_versions(
                 payload.suite_id,
@@ -201,11 +196,11 @@ class BulkOperationService:
             )
             if not updated:
                 raise HTTPException(
-                    status_code=409, detail={"code": policy["revision_conflict_code"]}
+                    status_code=409, detail={"code": 'REVISION_CONFLICT'}
                 )
         return await cls.finish(
             project_id,
-            policy["suite_operation_type"],
+            'BULK_ADD_TO_SUITE',
             succeeded,
             failed,
             user,
@@ -217,8 +212,7 @@ class BulkOperationService:
 
     @classmethod
     async def mark_review_required(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        await get_project(project_id, user, policy["test_case_bulk_permission"])
+        await get_project(project_id, user, 'testcase.bulk.update')
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
         if replay:
@@ -228,7 +222,7 @@ class BulkOperationService:
         results = []
         for test_case_id in dict.fromkeys(payload.test_case_ids):
             test_case = await bulk_operation_repository.find_current_case(
-                test_case_id, project_id, policy["obsolete_status"]
+                test_case_id, project_id, 'OBSOLETE'
             )
             result = (
                 None
@@ -236,8 +230,8 @@ class BulkOperationService:
                 else await bulk_operation_repository.mark_case_review_required(
                     test_case_id,
                     project_id,
-                    policy["obsolete_status"],
-                    policy["needs_update_status"],
+                    'OBSOLETE',
+                    'NEEDS_UPDATE',
                     payload.reason,
                     user.id,
                     now(),
@@ -245,13 +239,13 @@ class BulkOperationService:
             )
             if (payload.preview and test_case) or (result and result.matched_count):
                 succeeded.append(test_case_id)
-                results.append(item_result(test_case_id, policy["preview_status"] if payload.preview else policy["succeeded_status"]))
+                results.append(item_result(test_case_id, 'PREVIEW' if payload.preview else 'SUCCEEDED'))
             else:
-                failed.append({"id": test_case_id, "code": policy["entity_not_found_code"]})
-                results.append(item_result(test_case_id, policy["failed_status"], policy["entity_not_found_code"]))
+                failed.append({"id": test_case_id, "code": 'ENTITY_NOT_FOUND'})
+                results.append(item_result(test_case_id, 'FAILED', 'ENTITY_NOT_FOUND'))
         return await cls.finish(
             project_id,
-            policy["review_operation_type"],
+            'BULK_MARK_REVIEW_REQUIRED',
             succeeded,
             failed,
             user,
@@ -263,8 +257,7 @@ class BulkOperationService:
 
     @classmethod
     async def archive(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        permission = policy["archive_permissions"][payload.artifact_type]
+        permission = {'requirement': 'requirement.archive', 'test_case': 'testcase.bulk.archive'}[payload.artifact_type]
         await get_project(project_id, user, permission)
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
@@ -278,46 +271,46 @@ class BulkOperationService:
                 payload.artifact_type, artifact_id, project_id
             )
             if not artifact:
-                failed.append({"id": artifact_id, "code": policy["entity_not_found_code"]})
-                results.append(item_result(artifact_id, policy["failed_status"], policy["entity_not_found_code"]))
+                failed.append({"id": artifact_id, "code": 'ENTITY_NOT_FOUND'})
+                results.append(item_result(artifact_id, 'FAILED', 'ENTITY_NOT_FOUND'))
                 continue
-            if artifact.get("status") == policy["obsolete_status"]:
-                failed.append({"id": artifact_id, "code": policy["already_archived_code"]})
-                results.append(item_result(artifact_id, policy["failed_status"], policy["already_archived_code"]))
+            if artifact.get("status") == 'OBSOLETE':
+                failed.append({"id": artifact_id, "code": 'ALREADY_ARCHIVED'})
+                results.append(item_result(artifact_id, 'FAILED', 'ALREADY_ARCHIVED'))
                 continue
-            if payload.artifact_type == policy["test_case_type"]:
+            if payload.artifact_type == 'test_case':
                 active_run = await bulk_operation_repository.find_active_run(
                     project_id,
-                    policy["active_run_statuses"],
+                    ['DRAFT', 'READY', 'IN_PROGRESS'],
                     artifact.get("current_version_id"),
                 )
                 if active_run:
-                    failed.append({"id": artifact_id, "code": policy["active_run_link_code"]})
-                    results.append(item_result(artifact_id, policy["failed_status"], policy["active_run_link_code"]))
+                    failed.append({"id": artifact_id, "code": 'ACTIVE_RUN_LINK'})
+                    results.append(item_result(artifact_id, 'FAILED', 'ACTIVE_RUN_LINK'))
                     continue
             if payload.preview:
                 succeeded.append(artifact_id)
-                results.append(item_result(artifact_id, policy["preview_status"], current_status=artifact.get("status", policy["active_status"]), target_status=policy["obsolete_status"]))
+                results.append(item_result(artifact_id, 'PREVIEW', current_status=artifact.get("status", 'ACTIVE'), target_status='OBSOLETE'))
                 continue
             result = await bulk_operation_repository.archive_artifact(
                 payload.artifact_type,
                 artifact_id,
                 project_id,
                 artifact.get("current_version_id"),
-                policy["obsolete_status"],
+                'OBSOLETE',
                 payload.reason,
                 user.id,
                 now(),
             )
             if result.matched_count:
                 succeeded.append(artifact_id)
-                results.append(item_result(artifact_id, policy["succeeded_status"], target_status=policy["obsolete_status"]))
+                results.append(item_result(artifact_id, 'SUCCEEDED', target_status='OBSOLETE'))
             else:
-                failed.append({"id": artifact_id, "code": policy["revision_conflict_code"]})
-                results.append(item_result(artifact_id, policy["failed_status"], policy["revision_conflict_code"]))
+                failed.append({"id": artifact_id, "code": 'REVISION_CONFLICT'})
+                results.append(item_result(artifact_id, 'FAILED', 'REVISION_CONFLICT'))
         return await cls.finish(
             project_id,
-            policy["archive_operation_type"],
+            'BULK_ARCHIVE',
             succeeded,
             failed,
             user,
@@ -329,8 +322,7 @@ class BulkOperationService:
 
     @classmethod
     async def generate_proposals(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        await get_project(project_id, user, policy["proposal_generate_permission"])
+        await get_project(project_id, user, 'proposal.bulk.generate')
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
         if replay:
@@ -343,14 +335,14 @@ class BulkOperationService:
                 analysis_id, project_id
             )
             if not analysis:
-                failed.append({"id": analysis_id, "code": policy["entity_not_found_code"]})
-                results.append(item_result(analysis_id, policy["failed_status"], policy["entity_not_found_code"]))
+                failed.append({"id": analysis_id, "code": 'ENTITY_NOT_FOUND'})
+                results.append(item_result(analysis_id, 'FAILED', 'ENTITY_NOT_FOUND'))
                 continue
             if payload.preview:
                 succeeded.append(analysis_id)
                 results.append(item_result(
                     analysis_id,
-                    policy["preview_status"],
+                    'PREVIEW',
                     analysis_status=analysis.get("status"),
                     proposal_count=await bulk_operation_repository.count_proposals(analysis_id),
                 ))
@@ -358,15 +350,15 @@ class BulkOperationService:
             try:
                 await create_maintenance_proposal_records(analysis_id, user)
                 succeeded.append(analysis_id)
-                results.append(item_result(analysis_id, policy["succeeded_status"]))
+                results.append(item_result(analysis_id, 'SUCCEEDED'))
             except HTTPException as error:
                 detail = error.detail if isinstance(error.detail, dict) else {}
-                code = detail.get("code", policy["request_failed_code"])
+                code = detail.get("code", 'REQUEST_FAILED')
                 failed.append({"id": analysis_id, "code": code})
-                results.append(item_result(analysis_id, policy["failed_status"], code))
+                results.append(item_result(analysis_id, 'FAILED', code))
         return await cls.finish(
             project_id,
-            policy["proposal_generate_operation_type"],
+            'BULK_GENERATE_PROPOSALS',
             succeeded,
             failed,
             user,
@@ -377,16 +369,14 @@ class BulkOperationService:
 
     @classmethod
     async def approve_proposals(cls, project_id, payload, user):
-        policy = domain_policy("bulk_operation")
-        project = await get_project(project_id, user, policy["proposal_approve_permission"])
+        project = await get_project(project_id, user, 'proposal.bulk.approve')
         idempotency_key = operation_key(payload)
         replay = await cls.replay(project_id, idempotency_key)
         if replay:
             return replay
-        approval_policy = domain_policy("proposal_approval")
         threshold = float(
             project.get("settings", {}).get(
-                "impact_confidence_threshold", approval_policy["impact_confidence_default"]
+                "impact_confidence_threshold", 0.75
             )
         )
         succeeded = []
@@ -396,45 +386,45 @@ class BulkOperationService:
             proposal = await bulk_operation_repository.find_proposal(proposal_id, project_id)
             code = None
             if not proposal:
-                code = policy["entity_not_found_code"]
-            elif proposal.get("status") != policy["pending_status"]:
-                code = policy["invalid_transition_code"]
+                code = 'ENTITY_NOT_FOUND'
+            elif proposal.get("status") != 'PENDING':
+                code = 'INVALID_STATE_TRANSITION'
             elif not proposal.get("last_reviewed_by"):
-                code = policy["proposal_review_required_code"]
+                code = 'PROPOSAL_REVIEW_REQUIRED'
             elif float(proposal.get("confidence", 0)) < threshold:
-                code = policy["threshold_not_met_code"]
+                code = 'POLICY_THRESHOLD_NOT_MET'
             elif not await cls.fresh_proposal(proposal):
-                code = policy["stale_proposal_code"]
+                code = 'STALE_PROPOSAL'
             if code:
                 failed.append({"id": proposal_id, "code": code})
                 details = {"target_artifact_id": (proposal or {}).get("target_artifact_id")}
-                if code == policy["threshold_not_met_code"]:
+                if code == 'POLICY_THRESHOLD_NOT_MET':
                     details.update({"confidence": proposal.get("confidence", 0), "threshold": threshold})
-                if code == policy["stale_proposal_code"]:
+                if code == 'STALE_PROPOSAL':
                     details["base_version_id"] = proposal.get("base_version_id")
-                results.append(item_result(proposal_id, policy["failed_status"], code, **details))
+                results.append(item_result(proposal_id, 'FAILED', code, **details))
                 continue
             if payload.preview:
                 succeeded.append(proposal_id)
-                results.append(item_result(proposal_id, policy["preview_status"], target_artifact_id=proposal.get("target_artifact_id"), base_version_id=proposal.get("base_version_id")))
+                results.append(item_result(proposal_id, 'PREVIEW', target_artifact_id=proposal.get("target_artifact_id"), base_version_id=proposal.get("base_version_id")))
                 continue
             try:
                 await apply_maintenance_proposal(
                     proposal_id,
                     ProposalAction(expected_revision=proposal["revision"], review_note=payload.review_note),
                     user,
-                    policy["accepted_status"],
+                    'ACCEPTED',
                 )
                 succeeded.append(proposal_id)
-                results.append(item_result(proposal_id, policy["succeeded_status"], target_artifact_id=proposal.get("target_artifact_id")))
+                results.append(item_result(proposal_id, 'SUCCEEDED', target_artifact_id=proposal.get("target_artifact_id")))
             except HTTPException as error:
                 detail = error.detail if isinstance(error.detail, dict) else {}
-                code = detail.get("code", policy["request_failed_code"])
+                code = detail.get("code", 'REQUEST_FAILED')
                 failed.append({"id": proposal_id, "code": code})
-                results.append(item_result(proposal_id, policy["failed_status"], code, target_artifact_id=proposal.get("target_artifact_id")))
+                results.append(item_result(proposal_id, 'FAILED', code, target_artifact_id=proposal.get("target_artifact_id")))
         return await cls.finish(
             project_id,
-            policy["proposal_approve_operation_type"],
+            'BULK_APPROVE_PROPOSALS',
             succeeded,
             failed,
             user,

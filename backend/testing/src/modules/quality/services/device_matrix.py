@@ -10,37 +10,36 @@ from src.schemas.contracts.environment import (
     DeviceMatrixCreate,
     DeviceMatrixPatch,
 )
-from src.services.domain_policy import domain_policy
 
 
-DEVICE_POLICY = domain_policy("device_matrix")
+
 
 
 class DeviceMatrixService:
     @staticmethod
     async def list(project_id: str, include_archived: bool, user: CurrentUser):
-        await get_project(project_id, user, DEVICE_POLICY["read_permission"])
+        await get_project(project_id, user, 'device_matrix.read')
         query = {"project_id": project_id}
         if not include_archived:
-            query["status"] = {"$ne": DEVICE_POLICY["archived_status"]}
+            query["status"] = {"$ne": 'ARCHIVED'}
         return await test_design_repository.list_device_matrices(query)
 
     @staticmethod
     async def get(matrix_id: str, user: CurrentUser):
         return await get_project_entity(
-            DEVICE_POLICY["collection"], matrix_id, user, DEVICE_POLICY["read_permission"]
+            'device_matrices', matrix_id, user, 'device_matrix.read'
         )
 
     @staticmethod
     async def create(project_id: str, payload: DeviceMatrixCreate, user: CurrentUser):
-        await get_project(project_id, user, DEVICE_POLICY["manage_permission"])
+        await get_project(project_id, user, 'device_matrix.manage')
         timestamp = now()
         matrix = {
-            "_id": new_id(DEVICE_POLICY["id_prefix"]),
+            "_id": new_id('DMX'),
             "project_id": project_id,
             **payload.model_dump(),
-            "status": DEVICE_POLICY["active_status"],
-            "revision": DEVICE_POLICY["initial_revision"],
+            "status": 'ACTIVE',
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -49,12 +48,12 @@ class DeviceMatrixService:
             await test_design_repository.insert_device_matrix(matrix)
         except DuplicateKeyError as error:
             raise HTTPException(
-                status_code=409, detail={"code": DEVICE_POLICY["name_exists_code"]}
+                status_code=409, detail={"code": 'DEVICE_MATRIX_NAME_EXISTS'}
             ) from error
         await audit(
             user.id,
-            DEVICE_POLICY["created_event"],
-            DEVICE_POLICY["entity"],
+            'device_matrix_created',
+            'DeviceMatrix',
             matrix["_id"],
             project_id,
         )
@@ -63,15 +62,15 @@ class DeviceMatrixService:
     @staticmethod
     async def update(matrix_id: str, payload: DeviceMatrixPatch, user: CurrentUser):
         matrix = await get_project_entity(
-            DEVICE_POLICY["collection"], matrix_id, user, DEVICE_POLICY["manage_permission"]
+            'device_matrices', matrix_id, user, 'device_matrix.manage'
         )
-        if matrix.get("status") != DEVICE_POLICY["active_status"]:
+        if matrix.get("status") != 'ACTIVE':
             raise HTTPException(
-                status_code=409, detail={"code": DEVICE_POLICY["archived_code"]}
+                status_code=409, detail={"code": 'DEVICE_MATRIX_ARCHIVED'}
             )
         try:
             updated = await optimistic_patch(
-                DEVICE_POLICY["collection"],
+                'device_matrices',
                 matrix_id,
                 matrix["project_id"],
                 payload.expected_revision,
@@ -79,12 +78,12 @@ class DeviceMatrixService:
             )
         except DuplicateKeyError as error:
             raise HTTPException(
-                status_code=409, detail={"code": DEVICE_POLICY["name_exists_code"]}
+                status_code=409, detail={"code": 'DEVICE_MATRIX_NAME_EXISTS'}
             ) from error
         await audit(
             user.id,
-            DEVICE_POLICY["updated_event"],
-            DEVICE_POLICY["entity"],
+            'device_matrix_updated',
+            'DeviceMatrix',
             matrix_id,
             matrix["project_id"],
         )
@@ -93,17 +92,17 @@ class DeviceMatrixService:
     @staticmethod
     async def archive(matrix_id: str, payload: DeviceMatrixArchive, user: CurrentUser):
         matrix = await get_project_entity(
-            DEVICE_POLICY["collection"], matrix_id, user, DEVICE_POLICY["manage_permission"]
+            'device_matrices', matrix_id, user, 'device_matrix.manage'
         )
-        if matrix.get("status") == DEVICE_POLICY["archived_status"]:
+        if matrix.get("status") == 'ARCHIVED':
             return matrix
         updated = await optimistic_patch(
-            DEVICE_POLICY["collection"],
+            'device_matrices',
             matrix_id,
             matrix["project_id"],
             payload.expected_revision,
             {
-                "status": DEVICE_POLICY["archived_status"],
+                "status": 'ARCHIVED',
                 "archive_reason": payload.reason,
                 "archived_by": user.id,
                 "archived_at": now(),
@@ -111,8 +110,8 @@ class DeviceMatrixService:
         )
         await audit(
             user.id,
-            DEVICE_POLICY["archived_event"],
-            DEVICE_POLICY["entity"],
+            'device_matrix_archived',
+            'DeviceMatrix',
             matrix_id,
             matrix["project_id"],
             {"reason": payload.reason},
@@ -122,11 +121,11 @@ class DeviceMatrixService:
     @staticmethod
     async def assign(matrix_id: str, payload: DeviceMatrixAssignment, user: CurrentUser):
         matrix = await get_project_entity(
-            DEVICE_POLICY["collection"], matrix_id, user, DEVICE_POLICY["assign_permission"]
+            'device_matrices', matrix_id, user, 'device_matrix.assign'
         )
-        if matrix.get("status") != DEVICE_POLICY["active_status"]:
+        if matrix.get("status") != 'ACTIVE':
             raise HTTPException(
-                status_code=409, detail={"code": DEVICE_POLICY["archived_code"]}
+                status_code=409, detail={"code": 'DEVICE_MATRIX_ARCHIVED'}
             )
         enabled_profiles = {
             item["key"]: item for item in matrix.get("profiles", []) if item.get("enabled", True)
@@ -134,23 +133,23 @@ class DeviceMatrixService:
         selected_keys = list(dict.fromkeys(payload.profile_keys or enabled_profiles.keys()))
         if not selected_keys or not set(selected_keys) <= set(enabled_profiles):
             raise HTTPException(
-                status_code=422, detail={"code": DEVICE_POLICY["selection_invalid_code"]}
+                status_code=422, detail={"code": 'DEVICE_PROFILE_SELECTION_INVALID'}
             )
         collection = (
-            DEVICE_POLICY["test_plan_collection"]
+            'test_plans'
             if payload.target_type == "test_plan"
-            else DEVICE_POLICY["test_run_collection"]
+            else 'test_runs'
         )
         target = await get_project_entity(
             collection, payload.target_id, user, "device_matrix.assign"
         )
         if target["project_id"] != matrix["project_id"]:
             raise HTTPException(
-                status_code=422, detail={"code": DEVICE_POLICY["project_mismatch_code"]}
+                status_code=422, detail={"code": 'PROJECT_MISMATCH'}
             )
-        if target.get("status") != DEVICE_POLICY["draft_status"]:
+        if target.get("status") != 'DRAFT':
             raise HTTPException(
-                status_code=409, detail={"code": DEVICE_POLICY["target_frozen_code"]}
+                status_code=409, detail={"code": 'DEVICE_MATRIX_TARGET_SCOPE_FROZEN'}
             )
         snapshot = {
             "matrix_id": matrix_id,
@@ -173,10 +172,10 @@ class DeviceMatrixService:
         )
         await audit(
             user.id,
-            DEVICE_POLICY["assigned_event"],
-            DEVICE_POLICY["test_plan_entity"]
+            'device_matrix_assigned',
+            'TestPlan'
             if payload.target_type == "test_plan"
-            else DEVICE_POLICY["test_run_entity"],
+            else 'TestRun',
             payload.target_id,
             matrix["project_id"],
             {

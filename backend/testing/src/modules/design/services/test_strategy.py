@@ -12,27 +12,26 @@ from src.schemas.test_strategy import (
     strategy_snapshot,
 )
 from src.repositories.test_strategy import test_strategy_repository
-from src.services.domain_policy import domain_policy
 
 
-STRATEGY_POLICY = domain_policy("test_strategy")
+
 
 
 async def get_strategy_for_user(strategy_id, user, permission=None):
-    policy = STRATEGY_POLICY
+    
     strategy = await test_strategy_repository.get(strategy_id)
     if not strategy:
         raise HTTPException(
-            status_code=404, detail={"code": policy["error_codes"]["not_found"]}
+            status_code=404, detail={"code": 'TEST_STRATEGY_NOT_FOUND'}
         )
     await get_project(
-        strategy["project_id"], user, permission or policy["permissions"]["read"]
+        strategy["project_id"], user, permission or 'teststrategy.read'
     )
     return strategy
 
 
 async def list_strategies(project_id, user, query_text, status, version, page, page_size):
-    await get_project(project_id, user, STRATEGY_POLICY["permissions"]["read"])
+    await get_project(project_id, user, 'teststrategy.read')
     query = {"project_id": project_id}
     if query_text:
         query["$or"] = [
@@ -48,21 +47,21 @@ async def list_strategies(project_id, user, query_text, status, version, page, p
 
 
 async def create_strategy(project_id, payload, user):
-    policy = STRATEGY_POLICY
-    await get_project(project_id, user, policy["permissions"]["create"])
+    
+    await get_project(project_id, user, 'teststrategy.create')
     timestamp = now()
-    strategy_id = new_id(policy["id_prefix"])
+    strategy_id = new_id('TSTR')
     value = {
         "_id": strategy_id,
         "lineage_id": strategy_id,
         "project_id": project_id,
         **payload.model_dump(),
-        "version": policy["initial_version"],
-        "status": policy["statuses"]["draft"],
+        "version": 1,
+        "status": 'DRAFT',
         "active_approved": False,
         "reviewed_by": [],
         "approval_history": [],
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -71,35 +70,35 @@ async def create_strategy(project_id, payload, user):
         await test_strategy_repository.create(value)
     except DuplicateKeyError as error:
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["key_version_exists"]}
+            status_code=409, detail={"code": 'STRATEGY_KEY_VERSION_EXISTS'}
         ) from error
     await audit(
         user.id,
-        policy["events"]["created"],
-        policy["entity_type"],
+        'test_strategy_created',
+        'TestStrategy',
         strategy_id,
         project_id,
-        {"key": value["key"], "version": policy["initial_version"]},
+        {"key": value["key"], "version": 1},
     )
     return value
 
 
 async def update_strategy(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["update"]
+        strategy_id, user, 'teststrategy.update'
     )
-    if strategy["status"] == statuses["archived"]:
+    if strategy["status"] == 'ARCHIVED':
         raise HTTPException(
             status_code=409,
-            detail={"code": codes["artifact_archived"], "artifact_type": policy["artifact_type"]},
+            detail={"code": 'ARTIFACT_ARCHIVED', "artifact_type": 'TEST_STRATEGY'},
         )
-    if strategy["status"] not in set(policy["editable_statuses"]):
+    if strategy["status"] not in set(['DRAFT', 'IN_REVIEW']):
         raise HTTPException(
             status_code=409,
-            detail={"code": codes["not_draft"], "status": strategy["status"]},
+            detail={"code": 'TEST_STRATEGY_NOT_DRAFT', "status": strategy["status"]},
         )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
@@ -110,15 +109,15 @@ async def update_strategy(strategy_id, payload, user):
         strategy_id,
         strategy["project_id"],
         payload.expected_revision,
-        set(policy["editable_statuses"]),
+        set(['DRAFT', 'IN_REVIEW']),
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["updated"],
-        policy["entity_type"],
+        'test_strategy_updated',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {"fields": sorted(field for field in changes if field != "updated_at")},
@@ -127,30 +126,30 @@ async def update_strategy(strategy_id, payload, user):
 
 
 async def submit_strategy(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["submit_review"]
+        strategy_id, user, 'teststrategy.submit_review'
     )
     completeness = strategy_completeness(strategy)
     if not completeness["ready_for_review"]:
         raise HTTPException(
-            status_code=409, detail={"code": codes["incomplete"], **completeness}
+            status_code=409, detail={"code": 'TEST_STRATEGY_INCOMPLETE', **completeness}
         )
     if not strategy.get("reviewer_ids"):
-        raise HTTPException(status_code=422, detail={"code": codes["reviewers_required"]})
+        raise HTTPException(status_code=422, detail={"code": 'STRATEGY_REVIEWERS_REQUIRED'})
     if not any(reviewer_id != user.id for reviewer_id in strategy.get("reviewer_ids", [])):
         raise HTTPException(
-            status_code=422, detail={"code": codes["independent_reviewer_required"]}
+            status_code=422, detail={"code": 'INDEPENDENT_STRATEGY_REVIEWER_REQUIRED'}
         )
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
         payload.expected_revision,
-        {statuses["draft"]},
+        {'DRAFT'},
         {
-            "status": statuses["in_review"],
+            "status": 'IN_REVIEW',
             "submitted_by": user.id,
             "submitted_at": now(),
             "review_note": payload.note,
@@ -158,11 +157,11 @@ async def submit_strategy(strategy_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["transition_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'STRATEGY_TRANSITION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["submitted"],
-        policy["entity_type"],
+        'test_strategy_submitted',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {"note": payload.note},
@@ -171,38 +170,38 @@ async def submit_strategy(strategy_id, payload, user):
 
 
 async def request_strategy_changes(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["review"]
+        strategy_id, user, 'teststrategy.review'
     )
     if user.id not in strategy.get("reviewer_ids", []):
         raise HTTPException(
-            status_code=403, detail={"code": codes["review_assignment_required"]}
+            status_code=403, detail={"code": 'STRATEGY_REVIEW_ASSIGNMENT_REQUIRED'}
         )
     if user.id == strategy.get("created_by"):
         raise HTTPException(
-            status_code=403, detail={"code": codes["self_review_not_allowed"]}
+            status_code=403, detail={"code": 'STRATEGY_SELF_REVIEW_NOT_ALLOWED'}
         )
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
         payload.expected_revision,
-        {statuses["in_review"]},
+        {'IN_REVIEW'},
         {
-            "status": statuses["draft"],
+            "status": 'DRAFT',
             "reviewed_by": list(dict.fromkeys([*strategy.get("reviewed_by", []), user.id])),
             "change_request": payload.note,
             "updated_at": now(),
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["transition_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'STRATEGY_TRANSITION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["changes_requested"],
-        policy["entity_type"],
+        'test_strategy_changes_requested',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {"note": payload.note},
@@ -211,35 +210,35 @@ async def request_strategy_changes(strategy_id, payload, user):
 
 
 async def approve_strategy(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["approve"]
+        strategy_id, user, 'teststrategy.approve'
     )
-    if strategy["status"] != statuses["in_review"]:
-        raise HTTPException(status_code=409, detail={"code": codes["not_in_review"]})
+    if strategy["status"] != 'IN_REVIEW':
+        raise HTTPException(status_code=409, detail={"code": 'STRATEGY_NOT_IN_REVIEW'})
     if payload.expected_revision != strategy["revision"]:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     completeness = strategy_completeness(strategy)
     if not completeness["ready_for_review"]:
         raise HTTPException(
-            status_code=409, detail={"code": codes["incomplete"], **completeness}
+            status_code=409, detail={"code": 'TEST_STRATEGY_INCOMPLETE', **completeness}
         )
     if not strategy.get("reviewed_by"):
-        raise HTTPException(status_code=409, detail={"code": codes["review_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'STRATEGY_REVIEW_REQUIRED'})
     timestamp = now()
     existing = await test_strategy_repository.active_approved(
-        strategy["project_id"], statuses["approved"], strategy_id
+        strategy["project_id"], 'APPROVED', strategy_id
     )
     if existing:
         await test_strategy_repository.update(
             existing["_id"],
             strategy["project_id"],
             existing["revision"],
-            {statuses["approved"]},
+            {'APPROVED'},
             {
-                "status": statuses["superseded"],
+                "status": 'SUPERSEDED',
                 "active_approved": False,
                 "superseded_by": strategy_id,
                 "superseded_at": timestamp,
@@ -249,7 +248,7 @@ async def approve_strategy(strategy_id, payload, user):
     snapshot = strategy_snapshot(strategy)
     approval = {
         "actor_id": user.id,
-        "action": policy["approval_action"],
+        "action": 'APPROVED',
         "note": payload.note,
         "at": timestamp,
     }
@@ -258,9 +257,9 @@ async def approve_strategy(strategy_id, payload, user):
             strategy_id,
             strategy["project_id"],
             payload.expected_revision,
-            {statuses["in_review"]},
+            {'IN_REVIEW'},
             {
-                "status": statuses["approved"],
+                "status": 'APPROVED',
                 "active_approved": True,
                 "approved_by": user.id,
                 "approved_at": timestamp,
@@ -276,11 +275,11 @@ async def approve_strategy(strategy_id, payload, user):
                 existing["_id"],
                 strategy["project_id"],
                 existing["revision"] + 1,
-                {statuses["superseded"]},
-                {"status": statuses["approved"], "active_approved": True, "updated_at": now()},
+                {'SUPERSEDED'},
+                {"status": 'APPROVED', "active_approved": True, "updated_at": now()},
             )
         raise HTTPException(
-            status_code=409, detail={"code": codes["active_conflict"]}
+            status_code=409, detail={"code": 'TEST_STRATEGY_ACTIVE_CONFLICT'}
         ) from error
     if not updated:
         if existing:
@@ -288,14 +287,14 @@ async def approve_strategy(strategy_id, payload, user):
                 existing["_id"],
                 strategy["project_id"],
                 existing["revision"] + 1,
-                {statuses["superseded"]},
-                {"status": statuses["approved"], "active_approved": True, "updated_at": now()},
+                {'SUPERSEDED'},
+                {"status": 'APPROVED', "active_approved": True, "updated_at": now()},
             )
-        raise HTTPException(status_code=409, detail={"code": codes["transition_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'STRATEGY_TRANSITION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["approved"],
-        policy["entity_type"],
+        'test_strategy_approved',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {
@@ -307,35 +306,35 @@ async def approve_strategy(strategy_id, payload, user):
 
 
 async def create_strategy_version(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["create_version"]
+        strategy_id, user, 'teststrategy.version.create'
     )
-    if strategy["status"] not in set(policy["version_source_statuses"]):
+    if strategy["status"] not in set(['APPROVED', 'SUPERSEDED']):
         raise HTTPException(
-            status_code=409, detail={"code": codes["version_source_not_approved"]}
+            status_code=409, detail={"code": 'STRATEGY_VERSION_SOURCE_NOT_APPROVED'}
         )
     if payload.expected_revision != strategy["revision"]:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     version = await test_strategy_repository.next_version(strategy["lineage_id"])
     timestamp = now()
     fields = {field: strategy.get(field) for field in TestStrategyFields.model_fields}
     value = {
-        "_id": new_id(policy["id_prefix"]),
+        "_id": new_id('TSTR'),
         "lineage_id": strategy["lineage_id"],
         "project_id": strategy["project_id"],
         "key": strategy["key"],
         **fields,
         "version": version,
-        "status": statuses["draft"],
+        "status": 'DRAFT',
         "active_approved": False,
         "reviewed_by": [],
         "approval_history": [],
         "version_reason": payload.change_reason,
         "derived_from_strategy_id": strategy_id,
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -344,12 +343,12 @@ async def create_strategy_version(strategy_id, payload, user):
         await test_strategy_repository.create(value)
     except DuplicateKeyError as error:
         raise HTTPException(
-            status_code=409, detail={"code": codes["version_conflict"]}
+            status_code=409, detail={"code": 'STRATEGY_VERSION_CONFLICT'}
         ) from error
     await audit(
         user.id,
-        policy["events"]["version_created"],
-        policy["entity_type"],
+        'test_strategy_version_created',
+        'TestStrategy',
         value["_id"],
         strategy["project_id"],
         {"source_strategy_id": strategy_id, "version": version, "reason": payload.change_reason},
@@ -359,34 +358,34 @@ async def create_strategy_version(strategy_id, payload, user):
 
 async def validate_strategy(strategy_id, user):
     strategy = await get_strategy_for_user(
-        strategy_id, user, STRATEGY_POLICY["permissions"]["review"]
+        strategy_id, user, 'teststrategy.review'
     )
     return strategy_completeness(strategy)
 
 
 async def review_strategy(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["review"]
+        strategy_id, user, 'teststrategy.review'
     )
-    if strategy["status"] != statuses["in_review"]:
-        raise HTTPException(status_code=409, detail={"code": codes["review_state_invalid"]})
+    if strategy["status"] != 'IN_REVIEW':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_STRATEGY_NOT_IN_REVIEW'})
     if user.id not in strategy.get("reviewer_ids", []):
         raise HTTPException(
-            status_code=403, detail={"code": codes["review_assignment_required"]}
+            status_code=403, detail={"code": 'STRATEGY_REVIEW_ASSIGNMENT_REQUIRED'}
         )
     if user.id == strategy.get("created_by"):
         raise HTTPException(
-            status_code=403, detail={"code": codes["self_review_not_allowed"]}
+            status_code=403, detail={"code": 'STRATEGY_SELF_REVIEW_NOT_ALLOWED'}
         )
     entry = {"reviewer_id": user.id, "note": payload.note, "at": now()}
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
         payload.expected_revision,
-        {statuses["in_review"]},
+        {'IN_REVIEW'},
         {
             "reviewed_by": list(dict.fromkeys([*strategy.get("reviewed_by", []), user.id])),
             "review_history": [*strategy.get("review_history", []), entry],
@@ -394,11 +393,11 @@ async def review_strategy(strategy_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["reviewed"],
-        policy["entity_type"],
+        'test_strategy_reviewed',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {"note": payload.note},
@@ -407,29 +406,29 @@ async def review_strategy(strategy_id, payload, user):
 
 
 async def compare_strategies(strategy_id, other_strategy_id, user):
-    policy = STRATEGY_POLICY
+    
     left = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["read_version"]
+        strategy_id, user, 'teststrategy.version.read'
     )
     right = await get_strategy_for_user(
-        other_strategy_id, user, policy["permissions"]["read_version"]
+        other_strategy_id, user, 'teststrategy.version.read'
     )
     if left["project_id"] != right["project_id"]:
         raise HTTPException(
             status_code=422,
-            detail={"code": policy["error_codes"]["cross_project_reference"]},
+            detail={"code": 'CROSS_PROJECT_REFERENCE'},
         )
     return compare_strategy_snapshots(left, right)
 
 
 async def clone_strategy(project_id, payload, user):
-    policy = STRATEGY_POLICY
-    await get_project(project_id, user, policy["permissions"]["create"])
+    
+    await get_project(project_id, user, 'teststrategy.create')
     source = await get_strategy_for_user(
-        payload.source_strategy_id, user, policy["permissions"]["read"]
+        payload.source_strategy_id, user, 'teststrategy.read'
     )
     timestamp = now()
-    strategy_id = new_id(policy["id_prefix"])
+    strategy_id = new_id('TSTR')
     fields = {field: source.get(field) for field in TestStrategyFields.model_fields}
     fields["name"] = payload.name
     fields["tailoring_rationale"] = payload.tailoring_rationale
@@ -439,14 +438,14 @@ async def clone_strategy(project_id, payload, user):
         "project_id": project_id,
         "key": payload.key,
         **fields,
-        "version": policy["initial_version"],
-        "status": policy["statuses"]["draft"],
+        "version": 1,
+        "status": 'DRAFT',
         "active_approved": False,
         "reviewed_by": [],
         "approval_history": [],
         "cloned_from_strategy_id": source["_id"],
         "cloned_from_project_id": source["project_id"],
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -456,12 +455,12 @@ async def clone_strategy(project_id, payload, user):
     except DuplicateKeyError as error:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["key_version_exists"]},
+            detail={"code": 'STRATEGY_KEY_VERSION_EXISTS'},
         ) from error
     await audit(
         user.id,
-        policy["events"]["cloned"],
-        policy["entity_type"],
+        'test_strategy_cloned',
+        'TestStrategy',
         strategy_id,
         project_id,
         {"source_strategy_id": source["_id"]},
@@ -470,17 +469,17 @@ async def clone_strategy(project_id, payload, user):
 
 
 async def archive_strategy(strategy_id, payload, user):
-    policy = STRATEGY_POLICY
+    
     strategy = await get_strategy_for_user(
-        strategy_id, user, policy["permissions"]["archive"]
+        strategy_id, user, 'teststrategy.archive'
     )
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
         payload.expected_revision,
-        set(policy["archive_source_statuses"]),
+        set(['DRAFT', 'SUPERSEDED']),
         {
-            "status": policy["statuses"]["archived"],
+            "status": 'ARCHIVED',
             "active_approved": False,
             "archived_by": user.id,
             "archived_at": now(),
@@ -491,12 +490,12 @@ async def archive_strategy(strategy_id, payload, user):
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["archive_conflict"]},
+            detail={"code": 'STRATEGY_ARCHIVE_CONFLICT'},
         )
     await audit(
         user.id,
-        policy["events"]["archived"],
-        policy["entity_type"],
+        'test_strategy_archived',
+        'TestStrategy',
         strategy_id,
         strategy["project_id"],
         {"reason": payload.note},

@@ -11,7 +11,6 @@ from src.schemas.test_monitoring import (
     source_fingerprint,
 )
 from src.repositories.test_monitoring import test_monitoring_repository
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
 from src.modules.quality.services.quality_gate import (
     create_quality_decision,
@@ -26,7 +25,7 @@ from src.modules.execution.services.test_monitoring_snapshot import (
     monitoring_sources,
 )
 
-MONITORING_POLICY = domain_policy("test_monitoring")
+
 
 __all__ = [
     "create_quality_decision",
@@ -37,26 +36,26 @@ __all__ = [
 
 
 async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCreate, user):
-    await get_project(project_id, user, MONITORING_POLICY["snapshot_create_permission"])
+    await get_project(project_id, user, 'testmonitor.snapshot.create')
     plan = await test_monitoring_repository.find_test_plan(payload.test_plan_id, project_id)
     if not plan:
         raise HTTPException(
             status_code=422,
-            detail={"code": MONITORING_POLICY["source_incomplete_code"], "reason_code": MONITORING_POLICY["invalid_plan_reason_code"]},
+            detail={"code": 'MONITORING_SOURCE_INCOMPLETE', "reason_code": 'INVALID_TEST_PLAN'},
         )
-    if plan.get("status") != MONITORING_POLICY["approved_status"] or not plan.get(
+    if plan.get("status") != 'APPROVED' or not plan.get(
         "approved_snapshot_hash"
     ):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": MONITORING_POLICY["source_incomplete_code"],
-                "reason_code": MONITORING_POLICY["plan_not_approved_reason_code"],
+                "code": 'MONITORING_SOURCE_INCOMPLETE',
+                "reason_code": 'TEST_PLAN_NOT_APPROVED',
             },
         )
     release_id = payload.release_id or plan.get("release_id")
     if release_id and not await test_monitoring_repository.release_exists(release_id, project_id):
-        raise HTTPException(status_code=422, detail={"code": MONITORING_POLICY["invalid_release_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_RELEASE'})
     if payload.idempotency_key:
         existing = await test_monitoring_repository.find_snapshot_by_idempotency(
             project_id, payload.idempotency_key
@@ -66,7 +65,7 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
                 existing.get("test_plan_id") != payload.test_plan_id
                 or existing.get("release_id") != release_id
             ):
-                raise HTTPException(status_code=409, detail={"code": MONITORING_POLICY["idempotency_conflict_code"]})
+                raise HTTPException(status_code=409, detail={"code": 'IDEMPOTENCY_CONFLICT'})
             return existing
     timestamp = now()
     sources = await monitoring_sources(project_id, plan, release_id, payload)
@@ -77,20 +76,23 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
         [
             item["_id"]
             for item in sources["runs"]
-            if item.get("status") == MONITORING_POLICY["completed_run_status"]
+            if item.get("status") == 'COMPLETED'
         ],
     )
     blocker_incidents = [
         item
         for item in sources["environment_incidents"]
-        if item.get("severity") in MONITORING_POLICY["blocking_incident_severities"]
+        if item.get("severity") in ['BLOCKER', 'CRITICAL']
     ]
     if blocker_incidents:
         evaluations.append(
             {
-                **MONITORING_POLICY["environment_incident_gate"],
+                **{'criterion_id': 'ENVIRONMENT-INCIDENT-GATE',
+ 'criterion': 'Không có incident môi trường blocker hoặc critical',
+ 'type': 'ENVIRONMENT_INCIDENT_MAX',
+ 'threshold': 0},
                 "actual": len(blocker_incidents),
-                "status": MONITORING_POLICY["failed_status"],
+                "status": 'FAIL',
                 "overridden": False,
                 "evidence_refs": [item["_id"] for item in blocker_incidents],
             }
@@ -195,7 +197,7 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
         ),
     }
     snapshot = {
-        "_id": new_id(MONITORING_POLICY["snapshot_id_prefix"]),
+        "_id": new_id('MONS'),
         "project_id": project_id,
         "idempotency_key": payload.idempotency_key,
         "test_plan_id": plan["_id"],
@@ -231,7 +233,7 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
                 for item in sources["defects"]
                 if item.get("status") in OPEN_DEFECT_STATUSES
                 and str(item.get("severity", "")).upper()
-                == MONITORING_POLICY["blocker_severity"]
+                == 'BLOCKER'
             ],
             *[
                 {
@@ -247,10 +249,10 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
         "source_state": source_state,
         "created_by": user.id,
         "created_at": timestamp,
-        "revision": MONITORING_POLICY["initial_revision"],
+        "revision": 1,
     }
     gate_evaluation = {
-        "_id": new_id(MONITORING_POLICY["gate_evaluation_id_prefix"]),
+        "_id": new_id('QGTE'),
         "project_id": project_id,
         "test_plan_id": plan["_id"],
         "release_id": release_id,
@@ -260,15 +262,15 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
         "blocking_reasons": [
             item
             for item in evaluations
-            if item.get("status") == MONITORING_POLICY["failed_status"]
+            if item.get("status") == 'FAIL'
         ],
         "warning_reasons": [
             item
             for item in evaluations
-            if item.get("status") in MONITORING_POLICY["warning_statuses"]
+            if item.get("status") in ['WARN', 'INSUFFICIENT_DATA', 'MANUAL_REQUIRED']
         ],
         "evaluated_at": timestamp,
-        "engine_version": MONITORING_POLICY["gate_engine_version"],
+        "engine_version": 'exit_criteria',
     }
     snapshot["gate_evaluation_id"] = gate_evaluation["_id"]
     try:
@@ -288,8 +290,8 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
     await test_monitoring_repository.insert_gate_evaluation(gate_evaluation)
     await audit(
         user.id,
-        MONITORING_POLICY["snapshot_created_event"],
-        MONITORING_POLICY["snapshot_entity"],
+        'monitoring_snapshot_created',
+        'TestMonitoringSnapshot',
         snapshot["_id"],
         project_id,
         {
@@ -299,8 +301,8 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
     )
     await audit(
         user.id,
-        MONITORING_POLICY["criteria_evaluated_event"],
-        MONITORING_POLICY["snapshot_entity"],
+        'exit_criteria_evaluated',
+        'TestMonitoringSnapshot',
         snapshot["_id"],
         project_id,
         {
@@ -310,8 +312,8 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
     )
     await audit(
         user.id,
-        MONITORING_POLICY["gate_evaluated_event"],
-        MONITORING_POLICY["gate_entity"],
+        'quality_gate_evaluated',
+        'QualityGateEvaluation',
         gate_evaluation["_id"],
         project_id,
         {"snapshot_id": snapshot["_id"], "overall_status": gate_evaluation["overall_status"]},
@@ -321,7 +323,7 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
 
 async def effective_snapshot(snapshot):
     overrides = await test_monitoring_repository.list_overrides(
-        snapshot["_id"], MONITORING_POLICY["limits"]["overrides"]
+        snapshot["_id"], 1000
     )
     effective = [dict(item) for item in snapshot.get("exit_criteria_evaluation", [])]
     latest = {item["criterion_id"]: item for item in overrides}
@@ -340,13 +342,13 @@ async def effective_snapshot(snapshot):
 async def get_snapshot_for_user(snapshot_id, user):
     snapshot = await test_monitoring_repository.find_snapshot(snapshot_id)
     if not snapshot:
-        raise HTTPException(status_code=404, detail={"code": MONITORING_POLICY["snapshot_not_found_code"]})
-    await get_project(snapshot["project_id"], user, MONITORING_POLICY["read_permission"])
+        raise HTTPException(status_code=404, detail={"code": 'MONITORING_SNAPSHOT_NOT_FOUND'})
+    await get_project(snapshot["project_id"], user, 'testmonitor.read')
     return await effective_snapshot(snapshot)
 
 
 async def list_monitoring_snapshots(project_id, test_plan_id, release_id, limit, user):
-    await get_project(project_id, user, MONITORING_POLICY["read_permission"])
+    await get_project(project_id, user, 'testmonitor.read')
     return [
         await effective_snapshot(item)
         for item in await test_monitoring_repository.list_snapshots(
@@ -358,16 +360,16 @@ async def list_monitoring_snapshots(project_id, test_plan_id, release_id, limit,
 async def override_exit_criterion(snapshot_id, payload: ExitCriterionOverride, user):
     snapshot = await test_monitoring_repository.find_snapshot(snapshot_id)
     if not snapshot:
-        raise HTTPException(status_code=404, detail={"code": MONITORING_POLICY["snapshot_not_found_code"]})
-    await get_project(snapshot["project_id"], user, MONITORING_POLICY["override_permission"])
+        raise HTTPException(status_code=404, detail={"code": 'MONITORING_SNAPSHOT_NOT_FOUND'})
+    await get_project(snapshot["project_id"], user, 'testmonitor.exit_criteria.override')
     if payload.expected_revision != snapshot.get("revision", 1):
-        raise HTTPException(status_code=409, detail={"code": MONITORING_POLICY["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     if payload.criterion_id not in {
         item["criterion_id"] for item in snapshot.get("exit_criteria_evaluation", [])
     }:
-        raise HTTPException(status_code=404, detail={"code": MONITORING_POLICY["criterion_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'EXIT_CRITERION_NOT_FOUND'})
     value = {
-        "_id": new_id(MONITORING_POLICY["override_id_prefix"]),
+        "_id": new_id('MONO'),
         "project_id": snapshot["project_id"],
         "snapshot_id": snapshot_id,
         **payload.model_dump(exclude={"expected_revision"}),
@@ -377,8 +379,8 @@ async def override_exit_criterion(snapshot_id, payload: ExitCriterionOverride, u
     await test_monitoring_repository.insert_override(value)
     await audit(
         user.id,
-        MONITORING_POLICY["criterion_overridden_event"],
-        MONITORING_POLICY["snapshot_entity"],
+        'test_monitoring_exit_criterion_overridden',
+        'TestMonitoringSnapshot',
         snapshot_id,
         snapshot["project_id"],
         {
@@ -392,35 +394,35 @@ async def override_exit_criterion(snapshot_id, payload: ExitCriterionOverride, u
 
 
 async def create_control_action(project_id, payload: ControlActionCreate, user):
-    project = await get_project(project_id, user, MONITORING_POLICY["control_create_permission"])
+    project = await get_project(project_id, user, 'testmonitor.control.create')
     snapshot = await test_monitoring_repository.find_snapshot(payload.snapshot_id, project_id)
     if not snapshot:
-        raise HTTPException(status_code=422, detail={"code": MONITORING_POLICY["invalid_snapshot_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_MONITORING_SNAPSHOT'})
     membership = await test_monitoring_repository.find_active_membership(
-        project_id, user.id, MONITORING_POLICY["active_membership_status"]
+        project_id, user.id, 'ACTIVE'
     )
     permissions = (
         permissions_for_role(membership.get("project_role", ""), project.get("settings"))
         if membership
         else set()
     )
-    if payload.owner_id != user.id and MONITORING_POLICY["control_assign_permission"] not in permissions:
-        raise HTTPException(status_code=403, detail={"code": MONITORING_POLICY["action_assign_denied_code"]})
+    if payload.owner_id != user.id and 'testmonitor.control.assign' not in permissions:
+        raise HTTPException(status_code=403, detail={"code": 'CONTROL_ACTION_ASSIGN_DENIED'})
     if not await test_monitoring_repository.find_active_membership(
         project_id,
         payload.owner_id,
-        MONITORING_POLICY["active_membership_status"],
+        'ACTIVE',
         {"_id": 1},
     ):
-        raise HTTPException(status_code=422, detail={"code": MONITORING_POLICY["invalid_action_owner_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_CONTROL_ACTION_OWNER'})
     timestamp = now()
     value = {
-        "_id": new_id(MONITORING_POLICY["action_id_prefix"]),
+        "_id": new_id('MONA'),
         "project_id": project_id,
         "plan_id": snapshot["test_plan_id"],
         **payload.model_dump(),
-        "status": MONITORING_POLICY["initial_action_status"],
-        "revision": MONITORING_POLICY["initial_revision"],
+        "status": 'OPEN',
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -428,8 +430,8 @@ async def create_control_action(project_id, payload: ControlActionCreate, user):
     await test_monitoring_repository.insert_control_action(value)
     await audit(
         user.id,
-        MONITORING_POLICY["action_created_event"],
-        MONITORING_POLICY["action_entity"],
+        'control_action_created',
+        'TestControlAction',
         value["_id"],
         project_id,
         {"type": value["type"], "owner_id": value["owner_id"]},
@@ -440,46 +442,49 @@ async def create_control_action(project_id, payload: ControlActionCreate, user):
 async def update_control_action(action_id, payload: ControlActionPatch, user):
     action = await test_monitoring_repository.find_control_action(action_id)
     if not action:
-        raise HTTPException(status_code=404, detail={"code": MONITORING_POLICY["action_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'CONTROL_ACTION_NOT_FOUND'})
     project = await get_project(
         action["project_id"],
         user,
-        MONITORING_POLICY["control_update_permission"],
-        assigned_role=MONITORING_POLICY["tester_role"],
+        'testmonitor.control.update',
+        assigned_role='TESTER',
         assigned_user_id=action.get("owner_id"),
     )
     actor_membership = await test_monitoring_repository.find_active_membership(
-        action["project_id"], user.id, MONITORING_POLICY["active_membership_status"]
+        action["project_id"], user.id, 'ACTIVE'
     )
     actor_permissions = (
         permissions_for_role(actor_membership.get("project_role", ""), project.get("settings"))
         if actor_membership
         else set()
     )
-    if action.get("owner_id") != user.id and MONITORING_POLICY["control_assign_permission"] not in actor_permissions:
-        raise HTTPException(status_code=403, detail={"code": MONITORING_POLICY["action_update_denied_code"]})
+    if action.get("owner_id") != user.id and 'testmonitor.control.assign' not in actor_permissions:
+        raise HTTPException(status_code=403, detail={"code": 'CONTROL_ACTION_UPDATE_DENIED'})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "owner_id" in changes and changes["owner_id"] != action.get("owner_id"):
-        if MONITORING_POLICY["control_assign_permission"] not in actor_permissions:
-            raise HTTPException(status_code=403, detail={"code": MONITORING_POLICY["action_assign_denied_code"]})
+        if 'testmonitor.control.assign' not in actor_permissions:
+            raise HTTPException(status_code=403, detail={"code": 'CONTROL_ACTION_ASSIGN_DENIED'})
         if not await test_monitoring_repository.find_active_membership(
             action["project_id"],
             changes["owner_id"],
-            MONITORING_POLICY["active_membership_status"],
+            'ACTIVE',
             {"_id": 1},
         ):
-            raise HTTPException(status_code=422, detail={"code": MONITORING_POLICY["invalid_action_owner_code"]})
-    allowed = MONITORING_POLICY["action_transitions"]
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_CONTROL_ACTION_OWNER'})
+    
     if (
         "status" in changes
         and changes["status"] != action["status"]
-        and changes["status"] not in allowed[action["status"]]
+        and changes["status"] not in {'OPEN': ['IN_PROGRESS', 'CANCELLED'],
+ 'IN_PROGRESS': ['DONE', 'CANCELLED'],
+ 'DONE': [],
+ 'CANCELLED': []}[action["status"]]
     ):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": MONITORING_POLICY["invalid_transition_code"],
+                "code": 'INVALID_STATE_TRANSITION',
                 "from": action["status"],
                 "to": changes["status"],
             },
@@ -496,14 +501,14 @@ async def update_control_action(action_id, payload: ControlActionPatch, user):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": MONITORING_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": current.get("revision") if current else None,
             },
         )
     await audit(
         user.id,
-        MONITORING_POLICY["action_updated_event"],
-        MONITORING_POLICY["action_entity"],
+        'control_action_updated',
+        'TestControlAction',
         action_id,
         action["project_id"],
         {"changed_fields": sorted(changes)},
@@ -512,7 +517,7 @@ async def update_control_action(action_id, payload: ControlActionPatch, user):
 
 
 async def list_actions_for_user(project_id, snapshot_id, status, user):
-    await get_project(project_id, user, MONITORING_POLICY["read_permission"])
+    await get_project(project_id, user, 'testmonitor.read')
     return await test_monitoring_repository.list_control_actions(
-        project_id, snapshot_id, status, MONITORING_POLICY["limits"]["control_actions"]
+        project_id, snapshot_id, status, 500
     )

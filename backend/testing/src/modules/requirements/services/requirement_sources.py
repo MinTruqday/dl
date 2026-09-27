@@ -7,10 +7,9 @@ from fastapi import HTTPException
 from src.core.common import audit, get_project, get_project_entity, new_id, now, require_action_policy
 from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
-from src.services.domain_policy import domain_policy
 
 
-SOURCE_POLICY = domain_policy("requirement_source")
+
 
 
 @dataclass(frozen=True)
@@ -21,41 +20,41 @@ class RequirementSourceResult:
     @property
     def status(self):
         return (
-            SOURCE_POLICY["success_result_status"]
+            'SUCCESS'
             if self.indexed
-            else SOURCE_POLICY["degraded_result_status"]
+            else 'DEGRADED'
         )
 
     @property
     def degraded_mode(self):
-        return None if self.indexed else SOURCE_POLICY["vector_degraded_mode"]
+        return None if self.indexed else 'DEGRADED_VECTOR'
 
 
 async def create_requirement_source(project_id, payload, user):
-    await get_project(project_id, user, SOURCE_POLICY["manage_permission"])
+    await get_project(project_id, user, 'knowledge.manage')
     content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
     existing = await requirement_document_repository.find_by_hash(project_id, content_hash)
     if existing:
         return RequirementSourceResult(
-            existing, existing.get("index_status") == SOURCE_POLICY["indexed_status"]
+            existing, existing.get("index_status") == 'INDEXED'
         )
     timestamp = now()
     safe_name = (
         re.sub(
-            SOURCE_POLICY["filename_pattern"],
-            SOURCE_POLICY["filename_replacement"],
+            '[^A-Za-z0-9_-]+',
+            '-',
             payload.title,
-        ).strip(SOURCE_POLICY["filename_replacement"])
-        or SOURCE_POLICY["fallback_filename"]
+        ).strip('-')
+        or 'knowledge-source'
     )
     document = {
-        "_id": new_id(SOURCE_POLICY["id_prefix"]),
+        "_id": new_id('KSRC'),
         "project_id": project_id,
-        "filename": f"{safe_name}{SOURCE_POLICY['file_extension']}",
-        "format": SOURCE_POLICY["file_format"],
+        "filename": f"{safe_name}{'.md'}",
+        "format": 'md',
         "content_hash": content_hash,
         "raw_source": {
-            "storage": SOURCE_POLICY["storage_type"],
+            "storage": 'embedded',
             "content": payload.content,
             "sha256": content_hash,
             "size": len(payload.content.encode("utf-8")),
@@ -79,9 +78,9 @@ async def create_requirement_source(project_id, payload, user):
         "approved_at": payload.approved_at,
         "effective_from": payload.effective_from,
         "tags": payload.tags,
-        "status": SOURCE_POLICY["ready_status"],
-        "index_status": SOURCE_POLICY["pending_index_status"],
-        "revision": SOURCE_POLICY["initial_revision"],
+        "status": 'READY',
+        "index_status": 'PENDING',
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -110,7 +109,7 @@ async def create_requirement_source(project_id, payload, user):
         tags=payload.tags,
     )
     document["index_status"] = (
-        SOURCE_POLICY["indexed_status"] if indexed else SOURCE_POLICY["failed_index_status"]
+        'INDEXED' if indexed else 'FAILED'
     )
     document["indexed_at"] = now()
     await requirement_document_repository.set_index_result(
@@ -118,8 +117,8 @@ async def create_requirement_source(project_id, payload, user):
     )
     await audit(
         user.id,
-        SOURCE_POLICY["created_event"],
-        SOURCE_POLICY["entity"],
+        'knowledge_source_created',
+        'RequirementDocument',
         document["_id"],
         project_id,
         {"source_type": payload.source_type, "authority": payload.authority},
@@ -128,14 +127,14 @@ async def create_requirement_source(project_id, payload, user):
 
 
 async def list_requirement_sources(project_id, include_archived, user):
-    await get_project(project_id, user, SOURCE_POLICY["read_permission"])
+    await get_project(project_id, user, 'knowledge.read')
     query = {"project_id": project_id}
     if not include_archived:
-        query["status"] = {"$ne": SOURCE_POLICY["archived_status"]}
-    documents = await requirement_document_repository.list(query, SOURCE_POLICY["list_limit"])
+        query["status"] = {"$ne": 'ARCHIVED'}
+    documents = await requirement_document_repository.list(query, 1000)
     project = await requirement_document_repository.project_authority_order(project_id)
     order = (project or {}).get("settings", {}).get(
-        "knowledge_authority_order", SOURCE_POLICY["default_authority_order"]
+        "knowledge_authority_order", ['APPROVED_SOURCE', 'CONTROLLED_SOURCE', 'PROJECT_REFERENCE', 'SUPPLEMENTAL', 'DRAFT', 'UNVERIFIED']
     )
     ranks = {value: index for index, value in enumerate(order)}
     documents.sort(
@@ -146,14 +145,14 @@ async def list_requirement_sources(project_id, include_archived, user):
 
 async def reindex_requirement_source(document_id, user):
     document = await get_project_entity(
-        SOURCE_POLICY["collection"],
+        'requirement_documents',
         document_id,
         user,
-        SOURCE_POLICY["manage_permission"],
+        'knowledge.manage',
     )
-    if document.get("status") == SOURCE_POLICY["archived_status"]:
+    if document.get("status") == 'ARCHIVED':
         raise HTTPException(
-            status_code=409, detail={"code": SOURCE_POLICY["archived_code"]}
+            status_code=409, detail={"code": 'KNOWLEDGE_SOURCE_ARCHIVED'}
         )
     content = str((document.get("raw_source") or {}).get("content") or "")
     indexed = await index_artifact(
@@ -163,7 +162,7 @@ async def reindex_requirement_source(document_id, user):
         document["_id"],
         document.get("title") or document.get("filename") or "",
         content,
-        document.get("status", SOURCE_POLICY["ready_status"]),
+        document.get("status", 'READY'),
         document.get("authority"),
         document.get("source_version"),
         module=document.get("module") or "",
@@ -182,9 +181,9 @@ async def reindex_requirement_source(document_id, user):
     await requirement_document_repository.set_index_result(
         document_id,
         document["project_id"],
-        SOURCE_POLICY["indexed_status"]
+        'INDEXED'
         if indexed
-        else SOURCE_POLICY["failed_index_status"],
+        else 'FAILED',
         timestamp,
     )
     await requirement_document_repository.update(
@@ -198,8 +197,8 @@ async def reindex_requirement_source(document_id, user):
     )
     await audit(
         user.id,
-        SOURCE_POLICY["reindexed_event"],
-        SOURCE_POLICY["entity"],
+        'knowledge_source_reindexed',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"indexed": indexed},
@@ -209,15 +208,15 @@ async def reindex_requirement_source(document_id, user):
 
 async def archive_requirement_source(document_id, payload, user):
     document = await get_project_entity(
-        SOURCE_POLICY["collection"], document_id, user, SOURCE_POLICY["manage_permission"]
+        'requirement_documents', document_id, user, 'knowledge.manage'
     )
     await require_action_policy(
         document["project_id"],
         user,
-        SOURCE_POLICY["archive_permission"],
-        set(SOURCE_POLICY["archive_roles"]),
+        'knowledge.archive',
+        set(['QA', 'BA']),
     )
-    if document.get("status") == SOURCE_POLICY["archived_status"]:
+    if document.get("status") == 'ARCHIVED':
         return document
     timestamp = now()
     updated = await requirement_document_repository.update_with_revision(
@@ -225,8 +224,8 @@ async def archive_requirement_source(document_id, payload, user):
         document["project_id"],
         payload.expected_revision,
         {
-            "status_before_archive": document.get("status", SOURCE_POLICY["ready_status"]),
-            "status": SOURCE_POLICY["archived_status"],
+            "status_before_archive": document.get("status", 'READY'),
+            "status": 'ARCHIVED',
             "archived_by": user.id,
             "archived_at": timestamp,
             "archive_reason": payload.reason,
@@ -235,12 +234,12 @@ async def archive_requirement_source(document_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": SOURCE_POLICY["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        SOURCE_POLICY["archived_event"],
-        SOURCE_POLICY["entity"],
+        'knowledge_source_archived',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"reason": payload.reason},

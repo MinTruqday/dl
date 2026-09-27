@@ -3,61 +3,60 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.repositories.environment_incident import environment_incident_repository
-from src.services.domain_policy import domain_policy
 
 
-INCIDENT_POLICY = domain_policy("environment_incident")
+
 
 
 async def validate_sources(project_id, payload):
     environment = await environment_incident_repository.find_environment(
         payload.environment_id,
         project_id,
-        INCIDENT_POLICY["archived_environment_status"],
+        'ARCHIVED',
     )
     if not environment:
-        raise HTTPException(status_code=422, detail={"code": INCIDENT_POLICY["environment_not_in_project_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'ENVIRONMENT_NOT_IN_PROJECT'})
     if payload.build_id and not await environment_incident_repository.find_build(
         payload.build_id, project_id
     ):
-        raise HTTPException(status_code=422, detail={"code": INCIDENT_POLICY["build_not_in_project_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'BUILD_NOT_IN_PROJECT'})
     run_ids = list(dict.fromkeys(payload.affected_run_ids))
     count = await environment_incident_repository.count_environment_runs(
         run_ids, project_id, payload.environment_id
     )
     if count != len(run_ids):
-        raise HTTPException(status_code=422, detail={"code": INCIDENT_POLICY["affected_run_invalid_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'AFFECTED_RUN_NOT_IN_ENVIRONMENT'})
     if not await environment_incident_repository.find_active_member(
-        project_id, payload.owner_id, INCIDENT_POLICY["active_member_status"]
+        project_id, payload.owner_id, 'ACTIVE'
     ):
-        raise HTTPException(status_code=422, detail={"code": INCIDENT_POLICY["owner_not_member_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INCIDENT_OWNER_NOT_PROJECT_MEMBER'})
     return environment, run_ids
 
 
 async def get_incident(incident_id, user, permission=None):
     value = await environment_incident_repository.find_incident(incident_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": INCIDENT_POLICY["entity_not_found_code"]})
-    await get_project(value["project_id"], user, permission or INCIDENT_POLICY["read_permission"])
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
+    await get_project(value["project_id"], user, permission or 'environmentincident.read')
     return value
 
 
 async def list_incidents(project_id, environment_id, status, user):
-    await get_project(project_id, user, INCIDENT_POLICY["read_permission"])
+    await get_project(project_id, user, 'environmentincident.read')
     query = {"project_id": project_id}
     if environment_id:
         query["environment_id"] = environment_id
     if status:
         query["status"] = status
     items = await environment_incident_repository.list_incidents(
-        query, INCIDENT_POLICY["list_limit"]
+        query, 1000
     )
     return {"items": items, "total": len(items)}
 
 
 async def create_incident(project_id, payload, user):
-    await get_project(project_id, user, INCIDENT_POLICY["create_permission"])
-    policy = INCIDENT_POLICY
+    await get_project(project_id, user, 'environmentincident.create')
+    
     environment, run_ids = await validate_sources(project_id, payload)
     if payload.idempotency_key:
         existing = await environment_incident_repository.find_by_idempotency_key(
@@ -68,14 +67,14 @@ async def create_incident(project_id, payload, user):
                 existing.get("environment_id") != payload.environment_id
                 or existing.get("type") != payload.type
             ):
-                raise HTTPException(status_code=409, detail={"code": policy["idempotency_reused_code"]})
+                raise HTTPException(status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'})
             return existing
     timestamp = now()
     sequence = await environment_incident_repository.next_sequence(
-        f"{project_id}:{policy['counter_suffix']}"
+        f"{project_id}:{'environment-incident'}"
     )
-    previous_availability = environment.get("availability", policy["available_status"])
-    if previous_availability == policy["unavailable_status"] and environment.get("active_incident_id"):
+    previous_availability = environment.get("availability", 'AVAILABLE')
+    if previous_availability == 'UNAVAILABLE' and environment.get("active_incident_id"):
         active_incident = await environment_incident_repository.find_incident(
             environment["active_incident_id"], project_id
         )
@@ -84,18 +83,18 @@ async def create_incident(project_id, payload, user):
                 "previous_environment_availability", previous_availability
             )
     value = {
-        "_id": new_id(policy["key_prefix"]),
-        "incident_key": f"{policy['key_prefix']}-{int(sequence['value']):0{policy['key_width']}d}",
+        "_id": new_id('ENVINC'),
+        "incident_key": f"{'ENVINC'}-{int(sequence['value']):0{4}d}",
         "project_id": project_id,
         **payload.model_dump(),
         "affected_run_ids": run_ids,
         "previous_environment_availability": previous_availability,
-        "status": policy["initial_status"],
+        "status": 'OPEN',
         "resolution": "",
         "downtime_start": payload.observed_at,
         "downtime_end": None,
         "downtime": None,
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -108,22 +107,22 @@ async def create_incident(project_id, payload, user):
                 project_id, payload.idempotency_key
             )
         raise
-    if payload.severity in policy["blocking_severities"]:
+    if payload.severity in ['BLOCKER', 'CRITICAL']:
         await environment_incident_repository.mark_environment_unavailable(
-            environment["_id"], value["_id"], policy["unavailable_status"], timestamp
+            environment["_id"], value["_id"], 'UNAVAILABLE', timestamp
         )
         if run_ids:
             await environment_incident_repository.pause_runs(
                 run_ids,
                 project_id,
                 value["_id"],
-                policy["in_progress_run_status"],
+                'IN_PROGRESS',
                 timestamp,
             )
     await audit(
         user.id,
-        policy["created_event"],
-        policy["entity"],
+        'environment_incident_created',
+        'EnvironmentIncident',
         value["_id"],
         project_id,
         {
@@ -136,34 +135,34 @@ async def create_incident(project_id, payload, user):
 
 
 async def update_incident(incident_id, payload, user):
-    policy = INCIDENT_POLICY
-    value = await get_incident(incident_id, user, policy["update_permission"])
-    if value["status"] in policy["immutable_statuses"]:
-        raise HTTPException(status_code=409, detail={"code": policy["immutable_code"]})
+    
+    value = await get_incident(incident_id, user, 'environmentincident.update')
+    if value["status"] in ['RESOLVED', 'CLOSED']:
+        raise HTTPException(status_code=409, detail={"code": 'RESOLVED_INCIDENT_IMMUTABLE'})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "owner_id" in changes and not await environment_incident_repository.find_active_member(
-        value["project_id"], changes["owner_id"], policy["active_member_status"]
+        value["project_id"], changes["owner_id"], 'ACTIVE'
     ):
-        raise HTTPException(status_code=422, detail={"code": policy["owner_not_member_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INCIDENT_OWNER_NOT_PROJECT_MEMBER'})
     if "affected_run_ids" in changes:
         run_ids = list(dict.fromkeys(changes["affected_run_ids"]))
         count = await environment_incident_repository.count_environment_runs(
             run_ids, value["project_id"], value["environment_id"]
         )
         if count != len(run_ids):
-            raise HTTPException(status_code=422, detail={"code": policy["affected_run_invalid_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'AFFECTED_RUN_NOT_IN_ENVIRONMENT'})
         changes["affected_run_ids"] = run_ids
     changes["updated_at"] = now()
     updated = await environment_incident_repository.update_incident(
-        incident_id, payload.expected_revision, policy["active_statuses"], changes
+        incident_id, payload.expected_revision, ['OPEN', 'INVESTIGATING', 'MITIGATED'], changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["updated_event"],
-        policy["entity"],
+        'environment_incident_updated',
+        'EnvironmentIncident',
         incident_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -172,20 +171,23 @@ async def update_incident(incident_id, payload, user):
 
 
 async def transition_incident(incident_id, payload, user):
-    policy = INCIDENT_POLICY
+    
     permission = (
-        policy["close_permission"]
-        if payload.status == policy["closed_status"]
-        else policy["update_permission"]
+        'environmentincident.close'
+        if payload.status == 'CLOSED'
+        else 'environmentincident.update'
     )
     value = await get_incident(incident_id, user, permission)
-    if payload.status not in policy["transitions"].get(value["status"], []):
+    if payload.status not in {'OPEN': ['INVESTIGATING'],
+ 'INVESTIGATING': ['MITIGATED'],
+ 'MITIGATED': ['RESOLVED'],
+ 'RESOLVED': ['CLOSED']}.get(value["status"], []):
         raise HTTPException(
-            status_code=409, detail={"code": policy["invalid_transition_code"]}
+            status_code=409, detail={"code": 'INVALID_ENVIRONMENT_INCIDENT_TRANSITION'}
         )
     timestamp = now()
     changes = {"status": payload.status, "resolution": payload.resolution, "updated_at": timestamp}
-    if payload.status == policy["resolved_status"]:
+    if payload.status == 'RESOLVED':
         changes.update(
             {
                 "resolved_at": timestamp,
@@ -193,40 +195,40 @@ async def transition_incident(incident_id, payload, user):
                 "downtime": max(0, int((timestamp - value["observed_at"]).total_seconds())),
             }
         )
-    if payload.status == policy["closed_status"]:
+    if payload.status == 'CLOSED':
         changes.update({"closed_at": timestamp, "closed_by": user.id})
     updated = await environment_incident_repository.update_incident(
         incident_id, payload.expected_revision, value["status"], changes
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
-    if payload.status == policy["resolved_status"]:
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
+    if payload.status == 'RESOLVED':
         remaining = await environment_incident_repository.count_other_active_blocking(
             value["project_id"],
             value["environment_id"],
             incident_id,
-            policy["blocking_severities"],
-            policy["active_statuses"],
+            ['BLOCKER', 'CRITICAL'],
+            ['OPEN', 'INVESTIGATING', 'MITIGATED'],
         )
         if not remaining:
             await environment_incident_repository.restore_environment(
                 value["environment_id"],
-                value.get("previous_environment_availability", policy["available_status"]),
-                policy["archived_environment_status"],
+                value.get("previous_environment_availability", 'AVAILABLE'),
+                'ARCHIVED',
                 timestamp,
             )
             await environment_incident_repository.resume_runs(
                 value["project_id"], incident_id, timestamp
             )
     event = (
-        policy["closed_event"]
-        if payload.status == policy["closed_status"]
-        else policy["status_changed_event"]
+        'environment_incident_closed'
+        if payload.status == 'CLOSED'
+        else 'environment_incident_status_changed'
     )
     await audit(
         user.id,
         event,
-        policy["entity"],
+        'EnvironmentIncident',
         incident_id,
         value["project_id"],
         {"from": value["status"], "to": payload.status, "downtime": changes.get("downtime")},
@@ -253,19 +255,19 @@ class EnvironmentIncidentService:
 
     @staticmethod
     async def investigate(incident_id, payload, user):
-        if payload.status == INCIDENT_POLICY["closed_status"]:
+        if payload.status == 'CLOSED':
             raise HTTPException(
                 status_code=422,
-                detail={"code": INCIDENT_POLICY["close_endpoint_required_code"]},
+                detail={"code": 'USE_INCIDENT_CLOSE_ENDPOINT'},
             )
         return await transition_incident(incident_id, payload, user)
 
     @staticmethod
     async def close(incident_id, payload, user):
-        if payload.status != INCIDENT_POLICY["closed_status"]:
+        if payload.status != 'CLOSED':
             raise HTTPException(
                 status_code=422,
-                detail={"code": INCIDENT_POLICY["close_status_required_code"]},
+                detail={"code": 'INCIDENT_CLOSE_STATUS_REQUIRED'},
             )
         return await transition_incident(incident_id, payload, user)
 

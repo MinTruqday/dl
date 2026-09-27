@@ -12,23 +12,22 @@ from src.core.common import (
     sort_spec,
 )
 from src.repositories.test_design import test_design_repository
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.execution_policy import validate_test_versions
 
 
-TEST_DESIGN_POLICY = domain_policy("test_design")
+
 
 
 async def create_test_suite_record(payload, project_id, user):
     if project_id and project_id != payload.project_id:
-        raise HTTPException(status_code=422, detail={"code": TEST_DESIGN_POLICY["project_scope_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_SCOPE_MISMATCH'})
     await get_project(payload.project_id, user, "testsuite.create")
     await validate_test_versions(payload.project_id, payload.test_case_version_ids)
     timestamp = now()
     suite = {
-        "_id": new_id(TEST_DESIGN_POLICY["suite_id_prefix"]),
+        "_id": new_id('TSU'),
         **payload.model_dump(),
-        "status": TEST_DESIGN_POLICY["active_status"],
+        "status": 'ACTIVE',
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -56,7 +55,7 @@ async def list_test_suite_records(
             query[field] = value
     sort_field, direction = sort_spec(
         sort,
-        set(TEST_DESIGN_POLICY["suite_sort_fields"]),
+        set(['name', 'suite_type', 'status', 'created_at', 'updated_at']),
     )
     return await test_design_repository.list_suites(query, sort_field, direction)
 
@@ -67,8 +66,8 @@ async def get_test_suite_record(suite_id, user, permission="testsuite.read"):
 
 async def update_test_suite_record(suite_id, payload, user):
     suite = await get_test_suite_record(suite_id, user, "testsuite.update")
-    if suite.get("status", TEST_DESIGN_POLICY["active_status"]) == TEST_DESIGN_POLICY["archived_status"]:
-        raise HTTPException(status_code=409, detail={"code": TEST_DESIGN_POLICY["suite_archived_code"]})
+    if suite.get("status", 'ACTIVE') == 'ARCHIVED':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_SUITE_ARCHIVED'})
     if payload.test_case_version_ids is not None:
         await validate_test_versions(suite["project_id"], payload.test_case_version_ids)
     updated = await optimistic_patch(
@@ -87,9 +86,9 @@ async def clone_test_suite_record(suite_id, user):
     timestamp = now()
     cloned = {
         **suite,
-        "_id": new_id(TEST_DESIGN_POLICY["suite_id_prefix"]),
+        "_id": new_id('TSU'),
         "name": f"{suite['name']} bản sao",
-        "status": TEST_DESIGN_POLICY["active_status"],
+        "status": 'ACTIVE',
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -117,7 +116,7 @@ async def archive_test_suite_record(suite_id, payload, user):
         suite["project_id"],
         payload.expected_revision,
         {
-            "status": TEST_DESIGN_POLICY["archived_status"],
+            "status": 'ARCHIVED',
             "archive_reason": payload.reason,
             "archived_by": user.id,
             "archived_at": now(),

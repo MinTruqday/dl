@@ -1,86 +1,49 @@
-import json
-from functools import lru_cache
-from pathlib import Path
-
 from src.core.common import plain_text
 
 
-@lru_cache(maxsize=1)
-def quality_policy():
-    path = Path(__file__).resolve().parents[1] / "policies" / "quality_rules.json"
-    with path.open(encoding="utf-8") as source:
-        return json.load(source)
-
-
 def evaluate_rules(scope, value):
-    findings = []
-    for rule in quality_policy().get(scope, []):
-        if evaluate_condition(rule.get("condition", {}), value):
-            finding = {
-                "rule_id": rule["rule_id"],
-                "severity": rule["severity"],
-                "span": None,
-                "message": format_value(rule["message"], value),
-                "suggestion": format_value(rule["suggestion"], value),
-            }
-            if rule.get("target_field"):
-                finding["target_field"] = rule["target_field"]
-            for key in ("category", "reason_code"):
-                if rule.get(key):
-                    finding[key] = rule[key]
-            findings.append(finding)
-    return findings
+    if scope == "requirement":
+        return [
+            finding
+            for finding in (
+                _finding("MISSING_REQUIREMENT_CONTENT", "error", "Nội dung yêu cầu đang để trống", "Nhập mô tả phạm vi hoặc chức năng mà hệ thống phải đáp ứng", "content") if not _text(value.get("content")) else None,
+                _finding("MISSING_ACTOR", "error", "Yêu cầu chưa xác định tác nhân", "Bổ sung tác nhân thực hiện hoặc chịu tác động", "actors") if not _values(value.get("actors")) else None,
+                _finding("MISSING_BUSINESS_RULE", "error", "Yêu cầu chưa có quy tắc nghiệp vụ", "Bổ sung quy tắc có căn cứ hoặc xác nhận rõ yêu cầu không có quy tắc nghiệp vụ", "business_rules") if not _values(value.get("business_rules")) else None,
+                _finding("MISSING_ACCEPTANCE_CRITERIA", "error", "Yêu cầu chưa có tiêu chí chấp nhận", "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử", "acceptance_criteria") if not _values(value.get("acceptance_criteria")) else None,
+            )
+            if finding
+        ]
+    if scope == "acceptance_criterion" and not _text(value.get("text")):
+        return [_finding("EMPTY_ACCEPTANCE_CRITERION", "error", f"Tiêu chí {value.get('key') or ''} đang để trống", "Nhập điều kiện kích hoạt và hành vi quan sát được", "acceptance_criteria")]
+    if scope == "test_case":
+        findings = []
+        if not _text(value.get("expected_result_doc")):
+            findings.append(_finding("TCQ-001", "error", "Thiếu kết quả mong đợi", "Cập nhật kết quả mong đợi rồi chạy kiểm tra lại"))
+        if not _text(value.get("preconditions_doc")):
+            findings.append(_finding("TCQ-002", "warning", "Thiếu điều kiện tiên quyết", "Cập nhật điều kiện tiên quyết rồi chạy kiểm tra lại"))
+        if not _values(value.get("requirement_version_ids")) and not _values(value.get("acceptance_criterion_ids")):
+            findings.append(_finding("TCQ-005", "error", "Ca kiểm thử chưa có liên kết truy vết", "Liên kết yêu cầu hoặc tiêu chí chấp nhận rồi chạy kiểm tra lại"))
+        if not _values(value.get("test_data")) and not any(_values(item.get("test_data")) for item in value.get("steps", [])):
+            findings.append(_finding("TCQ-009", "warning", "Thiếu dữ liệu kiểm thử", "Bổ sung dữ liệu kiểm thử cho ca hoặc từng bước"))
+        return findings
+    if scope == "test_step" and not _text(value.get("expected_doc")):
+        return [_finding("TCQ-001", "warning", "Bước chưa có kết quả mong đợi", "Bổ sung kết quả mong đợi cho bước")]
+    if scope == "test_basis" and not _text(value.get("text")):
+        return [{**_finding("EMPTY_EXPECTED_BEHAVIOR", "BLOCKER", "Nội dung kiểm thử đang trống", "Bổ sung tiêu chí quan sát được và có thể kiểm chứng"), "category": "UNTESTABLE"}]
+    return []
 
 
-def evaluate_condition(condition, value):
-    if "all" in condition:
-        return all(evaluate_condition(item, value) for item in condition["all"])
-    if "any" in condition:
-        return any(evaluate_condition(item, value) for item in condition["any"])
-    if "not" in condition:
-        return not evaluate_condition(condition["not"], value)
-    if "text_empty" in condition:
-        return not text_value(resolve(value, condition["text_empty"]))
-    if "values_empty" in condition:
-        return not normalized_values(resolve(value, condition["values_empty"]))
-    if "collection_values_empty" in condition:
-        specification = condition["collection_values_empty"]
-        items = resolve(value, specification["path"]) or []
-        return not any(
-            normalized_values(resolve(item, specification["field"])) for item in items
-        )
-    return False
+def _finding(rule_id, severity, message, suggestion, target_field=None):
+    finding = {"rule_id": rule_id, "severity": severity, "span": None, "message": message, "suggestion": suggestion}
+    if target_field:
+        finding["target_field"] = target_field
+    return finding
 
 
-def resolve(value, path):
-    current = value
-    for part in str(path).split("."):
-        if not isinstance(current, dict):
-            return None
-        current = current.get(part)
-    return current
+def _text(value):
+    return plain_text(value).strip() if isinstance(value, dict) else str(value or "").strip()
 
 
-def text_value(value):
-    if isinstance(value, dict):
-        return plain_text(value).strip()
-    return str(value or "").strip()
-
-
-def normalized_values(value):
-    if value is None:
-        return []
+def _values(value):
     values = value if isinstance(value, list) else [value]
-    return [item for item in values if text_value(item)]
-
-
-def format_value(template, value):
-    replacements = {
-        key: str(item or "") for key, item in value.items() if not isinstance(item, dict)
-    }
-    return template.format_map(DefaultValues(replacements))
-
-
-class DefaultValues(dict):
-    def __missing__(self, key):
-        return ""
+    return [item for item in values if _text(item)]

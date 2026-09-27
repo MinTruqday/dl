@@ -3,39 +3,38 @@ from fastapi import HTTPException
 from src.core.common import audit, get_project, get_project_entity, new_id, now, require_action_policy
 from src.repositories.test_design import test_design_repository
 from src.modules.design.services.linters import lint_test_case
-from src.services.domain_policy import domain_policy
 from src.clients.project_knowledge import index_artifact
 from src.modules.design.services.test_case_records import project_test_text
 
-LIFECYCLE_POLICY = domain_policy("test_case_lifecycle")
+
 
 
 async def lint_test_case_draft_record(draft_id, user, project_id=None):
-    draft = await get_project_entity(LIFECYCLE_POLICY["draft_collection"], draft_id, user, LIFECYCLE_POLICY["lint_permission"])
-    await get_project(draft["project_id"], user, LIFECYCLE_POLICY["ai_lint_permission"])
+    draft = await get_project_entity('test_case_drafts', draft_id, user, 'testcase.lint')
+    await get_project(draft["project_id"], user, 'ai.run_lint')
     if project_id is not None and draft["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": LIFECYCLE_POLICY["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     findings = lint_test_case(draft)
     result = {
         "test_case_draft_id": draft_id,
         "findings": findings,
         "valid": not any(
-            item["severity"] == LIFECYCLE_POLICY["lint_blocking_severity"]
+            item["severity"] == 'error'
             for item in findings
         ),
         "model": {
-            "provider": LIFECYCLE_POLICY["deterministic_provider"],
-            "model": LIFECYCLE_POLICY["quality_model"],
-            "prompt_version": LIFECYCLE_POLICY["prompt_version"],
-            "tool_schema_version": LIFECYCLE_POLICY["tool_schema_version"],
-            "retrieval_version": LIFECYCLE_POLICY["retrieval_version"],
+            "provider": 'deterministic',
+            "model": 'test_case_quality',
+            "prompt_version": 'ai_assistance',
+            "tool_schema_version": '1',
+            "retrieval_version": 'project_evidence',
         },
     }
     await test_design_repository.insert_ai_finding(
         {
-            "_id": new_id(LIFECYCLE_POLICY["ai_finding_id_prefix"]),
+            "_id": new_id('AIF'),
             "project_id": draft["project_id"],
-            "artifact_type": LIFECYCLE_POLICY["test_case_artifact_type"],
+            "artifact_type": 'test_case_draft',
             "artifact_id": draft_id,
             **result,
             "created_at": now(),
@@ -45,36 +44,36 @@ async def lint_test_case_draft_record(draft_id, user, project_id=None):
 
 
 async def submit_test_case_review_record(project_id, draft_id, payload, user):
-    draft = await get_project_entity(LIFECYCLE_POLICY["draft_collection"], draft_id, user, LIFECYCLE_POLICY["submit_permission"])
+    draft = await get_project_entity('test_case_drafts', draft_id, user, 'testcase.submit_review')
     if draft["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": LIFECYCLE_POLICY["project_mismatch_code"]})
-    if draft["status"] == LIFECYCLE_POLICY["review_status"]:
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    if draft["status"] == 'IN_REVIEW':
         return draft
-    if draft["status"] != LIFECYCLE_POLICY["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]})
+    if draft["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if draft["revision"] != payload.expected_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"], "current_revision": draft["revision"]},
+            detail={"code": 'REVISION_CONFLICT', "current_revision": draft["revision"]},
         )
     findings = lint_test_case(draft)
     project_settings = await test_design_repository.find_project_settings(project_id)
     lint_blocking = project_settings.get(
-        LIFECYCLE_POLICY["lint_setting"], LIFECYCLE_POLICY["lint_setting_default"]
+        'testcase_lint_blocking', True
     )
     if lint_blocking and any(
-        item["severity"] == LIFECYCLE_POLICY["lint_blocking_severity"] for item in findings
+        item["severity"] == 'error' for item in findings
     ):
         raise HTTPException(
-            status_code=409, detail={"code": LIFECYCLE_POLICY["lint_blocked_code"], "findings": findings}
+            status_code=409, detail={"code": 'TEST_CASE_LINT_BLOCKED', "findings": findings}
         )
     timestamp = now()
     transitioned = await test_design_repository.transition_case_draft(
         draft_id,
         project_id,
         payload.expected_revision,
-        LIFECYCLE_POLICY["draft_status"],
-        LIFECYCLE_POLICY["review_status"],
+        'DRAFT',
+        'IN_REVIEW',
         {
             "review_note": payload.review_note,
             "review_submitted_by": user.id,
@@ -83,12 +82,12 @@ async def submit_test_case_review_record(project_id, draft_id, payload, user):
         },
     )
     if not transitioned:
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     draft = await test_design_repository.find_case_draft(draft_id, project_id)
     await audit(
         user.id,
-        LIFECYCLE_POLICY["review_submitted_event"],
-        LIFECYCLE_POLICY["draft_entity"],
+        'test_case_review_submitted',
+        'TestCaseDraft',
         draft_id,
         project_id,
         {"review_note": payload.review_note},
@@ -97,24 +96,24 @@ async def submit_test_case_review_record(project_id, draft_id, payload, user):
 
 
 async def request_test_case_changes_record(project_id, draft_id, payload, user):
-    draft = await get_project_entity(LIFECYCLE_POLICY["draft_collection"], draft_id, user, LIFECYCLE_POLICY["review_permission"])
-    await require_action_policy(draft["project_id"], user, LIFECYCLE_POLICY["request_changes_action"], set(LIFECYCLE_POLICY["request_changes_roles"]))
+    draft = await get_project_entity('test_case_drafts', draft_id, user, 'testcase.review')
+    await require_action_policy(draft["project_id"], user, 'testcase.request_changes', set(['QA']))
     if draft["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": LIFECYCLE_POLICY["project_mismatch_code"]})
-    if draft["status"] != LIFECYCLE_POLICY["review_status"]:
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    if draft["status"] != 'IN_REVIEW':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if draft["revision"] != payload.expected_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"], "current_revision": draft["revision"]},
+            detail={"code": 'REVISION_CONFLICT', "current_revision": draft["revision"]},
         )
     timestamp = now()
     transitioned = await test_design_repository.transition_case_draft(
         draft_id,
         project_id,
         payload.expected_revision,
-        LIFECYCLE_POLICY["review_status"],
-        LIFECYCLE_POLICY["draft_status"],
+        'IN_REVIEW',
+        'DRAFT',
         {
             "review_note": payload.review_note,
             "changes_requested_by": user.id,
@@ -123,12 +122,12 @@ async def request_test_case_changes_record(project_id, draft_id, payload, user):
         },
     )
     if not transitioned:
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     draft = await test_design_repository.find_case_draft(draft_id, project_id)
     await audit(
         user.id,
-        LIFECYCLE_POLICY["changes_requested_event"],
-        LIFECYCLE_POLICY["draft_entity"],
+        'test_case_changes_requested',
+        'TestCaseDraft',
         draft_id,
         project_id,
         {"review_note": payload.review_note},
@@ -137,28 +136,28 @@ async def request_test_case_changes_record(project_id, draft_id, payload, user):
 
 
 async def approve_test_case_draft_record(draft_id, payload, user):
-    draft = await get_project_entity(LIFECYCLE_POLICY["draft_collection"], draft_id, user, LIFECYCLE_POLICY["approve_permission"])
-    if draft["status"] == LIFECYCLE_POLICY["approved_status"] and draft.get(
+    draft = await get_project_entity('test_case_drafts', draft_id, user, 'testcase.approve')
+    if draft["status"] == 'APPROVED' and draft.get(
         "frozen_version_id"
     ):
         return await approved_test_case_result(draft)
-    if draft["status"] != LIFECYCLE_POLICY["review_status"]:
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["invalid_transition_code"]})
+    if draft["status"] != 'IN_REVIEW':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if draft["revision"] != payload.expected_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": LIFECYCLE_POLICY["revision_conflict_code"], "current_revision": draft["revision"]},
+            detail={"code": 'REVISION_CONFLICT', "current_revision": draft["revision"]},
         )
     findings = lint_test_case(draft)
     project_settings = await test_design_repository.find_project_settings(draft["project_id"])
     lint_blocking = project_settings.get(
-        LIFECYCLE_POLICY["lint_setting"], LIFECYCLE_POLICY["lint_setting_default"]
+        'testcase_lint_blocking', True
     )
     if lint_blocking and any(
-        item["severity"] == LIFECYCLE_POLICY["lint_blocking_severity"] for item in findings
+        item["severity"] == 'error' for item in findings
     ):
         raise HTTPException(
-            status_code=409, detail={"code": LIFECYCLE_POLICY["lint_blocked_code"], "findings": findings}
+            status_code=409, detail={"code": 'TEST_CASE_LINT_BLOCKED', "findings": findings}
         )
     claimed = await claim_test_case_draft(draft, payload, user)
     if not claimed:
@@ -167,11 +166,11 @@ async def approve_test_case_draft_record(draft_id, payload, user):
         )
         if (
             current
-            and current.get("status") == LIFECYCLE_POLICY["approved_status"]
+            and current.get("status") == 'APPROVED'
             and current.get("frozen_version_id")
         ):
             return await approved_test_case_result(current)
-        raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["approval_in_progress_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'TEST_CASE_APPROVAL_IN_PROGRESS'})
     test_case, version = await persist_test_case_version(claimed, payload, user)
     trace_ready = True
     try:
@@ -180,21 +179,21 @@ async def approve_test_case_draft_record(draft_id, payload, user):
         trace_ready = False
     indexed = await index_artifact(
         version["project_id"],
-        LIFECYCLE_POLICY["version_artifact_type"],
+        'test_case_version',
         version["test_case_id"],
         version["_id"],
         version["title"],
         version["plain_text_projection"],
         version["status"],
-        LIFECYCLE_POLICY["approved_authority"],
+        'APPROVED_SOURCE',
         version["version"],
         requirement_version_ids=version.get("requirement_version_ids", []),
         acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
     )
     await audit(
         user.id,
-        LIFECYCLE_POLICY["version_approved_event"],
-        LIFECYCLE_POLICY["version_entity"],
+        'test_case_version_approved',
+        'TestCaseVersion',
         version["_id"],
         claimed["project_id"],
         {"draft_id": draft_id},
@@ -202,8 +201,8 @@ async def approve_test_case_draft_record(draft_id, payload, user):
     ready = trace_ready and indexed
     return {
         "data": {"test_case": {**test_case, "current_version_id": version["_id"]}, "version": version},
-        "status": LIFECYCLE_POLICY["success_status"] if ready else LIFECYCLE_POLICY["degraded_status"],
-        "degraded_mode": None if ready else LIFECYCLE_POLICY["degraded_derived_data_mode"],
+        "status": 'SUCCESS' if ready else 'DEGRADED',
+        "degraded_mode": None if ready else 'DEGRADED_DERIVED_DATA',
     }
 
 
@@ -213,8 +212,8 @@ async def claim_test_case_draft(draft, payload, user):
         draft["_id"],
         draft["project_id"],
         payload.expected_revision,
-        LIFECYCLE_POLICY["review_status"],
-        LIFECYCLE_POLICY["approving_status"],
+        'IN_REVIEW',
+        'APPROVING',
         {
             "approval_started_by": user.id,
             "approval_started_at": timestamp,
@@ -230,7 +229,7 @@ async def approved_test_case_result(draft):
     test_case = await test_design_repository.find_case(
         version["test_case_id"], draft["project_id"]
     )
-    return {"data": {"test_case": test_case, "version": version}, "status": LIFECYCLE_POLICY["success_status"], "degraded_mode": None}
+    return {"data": {"test_case": test_case, "version": version}, "status": 'SUCCESS', "degraded_mode": None}
 
 
 async def persist_test_case_version(draft, payload, user):
@@ -246,17 +245,17 @@ async def persist_test_case_version(draft, payload, user):
         if existing:
             latest = await test_design_repository.find_latest_case_version(existing["_id"])
             if not latest:
-                raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["version_history_invalid_code"]})
+                raise HTTPException(status_code=409, detail={"code": 'TEST_CASE_VERSION_HISTORY_INVALID'})
             test_case = existing
             version_number = int(latest["version"]) + 1
             parent_version_id = latest["_id"]
         else:
             test_case = {
-                "_id": new_id(LIFECYCLE_POLICY["case_id_prefix"]),
+                "_id": new_id('TC'),
                 "project_id": draft["project_id"],
                 "test_case_key": draft["test_case_key"],
                 "current_version_id": None,
-                "status": LIFECYCLE_POLICY["active_status"],
+                "status": 'ACTIVE',
                 "owner_id": draft.get("owner_id") or draft.get("created_by"),
                 "tags": draft.get("tags", []),
                 "created_at": timestamp,
@@ -274,22 +273,22 @@ async def persist_test_case_version(draft, payload, user):
             draft["project_id"],
             parent_version_id,
             version["_id"],
-            LIFECYCLE_POLICY["active_status"],
+            'ACTIVE',
             timestamp,
         )
         if not updated_case:
-            raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["version_conflict_code"]})
+            raise HTTPException(status_code=409, detail={"code": 'TEST_CASE_VERSION_CONFLICT'})
         updated_draft = await test_design_repository.approve_case_draft(
             draft["_id"],
             draft["project_id"],
             draft["revision"],
-            LIFECYCLE_POLICY["approving_status"],
-            LIFECYCLE_POLICY["approved_status"],
+            'APPROVING',
+            'APPROVED',
             version["_id"],
             timestamp,
         )
         if not updated_draft:
-            raise HTTPException(status_code=409, detail={"code": LIFECYCLE_POLICY["approval_conflict_code"]})
+            raise HTTPException(status_code=409, detail={"code": 'TEST_CASE_APPROVAL_CONFLICT'})
         return test_case, version
     except Exception:
         await rollback_test_case_version(draft, test_case, version, parent_version_id, created_test_case)
@@ -298,7 +297,7 @@ async def persist_test_case_version(draft, payload, user):
 
 def build_test_case_version(draft, test_case_id, version_number, parent_version_id, payload, user, timestamp):
     return {
-        "_id": new_id(LIFECYCLE_POLICY["version_id_prefix"]),
+        "_id": new_id('TCV'),
         "project_id": draft["project_id"],
         "test_case_id": test_case_id,
         "test_case_key": draft["test_case_key"],
@@ -327,7 +326,7 @@ def build_test_case_version(draft, test_case_id, version_number, parent_version_
         "parent_version_id": parent_version_id,
         "change_reason": payload.change_reason,
         "review_note": payload.review_note,
-        "status": LIFECYCLE_POLICY["active_status"],
+        "status": 'ACTIVE',
         "approved_by": user.id,
         "created_at": timestamp,
     }
@@ -353,19 +352,19 @@ async def rollback_test_case_version(draft, test_case, version, parent_version_i
     await test_design_repository.reset_case_draft(
         draft["_id"],
         draft["project_id"],
-        LIFECYCLE_POLICY["approving_status"],
-        LIFECYCLE_POLICY["review_status"],
+        'APPROVING',
+        'IN_REVIEW',
         now(),
     )
 
 
 async def create_suggested_trace_records(draft, version, user):
-    trace_policy = domain_policy("trace_suggestion")
+    
     sources = [
-        (LIFECYCLE_POLICY["requirement_source_type"], source_id)
+        ('requirement_version', source_id)
         for source_id in draft.get("requirement_version_ids", [])
     ] + [
-        (LIFECYCLE_POLICY["criterion_source_type"], source_id)
+        ('acceptance_criterion', source_id)
         for source_id in draft.get("acceptance_criterion_ids", [])
     ]
     for source_type, source_id in sources:
@@ -374,32 +373,32 @@ async def create_suggested_trace_records(draft, version, user):
                 "project_id": draft["project_id"],
                 "source_type": source_type,
                 "source_id": source_id,
-                "target_type": LIFECYCLE_POLICY["trace_target_type"],
+                "target_type": 'test_case_version',
                 "target_id": version["_id"],
             }
         )
         if exists:
             continue
-        ai_generated = draft.get("origin") == LIFECYCLE_POLICY["ai_origin"]
+        ai_generated = draft.get("origin") == 'ai_generated'
         await test_design_repository.insert_trace_link(
             {
-                "_id": new_id(LIFECYCLE_POLICY["trace_id_prefix"]),
+                "_id": new_id('TL'),
                 "project_id": draft["project_id"],
                 "source_type": source_type,
                 "source_id": source_id,
-                "target_type": LIFECYCLE_POLICY["trace_target_type"],
+                "target_type": 'test_case_version',
                 "target_id": version["_id"],
-                "link_type": LIFECYCLE_POLICY["trace_link_type"],
-                "confidence": trace_policy["ai_confidence"]
+                "link_type": 'verifies',
+                "confidence": 0.9
                 if ai_generated
-                else trace_policy["manual_confidence"],
-                "origin": LIFECYCLE_POLICY["ai_trace_origin"]
+                else 1.0,
+                "origin": 'ai_suggested'
                 if ai_generated
-                else LIFECYCLE_POLICY["manual_trace_origin"],
-                "status": LIFECYCLE_POLICY["suggested_trace_status"]
+                else 'manual',
+                "status": 'SUGGESTED'
                 if ai_generated
-                else LIFECYCLE_POLICY["confirmed_trace_status"],
-                "revision": LIFECYCLE_POLICY["initial_revision"],
+                else 'CONFIRMED',
+                "revision": 1,
                 "evidence": draft.get("source_evidence", []),
                 "created_by": user.id,
                 "created_at": now(),

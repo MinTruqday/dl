@@ -4,18 +4,27 @@ from fastapi import HTTPException
 
 from src.core.common import get_project
 from src.repositories.requirement_analysis import requirement_analysis_repository
-from src.services.domain_policy import domain_policy
 from src.modules.quality.services.quality_policy import evaluate_rules
 
+BASIS_COLLECTIONS = {
+    "REQUIREMENT_VERSION": "requirement_versions",
+    "ACCEPTANCE_CRITERION": "acceptance_criteria",
+    "API_OPERATION": "api_operations",
+    "KNOWLEDGE_SOURCE": "requirement_documents",
+    "BUSINESS_RULE": "business_rules",
+    "RISK_RANKING": "risk_rankings",
+    "DEFECT": "defects",
+    "REGULATION": "requirement_documents",
+}
 
-BASIS_POLICY = domain_policy("test_analysis_basis")
-BASIS_COLLECTIONS = BASIS_POLICY["collections"]
+
+
 
 
 def basis_text(value):
-    for field in BASIS_POLICY["text_fields"]:
+    for field in ['plain_text_projection', 'plain_text', 'normalized_content', 'description', 'title', 'name']:
         if value.get(field):
-            return str(value[field])[: int(BASIS_POLICY["maximum_text_characters"])]
+            return str(value[field])[: int(4000)]
     return ""
 
 
@@ -25,25 +34,25 @@ async def resolve_basis(project_id, refs):
     for ref in refs:
         key = (ref.artifact_type, ref.artifact_id, ref.artifact_version_id)
         if key in seen:
-            raise HTTPException(status_code=422, detail={"code": BASIS_POLICY["duplicate_ref_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'DUPLICATE_TEST_BASIS_REF'})
         seen.add(key)
         collection = BASIS_COLLECTIONS[ref.artifact_type]
         identifier = ref.artifact_version_id or ref.artifact_id
         query = {"_id": identifier, "project_id": project_id}
-        if ref.artifact_type == BASIS_POLICY["regulation_type"]:
-            query["source_type"] = BASIS_POLICY["regulation_type"]
+        if ref.artifact_type == 'REGULATION':
+            query["source_type"] = 'REGULATION'
         value = await requirement_analysis_repository.find_basis(collection, query)
         if not value:
             global_query = {"_id": identifier}
-            if ref.artifact_type == BASIS_POLICY["regulation_type"]:
-                global_query["source_type"] = BASIS_POLICY["regulation_type"]
+            if ref.artifact_type == 'REGULATION':
+                global_query["source_type"] = 'REGULATION'
             exists = await requirement_analysis_repository.find_basis(
                 collection, global_query, {"_id": 1}
             )
             code = (
-                BASIS_POLICY["project_mismatch_code"]
+                'TEST_BASIS_PROJECT_MISMATCH'
                 if exists
-                else BASIS_POLICY["not_found_code"]
+                else 'TEST_BASIS_NOT_FOUND'
             )
             raise HTTPException(
                 status_code=422,
@@ -54,7 +63,7 @@ async def resolve_basis(project_id, refs):
                 },
             )
         text = basis_text(value)
-        if ref.artifact_type == BASIS_POLICY["requirement_version_type"]:
+        if ref.artifact_type == 'REQUIREMENT_VERSION':
             criteria = await requirement_analysis_repository.list_acceptance_criteria(
                 {"requirement_version_id": identifier, "project_id": project_id},
                 limit=200,
@@ -92,7 +101,7 @@ async def list_test_basis(project_id, user, artifact_type="", query_text="", lim
     for kind in types:
         collection_name = BASIS_COLLECTIONS.get(kind)
         if not collection_name:
-            raise HTTPException(status_code=422, detail={"code": BASIS_POLICY["invalid_type_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'TEST_BASIS_TYPE_INVALID'})
         query = {"project_id": project_id}
         if query_text:
             pattern = {"$regex": re.escape(query_text), "$options": "i"}
@@ -110,7 +119,7 @@ async def list_test_basis(project_id, user, artifact_type="", query_text="", lim
                     "artifact_type": kind,
                     "artifact_id": value["_id"],
                     "artifact_version_id": value["_id"]
-                    if kind.endswith(BASIS_POLICY["version_suffix"])
+                    if kind.endswith('VERSION')
                     else None,
                     "title": value.get("title")
                     or value.get("name")
@@ -139,7 +148,7 @@ def deterministic_testability_findings(basis_snapshots):
             findings.append(
                 {
                     "candidate_id": (
-                        f"{BASIS_POLICY['candidate_id_prefix']}"
+                        f"{'DET-'}"
                         f"{snapshot['resolved_id']}-{index}"
                     ),
                     "category": rule["category"],

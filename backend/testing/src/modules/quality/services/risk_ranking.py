@@ -8,23 +8,22 @@ from src.schemas.contracts.design import (
     RiskRankingGenerate,
     RiskRankingPatch,
 )
-from src.services.domain_policy import domain_policy
 
 
-RISK_POLICY = domain_policy("risk_scoring")
+
 
 
 class RiskRankingService:
     @staticmethod
     async def current(project_id: str, user: CurrentUser):
-        policy = RISK_POLICY
+        
         await get_project(project_id, user, "risk.read")
         ranking = await analysis_repository.find_latest_risk_ranking(project_id)
         if ranking:
             return ranking
         return {
             "project_id": project_id,
-            "status": policy["derived_status"],
+            "status": 'DERIVED',
             "items": await RiskRankingService._build_items(project_id),
         }
 
@@ -38,13 +37,13 @@ class RiskRankingService:
         items = await RiskRankingService._build_items(project_id)
         if payload.max_items:
             items = items[: payload.max_items]
-        policy = domain_policy("risk_scoring")
+        
         ranking = {
-            "_id": new_id(policy["item_id_prefix"]),
+            "_id": new_id('RISK'),
             "project_id": project_id,
             "items": items,
-            "status": policy["pending_approval_status"],
-            "model_version": policy["model_version"],
+            "status": 'PENDING_APPROVAL',
+            "model_version": 'risk_scoring',
             "revision": 1,
             "created_by": user.id,
             "created_at": now(),
@@ -60,13 +59,13 @@ class RiskRankingService:
         payload: RiskRankingPatch,
         user: CurrentUser,
     ):
-        policy = RISK_POLICY
+        
         ranking = await get_project_entity("risk_rankings", ranking_id, user, "risk.review")
         items = list(ranking.get("items") or [])
         by_version = {item.get("test_case_version_id"): item for item in items}
         target = by_version.get(payload.test_case_version_id)
         if not target:
-            raise HTTPException(status_code=404, detail={"code": policy["item_not_found_code"]})
+            raise HTTPException(status_code=404, detail={"code": 'RISK_ITEM_NOT_FOUND'})
         target.update({"included": payload.included, "review_reason": payload.reason})
         updated = await optimistic_patch(
             "risk_rankings",
@@ -91,19 +90,19 @@ class RiskRankingService:
         payload: RiskRankingApproval,
         user: CurrentUser,
     ):
-        policy = RISK_POLICY
+        
         ranking = await get_project_entity("risk_rankings", ranking_id, user, "risk.approve")
-        if ranking.get("status") == policy["approved_status"]:
+        if ranking.get("status") == 'APPROVED':
             return ranking
-        if ranking.get("status") != policy["pending_approval_status"]:
-            raise HTTPException(status_code=409, detail={"code": policy["state_invalid_code"]})
+        if ranking.get("status") != 'PENDING_APPROVAL':
+            raise HTTPException(status_code=409, detail={"code": 'RISK_RANKING_STATE_INVALID'})
         updated = await optimistic_patch(
             "risk_rankings",
             ranking_id,
             ranking["project_id"],
             payload.expected_revision,
             {
-                "status": policy["approved_status"],
+                "status": 'APPROVED',
                 "approved_by": user.id,
                 "approved_at": now(),
                 "review_note": payload.review_note,
@@ -120,25 +119,25 @@ class RiskRankingService:
 
     @staticmethod
     def _score(test_case: dict, version: dict, failure_count: int):
-        policy = domain_policy("risk_scoring")
-        levels = policy["levels"]
-        default = policy["default_level"]
-        risk = levels.get(str(version.get("risk", "medium")).lower(), default)
-        priority = levels.get(str(version.get("priority", "medium")).lower(), default)
+        
+        
+        
+        risk = {'critical': 1.0, 'high': 0.8, 'medium': 0.5, 'low': 0.25}.get(str(version.get("risk", "medium")).lower(), 0.5)
+        priority = {'critical': 1.0, 'high': 0.8, 'medium': 0.5, 'low': 0.25}.get(str(version.get("priority", "medium")).lower(), 0.5)
         stale = (
-            policy["stale_increment"]
-            if test_case.get("status") == policy["stale_test_case_status"]
+            0.2
+            if test_case.get("status") == 'NEEDS_UPDATE'
             else 0
         )
         failures = min(
-            policy["failure_maximum"],
-            failure_count * policy["failure_increment"],
+            0.4,
+            failure_count * 0.1,
         )
         return round(
             min(
                 1,
-                risk * policy["risk_weight"]
-                + priority * policy["priority_weight"]
+                risk * 0.45
+                + priority * 0.25
                 + stale
                 + failures,
             ),
@@ -147,11 +146,11 @@ class RiskRankingService:
 
     @staticmethod
     async def _build_items(project_id: str):
-        policy = domain_policy("risk_scoring")
-        reason_codes = policy["reason_codes"]
+        
+        
         cases = await analysis_repository.list_current_test_cases(
             project_id,
-            policy["current_test_case_excluded_status"],
+            'OBSOLETE',
             {"_id": 1, "test_case_key": 1, "current_version_id": 1, "status": 1},
         )
         version_ids = [
@@ -180,11 +179,11 @@ class RiskRankingService:
                     "failure_count": failure_count,
                     "score": RiskRankingService._score(case, version, failure_count),
                     "included": True,
-                    "reason_codes": list(reason_codes["base"])
-                    + ([reason_codes["failure"]] if failure_count else [])
+                    "reason_codes": list(['RISK', 'PRIORITY'])
+                    + (['RECENT_FAILURE'] if failure_count else [])
                     + (
-                        [reason_codes["stale"]]
-                        if case.get("status") == policy["stale_test_case_status"]
+                        ['NEEDS_UPDATE']
+                        if case.get("status") == 'NEEDS_UPDATE'
                         else []
                     ),
                 }

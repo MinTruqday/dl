@@ -8,37 +8,36 @@ from src.schemas.contracts.automation import CollaborationOperationInput
 from src.schemas.contracts.design import TestCaseDraftPatch
 from src.schemas.contracts.requirements import RequirementDraftPatch
 from src.repositories.collaboration import collaboration_repository
-from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_records import update_requirement_draft_record
 from src.modules.design.services.test_case_records import update_test_case_draft_record
 
 
 async def artifact_context(project_id, artifact_type, artifact_id, user, edit=False):
-    policy = domain_policy("collaboration")
-    if artifact_type == policy["requirement_artifact_type"]:
+    
+    if artifact_type == 'requirement':
         requirement = await get_project_entity(
             "requirements", artifact_id, user, "requirement.update" if edit else "requirement.read"
         )
         if requirement["project_id"] != project_id:
-            raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
         version = await collaboration_repository.find_requirement_version(
             requirement["current_version_id"], project_id
         )
         if not version:
-            raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
-        if edit and version.get("status") != policy["draft_status"]:
+            raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
+        if edit and version.get("status") != 'DRAFT':
             raise HTTPException(
-                status_code=409, detail={"code": policy["immutable_requirement_code"]}
+                status_code=409, detail={"code": 'IMMUTABLE_REQUIREMENT_VERSION'}
             )
         return version
     draft = await get_project_entity(
         "test_case_drafts", artifact_id, user, "testcase.update" if edit else "testcase.read"
     )
     if draft["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
-    if edit and draft.get("status") != policy["draft_status"]:
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    if edit and draft.get("status") != 'DRAFT':
         raise HTTPException(
-            status_code=409, detail={"code": policy["immutable_test_case_code"]}
+            status_code=409, detail={"code": 'IMMUTABLE_TEST_CASE_DRAFT'}
         )
     return draft
 
@@ -46,7 +45,7 @@ async def artifact_context(project_id, artifact_type, artifact_id, user, edit=Fa
 class CollaborationService:
     @staticmethod
     async def update_presence(project_id, payload, user):
-        policy = domain_policy("collaboration")
+        
         await get_project(project_id, user, "collaboration.presence.read")
         await artifact_context(project_id, payload.artifact_type, payload.artifact_id, user)
         timestamp = now()
@@ -61,14 +60,14 @@ class CollaborationService:
             {
                 "user_email": user.email,
                 "last_seen_at": timestamp,
-                "expires_at": timestamp + timedelta(seconds=policy["presence_ttl_seconds"]),
+                "expires_at": timestamp + timedelta(seconds=45),
             },
-            {"_id": new_id(policy["presence_id_prefix"]), "created_at": timestamp},
+            {"_id": new_id('COLSESS'), "created_at": timestamp},
         )
 
     @staticmethod
     async def list_presence(project_id, artifact_type, artifact_id, user):
-        policy = domain_policy("collaboration")
+        
         await get_project(project_id, user, "collaboration.presence.read")
         await artifact_context(project_id, artifact_type, artifact_id, user)
         return await collaboration_repository.list_presence(
@@ -78,12 +77,12 @@ class CollaborationService:
                 "artifact_id": artifact_id,
                 "expires_at": {"$gt": now()},
             },
-            policy["presence_limit"],
+            100,
         )
 
     @staticmethod
     async def apply_operation(project_id, artifact_type, artifact_id, payload, user):
-        policy = domain_policy("collaboration")
+        
         current = await artifact_context(project_id, artifact_type, artifact_id, user, edit=True)
         existing = await collaboration_repository.find_operation(
             project_id, payload.operation_id
@@ -99,7 +98,7 @@ class CollaborationService:
                 artifact_type,
                 artifact_id,
                 payload.base_revision,
-                policy["operation_history_limit"],
+                10000,
             )
             changed_keys = {
                 key for operation in operations for key in operation.get("changed_keys", [])
@@ -108,7 +107,7 @@ class CollaborationService:
                 rebased = True
             else:
                 conflict = {
-                    "_id": new_id(policy["conflict_id_prefix"]),
+                    "_id": new_id('DRAFTCONFLICT'),
                     "project_id": project_id,
                     "artifact_type": artifact_type,
                     "artifact_id": artifact_id,
@@ -117,7 +116,7 @@ class CollaborationService:
                     "incoming_changes": changes,
                     "changed_keys_since_base": sorted(changed_keys),
                     "operation_id": payload.operation_id,
-                    "status": policy["open_status"],
+                    "status": 'OPEN',
                     "revision": 1,
                     "created_by": user.id,
                     "created_at": now(),
@@ -127,12 +126,12 @@ class CollaborationService:
                 raise HTTPException(
                     status_code=409,
                     detail={
-                        "code": policy["conflict_review_code"],
+                        "code": 'DRAFT_CONFLICT_REQUIRES_REVIEW',
                         "conflict_id": conflict["_id"],
                     },
                 )
         try:
-            if artifact_type == policy["requirement_artifact_type"]:
+            if artifact_type == 'requirement':
                 updated = await update_requirement_draft_record(
                     project_id,
                     artifact_id,
@@ -153,10 +152,10 @@ class CollaborationService:
                 raise
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["retry_required_code"]},
+                detail={"code": 'COLLABORATION_RETRY_REQUIRED'},
             ) from error
         record = {
-            "_id": new_id(policy["operation_id_prefix"]),
+            "_id": new_id('COLOP'),
             "project_id": project_id,
             "artifact_type": artifact_type,
             "artifact_id": artifact_id,
@@ -190,20 +189,20 @@ class CollaborationService:
 
     @staticmethod
     async def list_conflicts(project_id, user):
-        policy = domain_policy("collaboration")
+        
         await get_project(project_id, user, "collaboration.conflict.resolve")
         return await collaboration_repository.list_conflicts(
-            project_id, policy["conflict_limit"]
+            project_id, 1000
         )
 
     @classmethod
     async def resolve_conflict(cls, project_id, conflict_id, payload, user):
-        policy = domain_policy("collaboration")
+        
         conflict = await get_project_entity(
             "draft_conflicts", conflict_id, user, "collaboration.conflict.resolve"
         )
         if conflict["project_id"] != project_id:
-            raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
         current = await artifact_context(
             project_id, conflict["artifact_type"], conflict["artifact_id"], user, edit=True
         )
@@ -211,15 +210,15 @@ class CollaborationService:
             raise HTTPException(
                 status_code=409,
                 detail={
-                    "code": policy["revision_conflict_code"],
+                    "code": 'REVISION_CONFLICT',
                     "current_revision": current["revision"],
                 },
             )
         changes = (
             {}
-            if payload.resolution == policy["keep_current_resolution"]
+            if payload.resolution == 'KEEP_CURRENT'
             else conflict["incoming_changes"]
-            if payload.resolution == policy["apply_incoming_resolution"]
+            if payload.resolution == 'APPLY_INCOMING'
             else payload.merged_changes
         )
         result = None
@@ -239,10 +238,10 @@ class CollaborationService:
         updated = await collaboration_repository.resolve_conflict(
             conflict_id,
             project_id,
-            policy["open_status"],
+            'OPEN',
             conflict["revision"],
             {
-                "status": policy["resolved_status"],
+                "status": 'RESOLVED',
                 "resolution": payload.resolution,
                 "reason": payload.reason,
                 "resolved_by": user.id,
@@ -252,7 +251,7 @@ class CollaborationService:
         )
         if not updated:
             raise HTTPException(
-                status_code=409, detail={"code": policy["already_resolved_code"]}
+                status_code=409, detail={"code": 'CONFLICT_ALREADY_RESOLVED'}
             )
         await audit(
             user.id,

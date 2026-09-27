@@ -9,10 +9,9 @@ from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.core.configuration import settings
 from src.repositories.execution_asset import execution_asset_repository
 from src.core.sensitive_data import redact_sensitive_data
-from src.services.domain_policy import domain_policy
 
 
-EXECUTION_ASSET_POLICY = domain_policy("execution_assets")
+
 
 
 def public_execution(value, evidence=False):
@@ -25,23 +24,23 @@ def public_execution(value, evidence=False):
 class AutomationExecutionService:
     @staticmethod
     async def list(project_id, user):
-        await get_project(project_id, user, EXECUTION_ASSET_POLICY["read_permission"])
+        await get_project(project_id, user, 'automation.read')
         items = await execution_asset_repository.list_executions(project_id)
         return [public_execution(item) for item in items]
 
     @staticmethod
     async def get(execution_id, user, evidence=False):
         value = await get_project_entity(
-            EXECUTION_ASSET_POLICY["execution_collection"],
+            'automation_executions',
             execution_id,
             user,
-            EXECUTION_ASSET_POLICY["read_permission"],
+            'automation.read',
         )
         return public_execution(value, evidence=evidence)
 
     @staticmethod
     async def create(project_id, payload, user):
-        await get_project(project_id, user, EXECUTION_ASSET_POLICY["create_permission"])
+        await get_project(project_id, user, 'automation.create')
         existing = await execution_asset_repository.find_execution_by_idempotency_key(
             project_id, payload.idempotency_key
         )
@@ -49,45 +48,45 @@ class AutomationExecutionService:
             return public_execution(existing)
         artifact = None
         script = None
-        if payload.runner == EXECUTION_ASSET_POLICY["postman_runner"]:
+        if payload.runner == 'newman':
             artifact = await execution_asset_repository.find_confirmed_postman_import(
                 project_id,
                 payload.postman_artifact_id,
-                EXECUTION_ASSET_POLICY["postman_format"],
-                EXECUTION_ASSET_POLICY["confirmed_status"],
+                'postman',
+                'CONFIRMED',
             )
             if not artifact or not artifact.get("raw_content"):
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": EXECUTION_ASSET_POLICY["postman_collection_required_code"]},
+                    detail={"code": 'CONFIRMED_POSTMAN_COLLECTION_REQUIRED'},
                 )
         else:
             script = await execution_asset_repository.find_approved_playwright_script(
                 project_id,
                 payload.automation_script_id,
-                EXECUTION_ASSET_POLICY["playwright_framework"],
-                EXECUTION_ASSET_POLICY["approved_status"],
+                'playwright',
+                'APPROVED',
             )
             if not script or not str(script.get("source") or "").strip():
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": EXECUTION_ASSET_POLICY["playwright_script_required_code"]},
+                    detail={"code": 'APPROVED_PLAYWRIGHT_SCRIPT_REQUIRED'},
                 )
         environment = None
         if payload.environment_id:
             environment = await execution_asset_repository.find_active_environment(
                 project_id,
                 payload.environment_id,
-                EXECUTION_ASSET_POLICY["archived_status"],
+                'ARCHIVED',
             )
             if not environment:
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": EXECUTION_ASSET_POLICY["invalid_environment_code"]},
+                    detail={"code": 'INVALID_ENVIRONMENT'},
                 )
         timestamp = now()
         value = {
-            "_id": new_id(EXECUTION_ASSET_POLICY["execution_id_prefix"]),
+            "_id": new_id('AUTOEX'),
             "project_id": project_id,
             "name": payload.name,
             "runner": payload.runner,
@@ -110,18 +109,18 @@ class AutomationExecutionService:
                 ),
                 "environment": {
                     key: environment.get("base_url")
-                    for key in EXECUTION_ASSET_POLICY["base_url_environment_keys"]
+                    for key in ['BASE_URL', 'baseUrl']
                 }
                 if environment and environment.get("base_url")
                 else {},
             },
-            "status": EXECUTION_ASSET_POLICY["created_status"],
+            "status": 'CREATED',
             "summary": {},
             "results": [],
             "logs": [],
             "artifact_refs": [],
             "idempotency_key": payload.idempotency_key,
-            "revision": EXECUTION_ASSET_POLICY["initial_revision"],
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -137,8 +136,8 @@ class AutomationExecutionService:
             raise
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["created_event"],
-            EXECUTION_ASSET_POLICY["execution_entity"],
+            'automation_execution_created',
+            'AutomationExecution',
             value["_id"],
             project_id,
             {
@@ -152,27 +151,27 @@ class AutomationExecutionService:
     @staticmethod
     async def start(execution_id, payload, user):
         execution = await get_project_entity(
-            EXECUTION_ASSET_POLICY["execution_collection"],
+            'automation_executions',
             execution_id,
             user,
-            EXECUTION_ASSET_POLICY["execute_permission"],
+            'automation.execute',
         )
-        if execution.get("status") == EXECUTION_ASSET_POLICY["queued_status"] and execution.get(
+        if execution.get("status") == 'QUEUED' and execution.get(
             "start_idempotency_key"
         ) == payload.idempotency_key:
             return public_execution(execution), execution.get("operation_id")
-        if execution.get("status") != EXECUTION_ASSET_POLICY["created_status"] or execution.get(
+        if execution.get("status") != 'CREATED' or execution.get(
             "revision"
         ) != payload.expected_revision:
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["state_conflict_code"]},
+                detail={"code": 'AUTOMATION_STATE_CONFLICT'},
             )
         runner = execution.get("runner")
-        if runner not in set(EXECUTION_ASSET_POLICY["supported_runners"]):
+        if runner not in set(['newman', 'playwright']):
             raise HTTPException(
                 status_code=422,
-                detail={"code": EXECUTION_ASSET_POLICY["unsupported_runner_code"]},
+                detail={"code": 'UNSUPPORTED_AUTOMATION_RUNNER'},
             )
         request = {
             "event": f"automation.{runner}.requested",
@@ -191,9 +190,9 @@ class AutomationExecutionService:
         updated = await execution_asset_repository.transition_execution(
             execution_id,
             payload.expected_revision,
-            EXECUTION_ASSET_POLICY["created_status"],
+            'CREATED',
             {
-                "status": EXECUTION_ASSET_POLICY["queued_status"],
+                "status": 'QUEUED',
                 "operation_id": operation_id,
                 "start_idempotency_key": payload.idempotency_key,
                 "queued_at": timestamp,
@@ -203,7 +202,7 @@ class AutomationExecutionService:
         if not updated:
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["state_conflict_code"]},
+                detail={"code": 'AUTOMATION_STATE_CONFLICT'},
             )
         try:
             job = await worker_client.enqueue(request)
@@ -214,18 +213,18 @@ class AutomationExecutionService:
                 execution_id,
                 payload.expected_revision,
                 operation_id,
-                EXECUTION_ASSET_POLICY["queued_status"],
-                EXECUTION_ASSET_POLICY["created_status"],
+                'QUEUED',
+                'CREATED',
                 now(),
             )
             raise HTTPException(
                 status_code=503,
-                detail={"code": EXECUTION_ASSET_POLICY["worker_unavailable_code"]},
+                detail={"code": 'WORKER_UNAVAILABLE'},
             ) from error
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["queued_event"],
-            EXECUTION_ASSET_POLICY["execution_entity"],
+            'automation_execution_queued',
+            'AutomationExecution',
             execution_id,
             execution["project_id"],
             {"operation_id": operation_id},
@@ -235,34 +234,34 @@ class AutomationExecutionService:
     @staticmethod
     async def cancel(execution_id, payload, user):
         execution = await get_project_entity(
-            EXECUTION_ASSET_POLICY["execution_collection"],
+            'automation_executions',
             execution_id,
             user,
-            EXECUTION_ASSET_POLICY["execute_permission"],
+            'automation.execute',
         )
-        if execution.get("status") == EXECUTION_ASSET_POLICY["cancelled_status"]:
+        if execution.get("status") == 'CANCELLED':
             return public_execution(execution)
-        if execution.get("status") != EXECUTION_ASSET_POLICY["queued_status"] or execution.get(
+        if execution.get("status") != 'QUEUED' or execution.get(
             "revision"
         ) != payload.expected_revision:
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["not_cancellable_code"]},
+                detail={"code": 'AUTOMATION_NOT_CANCELLABLE'},
             )
         try:
             await worker_client.cancel(execution["operation_id"])
         except WorkerClientError as error:
             raise HTTPException(
                 status_code=503,
-                detail={"code": EXECUTION_ASSET_POLICY["worker_unavailable_code"]},
+                detail={"code": 'WORKER_UNAVAILABLE'},
             ) from error
         timestamp = now()
         updated = await execution_asset_repository.transition_execution(
             execution_id,
             payload.expected_revision,
-            EXECUTION_ASSET_POLICY["queued_status"],
+            'QUEUED',
             {
-                "status": EXECUTION_ASSET_POLICY["cancelled_status"],
+                "status": 'CANCELLED',
                 "cancelled_by": user.id,
                 "cancelled_at": timestamp,
                 "updated_at": timestamp,
@@ -270,8 +269,8 @@ class AutomationExecutionService:
         )
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["cancelled_event"],
-            EXECUTION_ASSET_POLICY["execution_entity"],
+            'automation_execution_cancelled',
+            'AutomationExecution',
             execution_id,
             execution["project_id"],
         )
@@ -282,14 +281,14 @@ class AutomationExecutionService:
         if not hmac.compare_digest(internal_token, settings.SECRET_KEY):
             raise HTTPException(
                 status_code=403,
-                detail={"code": EXECUTION_ASSET_POLICY["invalid_internal_token_code"]},
+                detail={"code": 'INVALID_INTERNAL_TOKEN'},
             )
         signature_value = f"{payload.execution_id}:{payload.operation_id}:{payload.status}"
         expected = hmac.new(settings.SECRET_KEY.encode(), signature_value.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, payload.context_signature):
             raise HTTPException(
                 status_code=403,
-                detail={"code": EXECUTION_ASSET_POLICY["invalid_context_signature_code"]},
+                detail={"code": 'INVALID_JOB_CONTEXT_SIGNATURE'},
             )
         execution = await execution_asset_repository.find_execution_operation(
             payload.execution_id, payload.operation_id
@@ -297,17 +296,17 @@ class AutomationExecutionService:
         if not execution:
             raise HTTPException(
                 status_code=404,
-                detail={"code": EXECUTION_ASSET_POLICY["execution_not_found_code"]},
+                detail={"code": 'AUTOMATION_EXECUTION_NOT_FOUND'},
             )
         if execution.get("status") in set(
-            EXECUTION_ASSET_POLICY["terminal_execution_statuses"]
+            ['COMPLETED', 'FAILED', 'CANCELLED']
         ):
             return public_execution(execution, evidence=True)
         timestamp = now()
         updated = await execution_asset_repository.ingest_execution_result(
             payload.execution_id,
             payload.operation_id,
-            EXECUTION_ASSET_POLICY["result_ingest_source_statuses"],
+            ['QUEUED', 'RUNNING'],
             {
                 "status": payload.status,
                 "summary": redact_sensitive_data(payload.summary),
@@ -321,12 +320,12 @@ class AutomationExecutionService:
         if not updated:
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["state_conflict_code"]},
+                detail={"code": 'AUTOMATION_STATE_CONFLICT'},
             )
         await audit(
-            EXECUTION_ASSET_POLICY["worker_actor"],
-            EXECUTION_ASSET_POLICY["result_ingested_event"],
-            EXECUTION_ASSET_POLICY["execution_entity"],
+            'service:worker',
+            'automation_result_ingested',
+            'AutomationExecution',
             payload.execution_id,
             updated["project_id"],
             {"operation_id": payload.operation_id, "status": payload.status},

@@ -6,10 +6,9 @@ from src.repositories.test_completion import (
     find_completion,
     list_completions,
 )
-from src.services.domain_policy import domain_policy
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 async def validate_people(project_id, user_ids):
@@ -19,12 +18,12 @@ async def validate_people(project_id, user_ids):
     count = await count_active_members(
         project_id,
         values,
-        COMPLETION_POLICY["source_filters"]["active_membership_status"],
+        'ACTIVE',
     )
     if count != len(values):
         raise HTTPException(
             status_code=422,
-            detail={"code": COMPLETION_POLICY["error_codes"]["owner_invalid"]},
+            detail={"code": 'COMPLETION_OWNER_INVALID'},
         )
 
 
@@ -33,16 +32,16 @@ async def get_completion_for_user(report_id, user, permission=None):
     if not report:
         raise HTTPException(
             status_code=404,
-            detail={"code": COMPLETION_POLICY["error_codes"]["report_not_found"]},
+            detail={"code": 'COMPLETION_REPORT_NOT_FOUND'},
         )
     await get_project(
         report["project_id"],
         user,
-        permission or COMPLETION_POLICY["permissions"]["read"],
+        permission or 'testcompletion.read',
     )
     return report
 
 
 async def list_completion_reports(project_id, release_id, status, limit, user):
-    await get_project(project_id, user, COMPLETION_POLICY["permissions"]["read"])
+    await get_project(project_id, user, 'testcompletion.read')
     return await list_completions(project_id, release_id, status, limit)

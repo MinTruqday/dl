@@ -4,11 +4,10 @@ from src.core.common import audit, get_project, get_project_entity, new_id, now,
 from src.clients.project_knowledge import index_artifact
 from src.repositories.analysis import analysis_repository
 from src.modules.quality.services.change_analysis import semantic_changes
-from src.services.domain_policy import domain_policy
 
 
 async def enrich_change_set_records(items, project_id):
-    policy = domain_policy("change_set")
+    
     requirement_ids = sorted(
         {item.get("requirement_id") for item in items if item.get("requirement_id")}
     )
@@ -40,12 +39,12 @@ async def enrich_change_set_records(items, project_id):
                 or requirement.get("title")
                 or item.get("requirement_id"),
                 "from_version_label": (
-                    f"{policy['version_label_prefix']}{from_version['version']}"
+                    f"{'v'}{from_version['version']}"
                     if from_version.get("version") is not None
                     else None
                 ),
                 "to_version_label": (
-                    f"{policy['version_label_prefix']}{to_version['version']}"
+                    f"{'v'}{to_version['version']}"
                     if to_version.get("version") is not None
                     else None
                 ),
@@ -55,29 +54,29 @@ async def enrich_change_set_records(items, project_id):
 
 
 async def mark_previous_traces_stale(change_set):
-    policy = domain_policy("change_set")
+    
     criteria = await analysis_repository.list_acceptance_criteria(
-        change_set["from_version_id"], policy["criteria_limit"]
+        change_set["from_version_id"], 10000
     )
     await analysis_repository.mark_traces_stale(
         change_set["project_id"],
         [change_set["from_version_id"], *[item["_id"] for item in criteria]],
-        policy["confirmed_status"],
-        policy["stale_status"],
+        'CONFIRMED',
+        'STALE',
         now(),
     )
 
 
 async def create_change_set_record(requirement_id, payload, user):
-    policy = domain_policy("change_set")
+    
     requirement = await get_project_entity("requirements", requirement_id, user, "changeset.create")
     version_ids = [payload.from_version_id, payload.to_version_id]
     versions = await analysis_repository.list_change_pair_versions(requirement_id, version_ids)
     by_id = {item["_id"]: item for item in versions}
     if set(by_id) != {payload.from_version_id, payload.to_version_id}:
-        raise HTTPException(status_code=422, detail={"code": policy["invalid_version_pair_code"]})
-    if by_id[payload.to_version_id].get("status") != policy["baselined_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["target_not_baselined_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_REQUIREMENT_VERSION_PAIR'})
+    if by_id[payload.to_version_id].get("status") != 'BASELINED':
+        raise HTTPException(status_code=409, detail={"code": 'TARGET_VERSION_NOT_BASELINED'})
     existing = await analysis_repository.find_change_set_for_target(
         requirement_id, payload.to_version_id
     )
@@ -85,14 +84,14 @@ async def create_change_set_record(requirement_id, payload, user):
         return existing
     changes = semantic_changes(by_id[payload.from_version_id], by_id[payload.to_version_id])
     change_set = {
-        "_id": new_id(policy["id_prefix"]),
+        "_id": new_id('CHG'),
         "project_id": requirement["project_id"],
         "requirement_id": requirement_id,
         "from_version_id": payload.from_version_id,
         "to_version_id": payload.to_version_id,
         "changes": changes,
-        "model_version": policy["model_version"],
-        "status": policy["ready_status"],
+        "model_version": 'semantic_diff',
+        "status": 'READY',
         "revision": 1,
         "created_by": user.id,
         "created_at": now(),
@@ -120,7 +119,7 @@ async def create_change_set_record(requirement_id, payload, user):
             ]
         ),
         change_set["status"],
-        policy["project_reference_authority"],
+        'PROJECT_REFERENCE',
         change_set["revision"],
         requirement_version_ids=[payload.from_version_id, payload.to_version_id],
     )
@@ -135,14 +134,14 @@ async def list_change_set_records(
     sort="-created_at",
     limit=100,
 ):
-    policy = domain_policy("change_set")
+    
     await get_project(project_id, user, "changeset.read")
     query = {"project_id": project_id}
     for field, value in {"requirement_id": requirement_id, "status": status}.items():
         if value:
             query[field] = value
     sort_field, direction = sort_spec(
-        sort, set(policy["sort_fields"]), policy["default_sort"]
+        sort, set(['requirement_id', 'status', 'created_at', 'updated_at']), '-created_at'
     )
     items = await analysis_repository.list_change_sets(
         query, sort_field, direction, limit
@@ -158,22 +157,22 @@ async def get_change_set_record(change_set_id, user):
 
 
 async def review_change_set_record(change_set_id, payload, user):
-    policy = domain_policy("change_set")
+    
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "changeset.review"
     )
-    if change_set.get("status") == policy["reviewed_status"]:
+    if change_set.get("status") == 'REVIEWED':
         return change_set
-    if change_set.get("status") != policy["ready_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["not_reviewable_code"]})
+    if change_set.get("status") != 'READY':
+        raise HTTPException(status_code=409, detail={"code": 'CHANGE_SET_NOT_REVIEWABLE'})
     updated = await analysis_repository.review_change_set(
         change_set_id,
         change_set["project_id"],
         payload.expected_revision,
-        policy["ready_status"],
+        'READY',
         {
             "changes": payload.changes,
-            "status": policy["reviewed_status"],
+            "status": 'REVIEWED',
             "review_note": payload.review_note,
             "reviewed_by": user.id,
             "reviewed_at": now(),
@@ -181,7 +180,7 @@ async def review_change_set_record(change_set_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
         "requirement_change_set_reviewed",

@@ -8,28 +8,23 @@ import zipfile
 from defusedxml import ElementTree
 from pypdf import PdfReader
 
-from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_workflow import text_doc
 
 
-def requirement_import_policy():
-    return domain_policy("requirement_import")
-
 
 def supported_requirement_formats():
-    return set(requirement_import_policy()["supported_formats"])
+    return set(['pdf', 'docx', 'md', 'txt', 'csv', 'xlsx', 'openapi', 'postman'])
 
 
 def safe_requirement_filename(value: str, fallback: str = "source.bin") -> str:
     filename = re.sub(
-        requirement_import_policy()["safe_filename_pattern"], "_", value or fallback
+        '[^a-zA-Z0-9._-]', "_", value or fallback
     )
     return filename or fallback
 
 
 def parse_requirement_import(content, format):
-    policy = requirement_import_policy()
-    if format in set(policy["api_artifact_formats"]):
+    if format in set(['openapi', 'postman']):
         value = json.loads(content) if isinstance(content, str) else content
         return parse_api_artifact(value, format)
     if format == "csv":
@@ -50,18 +45,17 @@ def parse_requirement_import(content, format):
     blocks = [block.strip() for block in text.split("\n\n") if block.strip()]
     return [
         {
-            "title": block.splitlines()[0][: policy["maximum_title_characters"]],
+            "title": block.splitlines()[0][: 300],
             "content_doc": text_doc(block),
             "acceptance_criteria": [],
         }
-        for block in blocks[: policy["maximum_text_candidates"]]
+        for block in blocks[: 500]
     ]
 
 
 def atomic_requirement_candidates(document):
-    policy = requirement_import_policy()
     content = document["normalized_content"]
-    if document["format"] in set(policy["atomic_structured_formats"]):
+    if document["format"] in set(['csv', 'xlsx', 'openapi', 'postman']):
         candidates = parse_requirement_import(content, document["format"])
         for index, candidate in enumerate(candidates):
             candidate["source_refs"] = [
@@ -72,23 +66,21 @@ def atomic_requirement_candidates(document):
                     "format": document["format"],
                 }
             ]
-            candidate["extraction_confidence"] = policy[
-                "structured_extraction_confidence"
-            ]
+            candidate["extraction_confidence"] = 1.0
         return candidates
     text = str(content).replace("\r\n", "\n").replace("\r", "\n")
-    matches = list(re.finditer(policy["sentence_pattern"], text))
+    matches = list(re.finditer('[^\\n]+?(?:[.!?;]+(?=\\s|$)|(?=\\n)|$)', text))
     candidates = []
     for match in matches:
         raw = match.group(0)
-        value = re.sub(policy["list_prefix_pattern"], "", raw).strip()
+        value = re.sub('^\\s*(?:[-*•]+|\\d+[.)])\\s*', "", raw).strip()
         if len(value) < 2:
             continue
         source_start = match.start() + raw.find(value)
         source_end = source_start + len(value)
         candidates.append(
             {
-                "title": value[: policy["maximum_title_characters"]],
+                "title": value[: 300],
                 "content_doc": text_doc(value),
                 "acceptance_criteria": [],
                 "source_refs": [
@@ -101,10 +93,10 @@ def atomic_requirement_candidates(document):
                         "format": document["format"],
                     }
                 ],
-                "extraction_confidence": policy["text_extraction_confidence"],
+                "extraction_confidence": 0.8,
             }
         )
-        if len(candidates) == policy["maximum_text_candidates"]:
+        if len(candidates) == 500:
             break
     return candidates
 
@@ -118,7 +110,7 @@ def extract_file_content(data, format):
     if format == "xlsx":
         return extract_xlsx_csv(data)
     text = data.decode("utf-8-sig")
-    if format in set(requirement_import_policy()["api_artifact_formats"]):
+    if format in set(['openapi', 'postman']):
         return json.loads(text)
     return text
 
@@ -175,12 +167,11 @@ def extract_xlsx_csv(data):
 
 
 def parse_api_artifact(value, artifact_format):
-    policy = requirement_import_policy()
     items = []
     if artifact_format == "openapi":
         for path, operations in value.get("paths", {}).items():
             for method, operation in operations.items():
-                if method.lower() not in set(policy["api_methods"]):
+                if method.lower() not in set(['get', 'post', 'put', 'patch', 'delete']):
                     continue
                 items.append(
                     {
@@ -214,7 +205,7 @@ def parse_api_artifact(value, artifact_format):
                     items.append(
                         {
                             "title": node.get("name")
-                            or f"{request.get('method', policy['default_api_method'])} {raw_url}",
+                            or f"{request.get('method', 'GET')} {raw_url}",
                             "type": "api",
                             "content_doc": text_doc(
                                 json.dumps(
@@ -236,4 +227,4 @@ def parse_api_artifact(value, artifact_format):
                     )
 
         walk(value.get("item", []))
-    return items[: policy["maximum_api_candidates"]]
+    return items[: 1000]

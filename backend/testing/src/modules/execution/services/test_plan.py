@@ -16,14 +16,50 @@ from src.core.common import (
 )
 from src.schemas.contracts.planning import TestPlanCreate
 from src.repositories.test_plan import test_plan_repository
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.execution_context import resolve_execution_context
 
 
 def plan_snapshot(plan):
     return {
         field: plan.get(field)
-        for field in domain_policy("test_plan")["snapshot_fields"]
+        for field in ['project_id',
+ 'name',
+ 'objective',
+ 'scope_in',
+ 'scope_out',
+ 'environment',
+ 'environment_id',
+ 'entry_criteria',
+ 'exit_criteria',
+ 'risks',
+ 'test_types',
+ 'members',
+ 'release',
+ 'release_id',
+ 'build',
+ 'build_id',
+ 'strategy_version_id',
+ 'strategy_id',
+ 'strategy_version',
+ 'strategy_snapshot_hash',
+ 'test_level',
+ 'test_approach',
+ 'assumptions',
+ 'constraints',
+ 'dependencies',
+ 'stakeholders',
+ 'responsibility_matrix',
+ 'estimation',
+ 'schedule',
+ 'milestones',
+ 'deliverables',
+ 'tools',
+ 'suspension_criteria',
+ 'resumption_criteria',
+ 'monitoring_metrics',
+ 'quality_targets',
+ 'risk_register',
+ 'communication_plan']
     }
 
 
@@ -36,29 +72,41 @@ def plan_snapshot_hash(plan):
 
 def plan_completeness(plan, settings=None):
     settings = settings or {}
-    policy = domain_policy("test_plan")
+    
     checks = [
         (
-            policy["strategy_requirement"]["code"],
-            all(plan.get(field) for field in policy["strategy_requirement"]["fields"]),
+            'TEST_PLAN_STRATEGY_REQUIRED',
+            all(plan.get(field) for field in ['strategy_version_id', 'strategy_snapshot_hash']),
         ),
         *[
             (requirement["code"], bool(plan.get(requirement["field"])))
-            for requirement in policy["required_fields"]
+            for requirement in [{'code': 'TEST_PLAN_OBJECTIVE_REQUIRED', 'field': 'objective'},
+ {'code': 'TEST_PLAN_SCOPE_REQUIRED', 'field': 'scope_in'},
+ {'code': 'TEST_PLAN_ENTRY_CRITERIA_REQUIRED', 'field': 'entry_criteria'},
+ {'code': 'TEST_PLAN_EXIT_CRITERIA_REQUIRED', 'field': 'exit_criteria'},
+ {'code': 'TEST_PLAN_TEST_TYPE_REQUIRED', 'field': 'test_types'},
+ {'code': 'TEST_PLAN_QUALITY_TARGET_REQUIRED', 'field': 'quality_targets'}]
         ],
         (
-            policy["schedule_requirement"]["code"],
+            'TEST_PLAN_SCHEDULE_REQUIRED',
             all(
-                (plan.get(policy["schedule_requirement"]["field"]) or {}).get(field)
-                for field in policy["schedule_requirement"]["required_fields"]
+                (plan.get('schedule') or {}).get(field)
+                for field in ['planned_start_at', 'planned_end_at']
             ),
         ),
     ]
-    for requirement in policy["conditional_requirements"]:
+    for requirement in [{'setting': 'require_release_for_test_plan',
+  'default': True,
+  'code': 'TEST_PLAN_RELEASE_REQUIRED',
+  'field': 'release_id'},
+ {'setting': 'require_environment_for_test_plan',
+  'default': True,
+  'code': 'TEST_PLAN_ENVIRONMENT_REQUIRED',
+  'field': 'environment_id'}]:
         if settings.get(requirement["setting"], requirement["default"]):
             checks.append((requirement["code"], bool(plan.get(requirement["field"]))))
     findings = [
-        {"code": code, "severity": policy["finding_severity"]}
+        {"code": code, "severity": 'MAJOR'}
         for code, passed in checks
         if not passed
     ]
@@ -66,23 +114,23 @@ def plan_completeness(plan, settings=None):
 
 
 async def resolve_strategy_binding(project_id, strategy_version_id, auto_bind=False):
-    policy = domain_policy("test_plan")
+    
     strategy = None
     if strategy_version_id:
         strategy = await test_plan_repository.find_strategy(
             project_id, strategy_version_id
         )
         if not strategy:
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_strategy_code"]})
-        if strategy.get("status") != policy["approved_status"] or not strategy.get(
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_STRATEGY_VERSION'})
+        if strategy.get("status") != 'APPROVED' or not strategy.get(
             "snapshot_hash"
         ):
             raise HTTPException(
-                status_code=409, detail={"code": policy["strategy_not_approved_code"]}
+                status_code=409, detail={"code": 'STRATEGY_VERSION_NOT_APPROVED'}
             )
     elif auto_bind:
         strategy = await test_plan_repository.find_active_strategy(
-            project_id, policy["approved_status"]
+            project_id, 'APPROVED'
         )
     if not strategy:
         return {
@@ -100,9 +148,9 @@ async def resolve_strategy_binding(project_id, strategy_version_id, auto_bind=Fa
 
 
 async def create_test_plan_record(payload, project_id, user):
-    policy = domain_policy("test_plan")
+    
     if project_id and project_id != payload.project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_scope_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_SCOPE_MISMATCH'})
     await get_project(payload.project_id, user, "testplan.create")
     context = await resolve_execution_context(
         payload.project_id,
@@ -119,7 +167,7 @@ async def create_test_plan_record(payload, project_id, user):
             payload.project_id,
             user,
             "testplan.assignments",
-            set(policy["assignment_roles"]),
+            set(['QA']),
         )
     strategy_binding = await resolve_strategy_binding(
         payload.project_id,
@@ -128,11 +176,11 @@ async def create_test_plan_record(payload, project_id, user):
     )
     timestamp = now()
     plan = {
-        "_id": new_id(policy["id_prefix"]),
+        "_id": new_id('TP'),
         **payload.model_dump(),
         **context,
         **strategy_binding,
-        "status": policy["draft_status"],
+        "status": 'DRAFT',
         "approval_history": [],
         "revision": 1,
         "created_by": user.id,
@@ -155,7 +203,7 @@ async def list_test_plan_records(
     status="",
     sort="-updated_at",
 ):
-    policy = domain_policy("test_plan")
+    
     await get_project(project_id, user, "testplan.read")
     query = {"project_id": project_id}
     if q:
@@ -174,10 +222,10 @@ async def list_test_plan_records(
             query[field] = value
     sort_field, direction = sort_spec(
         sort,
-        set(policy["sort_fields"]),
+        set(['name', 'release', 'status', 'created_at', 'updated_at']),
     )
     return await test_plan_repository.list_plans(
-        query, sort_field, direction, policy["list_limit"]
+        query, sort_field, direction, 500
     )
 
 
@@ -192,16 +240,16 @@ async def validate_test_plan_record(plan_id, user):
 
 
 async def update_test_plan_record(plan_id, payload, user):
-    policy = domain_policy("test_plan")
+    
     plan = await get_test_plan_record(plan_id, user, "testplan.update")
-    if plan.get("status") != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["not_draft_code"]})
+    if plan.get("status") != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_PLAN_NOT_DRAFT'})
     if payload.members is not None:
         await require_action_policy(
             plan["project_id"],
             user,
             "testplan.assignments",
-            set(policy["assignment_roles"]),
+            set(['QA']),
         )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
@@ -247,39 +295,39 @@ async def update_test_plan_record(plan_id, payload, user):
 
 
 async def submit_test_plan_record(plan_id, payload, user):
-    policy = domain_policy("test_plan")
+    
     plan = await get_test_plan_record(plan_id, user, "testplan.submit_review")
-    if plan.get("status") != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if plan.get("status") != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     updated = await optimistic_patch(
         "test_plans",
         plan_id,
         plan["project_id"],
         payload.expected_revision,
-        {"status": policy["review_status"], "review_note": payload.review_note},
+        {"status": 'IN_REVIEW', "review_note": payload.review_note},
     )
     await audit(user.id, "test_plan_submitted", "TestPlan", plan_id, plan["project_id"])
     return updated
 
 
 async def approve_test_plan_record(plan_id, payload, user):
-    policy = domain_policy("test_plan")
+    
     plan = await get_test_plan_record(plan_id, user, "testplan.approve")
-    if plan.get("status") not in policy["approval_source_statuses"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if plan.get("status") not in ['DRAFT', 'IN_REVIEW']:
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     settings = await test_plan_repository.find_project_settings(plan["project_id"])
     if settings.get("strict_test_plan_approval", False):
         completeness = plan_completeness(plan, settings)
         if not completeness["ready_for_approval"]:
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["incomplete_code"], **completeness},
+                detail={"code": 'TEST_PLAN_INCOMPLETE', **completeness},
             )
     timestamp = now()
     approved_hash = plan_snapshot_hash(plan)
     approval = {
         "actor_id": user.id,
-        "action": policy["approved_status"],
+        "action": 'APPROVED',
         "note": payload.review_note,
         "at": timestamp,
     }
@@ -289,7 +337,7 @@ async def approve_test_plan_record(plan_id, payload, user):
         plan["project_id"],
         payload.expected_revision,
         {
-            "status": policy["approved_status"],
+            "status": 'APPROVED',
             "approved_by": user.id,
             "approved_at": timestamp,
             "approved_snapshot": plan_snapshot(plan),
@@ -304,7 +352,7 @@ async def approve_test_plan_record(plan_id, payload, user):
 
 
 async def archive_test_plan_record(plan_id, payload, user):
-    policy = domain_policy("test_plan")
+    
     plan = await get_test_plan_record(plan_id, user, "testplan.archive")
     updated = await optimistic_patch(
         "test_plans",
@@ -312,7 +360,7 @@ async def archive_test_plan_record(plan_id, payload, user):
         plan["project_id"],
         payload.expected_revision,
         {
-            "status": policy["archived_status"],
+            "status": 'ARCHIVED',
             "archive_reason": payload.reason,
             "archived_by": user.id,
             "archived_at": now(),
@@ -323,14 +371,14 @@ async def archive_test_plan_record(plan_id, payload, user):
 
 
 async def clone_test_plan_record(plan_id, user):
-    policy = domain_policy("test_plan")
+    
     plan = await get_test_plan_record(plan_id, user, "testplan.create")
     timestamp = now()
     cloned = {
         **plan,
-        "_id": new_id(policy["id_prefix"]),
-        "name": f"{plan['name']}{policy['clone_name_suffix']}",
-        "status": policy["draft_status"],
+        "_id": new_id('TP'),
+        "name": f"{plan['name']}{' bản sao'}",
+        "status": 'DRAFT',
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,

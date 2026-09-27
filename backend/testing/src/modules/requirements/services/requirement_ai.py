@@ -13,28 +13,27 @@ from src.modules.requirements.services.requirement_workflow import (
     requirement_suggestion_changes,
     text_doc,
 )
-from src.services.domain_policy import domain_policy
 
 
 async def analyze_requirement_quality(version_id, payload, user):
-    policy = domain_policy("requirement_ai")
+    
     version = await get_project_entity("requirement_versions", version_id, user, "ai.run_lint")
     query = {
         "project_id": version["project_id"],
         "artifact_id": version_id,
-        "result_type": policy["result_type"],
+        "result_type": 'REQUIREMENT_QUALITY_ANALYSIS',
         "idempotency_key": payload.idempotency_key,
     }
     existing = await requirement_ai_repository.find_finding(query)
     if existing:
         return existing
     acceptance_criteria = await requirement_ai_repository.list_acceptance_criteria(
-        version_id, policy["acceptance_criteria_limit"]
+        version_id, 200
     )
     deterministic_findings = [
         {
             **item,
-            "origin": policy["rule_origin"],
+            "origin": 'RULE',
             "evidence_refs": [version_id],
             "reason_codes": [item["rule_id"]],
         }
@@ -45,9 +44,9 @@ async def analyze_requirement_quality(version_id, payload, user):
             "artifact_type": "requirement_version",
             "artifact_id": version.get("requirement_id"),
             "artifact_version_id": version_id,
-            "authority": policy["project_baseline_authority"]
-            if version.get("status") == policy["baselined_status"]
-            else policy["draft_status"],
+            "authority": 'PROJECT_BASELINE'
+            if version.get("status") == 'BASELINED'
+            else 'DRAFT',
             "text": json.dumps(
                 {
                     "title": version.get("title"),
@@ -75,9 +74,9 @@ async def analyze_requirement_quality(version_id, payload, user):
         {
             **item,
             "rule_id": item.get(
-                "reason_codes", [item.get("category", policy["default_ai_rule"])]
+                "reason_codes", [item.get("category", 'AI_FINDING')]
             )[0],
-            "origin": policy["ai_origin"],
+            "origin": 'AI',
             "span": None,
         }
         for item in ai_result.get("findings", [])
@@ -96,30 +95,30 @@ async def analyze_requirement_quality(version_id, payload, user):
             aggregate[field] = list(
                 dict.fromkeys([*aggregate[field], *ai_suggestion.get(field, [])])
             )
-    aggregate["origin"] = policy["ai_origin"]
+    aggregate["origin"] = 'AI'
     suggestions = []
     if requirement_suggestion_changes(version, aggregate, acceptance_criteria):
         suggestions.append(
             {
                 **aggregate,
-                "suggestion_id": policy["suggestion_id"],
-                "status": policy["candidate_status"],
+                "suggestion_id": 'REQ-SUG-1',
+                "status": 'CANDIDATE',
                 "candidate_only": True,
             }
         )
     findings = deterministic_findings + ai_findings
     result = {
-        "_id": new_id(policy["finding_id_prefix"]),
+        "_id": new_id('AIF'),
         "project_id": version["project_id"],
-        "artifact_type": policy["artifact_type"],
+        "artifact_type": 'requirement_version',
         "artifact_id": version_id,
-        "result_type": policy["result_type"],
+        "result_type": 'REQUIREMENT_QUALITY_ANALYSIS',
         "requirement_version_id": version_id,
         "findings": findings,
         "suggestions": suggestions,
-        "valid": ai_result.get("status") == policy["success_status"]
+        "valid": ai_result.get("status") == 'SUCCESS'
         and not ai_result.get("degraded_mode")
-        and not any(item["severity"] == policy["invalid_severity"] for item in findings),
+        and not any(item["severity"] == 'error' for item in findings),
         **ai_contract_metadata(ai_result),
         "idempotency_key": payload.idempotency_key,
         "human_confirmation_required": True,
@@ -145,27 +144,27 @@ async def analyze_requirement_quality(version_id, payload, user):
 
 
 async def apply_requirement_quality_suggestion(version_id, payload, user):
-    policy = domain_policy("requirement_ai")
+    
     version = await get_project_entity(
         "requirement_versions", version_id, user, "requirement.update"
     )
-    if version.get("status") != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["immutable_version_code"]})
+    if version.get("status") != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'IMMUTABLE_REQUIREMENT_VERSION'})
     if version.get("revision") != payload.expected_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["revision_conflict_code"], "current_revision": version.get("revision")},
+            detail={"code": 'REVISION_CONFLICT', "current_revision": version.get("revision")},
         )
     ai_result = await requirement_ai_repository.find_finding(
         {
             "_id": payload.ai_result_id,
             "project_id": version["project_id"],
             "artifact_id": version_id,
-            "result_type": policy["result_type"],
+            "result_type": 'REQUIREMENT_QUALITY_ANALYSIS',
         }
     )
     if not ai_result:
-        raise HTTPException(status_code=404, detail={"code": policy["suggestion_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'AI_SUGGESTION_NOT_FOUND'})
     suggestion = next(
         (
             item
@@ -175,14 +174,14 @@ async def apply_requirement_quality_suggestion(version_id, payload, user):
         None,
     )
     if not suggestion:
-        raise HTTPException(status_code=404, detail={"code": policy["suggestion_not_found_code"]})
-    if ai_result.get("status") != policy["success_status"] or ai_result.get("degraded_mode"):
-        raise HTTPException(status_code=409, detail={"code": policy["suggestion_not_applicable_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'AI_SUGGESTION_NOT_FOUND'})
+    if ai_result.get("status") != 'SUCCESS' or ai_result.get("degraded_mode"):
+        raise HTTPException(status_code=409, detail={"code": 'AI_SUGGESTION_NOT_APPLICABLE'})
     acceptance_criteria = await requirement_ai_repository.list_acceptance_criteria(
-        version_id, policy["acceptance_criteria_limit"]
+        version_id, 200
     )
     if not requirement_suggestion_changes(version, suggestion, acceptance_criteria):
-        raise HTTPException(status_code=422, detail={"code": policy["suggestion_no_change_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'AI_SUGGESTION_NO_CHANGE'})
     changes = {"updated_at": now()}
     revised_title = str(suggestion.get("revised_title") or "").strip()
     revised_content = str(suggestion.get("revised_content") or "").strip()
@@ -209,7 +208,7 @@ async def apply_requirement_quality_suggestion(version_id, payload, user):
         if len(keys) != len(set(keys)) or any(not key for key in keys):
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["invalid_criterion_patch_code"]},
+                detail={"code": 'INVALID_ACCEPTANCE_CRITERION_PATCH'},
             )
         for item in proposed_criteria:
             validate_doc(item.get("content_doc", {}))
@@ -217,13 +216,13 @@ async def apply_requirement_quality_suggestion(version_id, payload, user):
         {
             "_id": version_id,
             "project_id": version["project_id"],
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
             "revision": payload.expected_revision,
         },
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     if proposed_criteria is not None:
         previous_criteria = acceptance_criteria
         await requirement_ai_repository.delete_acceptance_criteria(version_id)
@@ -251,7 +250,7 @@ async def apply_requirement_quality_suggestion(version_id, payload, user):
                 {
                     "_id": version_id,
                     "project_id": version["project_id"],
-                    "status": policy["draft_status"],
+                    "status": 'DRAFT',
                     "revision": payload.expected_revision + 1,
                 },
                 rollback_values,

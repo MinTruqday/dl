@@ -14,7 +14,6 @@ from src.repositories.test_completion import (
     update_completion,
 )
 from src.modules.execution.services.exit_criteria import quality_gate_status
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.test_completion_assistance import completion_ai_result
 from src.modules.execution.services.test_completion_policy import (
     default_completion_recommendation,
@@ -33,8 +32,8 @@ from src.modules.execution.services.test_completion_updates import (
     manage_completion_handover,
 )
 
-COMPLETION_POLICY = domain_policy("completion")
-OPEN_DEFECT_STATUSES = set(COMPLETION_POLICY["open_defect_statuses"])
+
+OPEN_DEFECT_STATUSES = set(['NEW', 'CONFIRMED', 'IN_PROGRESS', 'READY_FOR_RETEST', 'REOPENED'])
 
 __all__ = [
     "add_completion_lesson",
@@ -45,11 +44,11 @@ __all__ = [
 
 
 async def create_completion_report(project_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    types = policy["artifact_types"]
-    codes = policy["error_codes"]
-    await get_project(project_id, user, policy["permissions"]["create"])
+    
+    
+    
+    
+    await get_project(project_id, user, 'testcompletion.create')
     if payload.idempotency_key:
         existing = await find_completion_by_idempotency_key(
             project_id, payload.idempotency_key
@@ -59,18 +58,18 @@ async def create_completion_report(project_id, payload, user):
                 existing.get("monitoring_snapshot_id") != payload.snapshot_id
                 or existing.get("build_id") != payload.build_id
             ):
-                raise HTTPException(status_code=409, detail={"code": codes["idempotency_reused"]})
+                raise HTTPException(status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'})
             return existing
     snapshot = await find_monitoring_snapshot(project_id, payload.snapshot_id)
     if not snapshot:
-        raise HTTPException(status_code=422, detail={"code": codes["snapshot_invalid"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_MONITORING_SNAPSHOT'})
     plan = await find_test_plan(project_id, snapshot["test_plan_id"])
     if (
         not plan
-        or plan.get("status") != statuses["approved"]
+        or plan.get("status") != 'APPROVED'
         or plan.get("approved_snapshot_hash") != snapshot.get("plan_snapshot_hash")
     ):
-        raise HTTPException(status_code=409, detail={"code": codes["plan_snapshot_invalid"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_PLAN_SNAPSHOT_INVALID'})
     sources = await completion_sources(project_id, snapshot, plan, payload.build_id)
     (
         release,
@@ -91,7 +90,7 @@ async def create_completion_report(project_id, payload, user):
     lessons_learned = [
         {
             **item.model_dump(),
-            "lesson_id": item.lesson_id or new_id(policy["id_prefixes"]["lesson"]),
+            "lesson_id": item.lesson_id or new_id('LESSON'),
         }
         for item in payload.lessons_learned
     ]
@@ -106,12 +105,12 @@ async def create_completion_report(project_id, payload, user):
             *[item.get("owner_id") for item in lessons_learned],
         ],
     )
-    if any(item.get("treatment") != statuses["pending"] for item in residual_risks):
+    if any(item.get("treatment") != 'PENDING' for item in residual_risks):
         raise HTTPException(
-            status_code=422, detail={"code": codes["risk_decision_endpoint_required"]}
+            status_code=422, detail={"code": 'RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED'}
         )
     completed_run_ids = sorted(
-        item["_id"] for item in runs if item.get("status") == statuses["completed"]
+        item["_id"] for item in runs if item.get("status") == 'COMPLETED'
     )
     metrics = snapshot.get("metrics") or {}
     exit_evaluation = await reevaluate_completion_exit_criteria(plan, snapshot, completed_run_ids)
@@ -119,7 +118,7 @@ async def create_completion_report(project_id, payload, user):
     open_defects = [item for item in defects if item.get("status") in OPEN_DEFECT_STATUSES]
     generated_unresolved = [
         {
-            "type": types["defect"],
+            "type": 'DEFECT',
             "defect_id": item["_id"],
             "title": item.get("title"),
             "severity": item.get("severity"),
@@ -131,7 +130,7 @@ async def create_completion_report(project_id, payload, user):
     omitted = [
         {
             "item_id": result["_id"],
-            "item_type": types["test_result"],
+            "item_type": 'TEST_RESULT',
             "reason": result.get("reason") or result.get("notes") or "",
             "source_refs": [
                 value
@@ -140,7 +139,7 @@ async def create_completion_report(project_id, payload, user):
             ],
         }
         for result in results
-        if result.get("status") in set(policy["result_omission_statuses"])
+        if result.get("status") in set(['NOT_RUN', 'IN_PROGRESS', 'SKIPPED'])
     ]
     unexecuted_scope = [*omitted, *supplied_unexecuted]
     unresolved_items = [*generated_unresolved, *payload.unresolved_items]
@@ -160,18 +159,18 @@ async def create_completion_report(project_id, payload, user):
     ]
     testware = [
         *handover_records(
-            types["test_case_version"],
+            'TEST_CASE_VERSION',
             (snapshot.get("source_state") or {}).get("test_case_versions", []),
             "test-case-versions",
         ),
-        *handover_records(types["data_set"], data_sets, "data-sets"),
-        *handover_records(types["automation_script"], automation, "automation-scripts"),
-        *handover_records(types["status_report"], status_reports, "status-reports"),
+        *handover_records('DATA_SET', data_sets, "data-sets"),
+        *handover_records('AUTOMATION_SCRIPT', automation, "automation-scripts"),
+        *handover_records('STATUS_REPORT', status_reports, "status-reports"),
         *supplied_handover,
     ]
     archived = [
-        {"type": types["test_case"], "items": archived_testcases},
-        {"type": types["requirement_document"], "items": archived_documents},
+        {"type": 'TEST_CASE', "items": archived_testcases},
+        {"type": 'REQUIREMENT_DOCUMENT', "items": archived_documents},
         *payload.archived_artifacts,
     ]
     environment_closure = [
@@ -188,20 +187,20 @@ async def create_completion_report(project_id, payload, user):
     if payload.recommendation and payload.recommendation != recommendation:
         raise HTTPException(
             status_code=422,
-            detail={"code": codes["recommendation_mismatch"], "expected": recommendation},
+            detail={"code": 'COMPLETION_RECOMMENDATION_MISMATCH', "expected": recommendation},
         )
-    source_filters = policy["source_filters"]
+    
     maintenance = await maintenance_summary(
         project_id,
-        source_filters["maintenance_pending_status"],
-        source_filters["maintenance_applied_statuses"],
+        'PENDING',
+        ['APPLIED', 'EDITED_ACCEPTED'],
     )
     timestamp = now()
     sequence = await next_completion_sequence(project_id, release["_id"])
     report = {
-        "_id": new_id(policy["id_prefixes"]["report"]),
+        "_id": new_id('TCP'),
         "project_id": project_id,
-        "completion_key": f"{policy['id_prefixes']['report_key']}{sequence:04d}",
+        "completion_key": f"{'TCP-'}{sequence:04d}",
         "idempotency_key": payload.idempotency_key,
         "test_plan_id": plan["_id"],
         "release_id": release["_id"],
@@ -272,7 +271,7 @@ async def create_completion_report(project_id, payload, user):
         "residual_risk_summary": "",
         "recommendation_rationale": "",
         "sign_offs": [],
-        "status": statuses["draft"],
+        "status": 'DRAFT',
         "sequence": sequence,
         "revision": 1,
         "review_history": [],
@@ -295,12 +294,12 @@ async def create_completion_report(project_id, payload, user):
             existing.get("monitoring_snapshot_id") != payload.snapshot_id
             or existing.get("build_id") != payload.build_id
         ):
-            raise HTTPException(status_code=409, detail={"code": codes["idempotency_reused"]})
+            raise HTTPException(status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'})
         return existing
     await audit(
         user.id,
-        policy["events"]["created"],
-        policy["entity_type"],
+        'completion_report_created',
+        'TestCompletionReport',
         report["_id"],
         project_id,
         {"release_id": release["_id"], "snapshot_id": snapshot["_id"], "quality_gate_status": gate},
@@ -309,20 +308,20 @@ async def create_completion_report(project_id, payload, user):
 
 
 async def update_completion_report(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    types = policy["artifact_types"]
-    codes = policy["error_codes"]
-    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
-    if report["status"] != statuses["draft"]:
-        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+    
+    
+    
+    
+    report = await get_completion_for_user(report_id, user, 'testcompletion.update')
+    if report["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'})
     changes = payload.model_dump(exclude_unset=True, exclude_none=True)
     changes.pop("expected_revision", None)
     if "unresolved_items" in changes:
         generated = [
             item
             for item in report.get("unresolved_items", [])
-            if isinstance(item, dict) and item.get("type") == types["defect"]
+            if isinstance(item, dict) and item.get("type") == 'DEFECT'
         ]
         identities = {
             (item.get("defect_id"), item.get("type"))
@@ -331,22 +330,22 @@ async def update_completion_report(report_id, payload, user):
         }
         if any((item.get("defect_id"), item.get("type")) not in identities for item in generated):
             raise HTTPException(
-                status_code=422, detail={"code": codes["generated_fact_immutable"]}
+                status_code=422, detail={"code": 'GENERATED_COMPLETION_FACT_IMMUTABLE'}
             )
     if "unexecuted_scope" in changes:
         existing = {
             item.get("item_id")
             for item in report.get("unexecuted_scope", [])
-            if item.get("item_type") == types["test_result"]
+            if item.get("item_type") == 'TEST_RESULT'
         }
         incoming = {
             item.get("item_id")
             for item in changes["unexecuted_scope"]
-            if item.get("item_type") == types["test_result"]
+            if item.get("item_type") == 'TEST_RESULT'
         }
         if not existing <= incoming:
             raise HTTPException(
-                status_code=422, detail={"code": codes["generated_fact_immutable"]}
+                status_code=422, detail={"code": 'GENERATED_COMPLETION_FACT_IMMUTABLE'}
             )
     if (
         "residual_risks" in changes
@@ -369,7 +368,7 @@ async def update_completion_report(report_id, payload, user):
             not incoming_risk_ids <= set(existing_risks)
             or not set(existing_risks) <= incoming_risk_ids
         ):
-            await get_project(report["project_id"], user, policy["permissions"]["risk_manage"])
+            await get_project(report["project_id"], user, 'testcompletion.risk.manage')
         for item in changes["residual_risks"]:
             previous = existing_risks.get(item.get("risk_id")) or {}
             decision = (
@@ -382,34 +381,34 @@ async def update_completion_report(report_id, payload, user):
                 previous.get("acceptance_reason"),
                 previous.get("accepted_by"),
             )
-            if item.get("treatment") != statuses["pending"] and decision != previous_decision:
+            if item.get("treatment") != 'PENDING' and decision != previous_decision:
                 raise HTTPException(
                     status_code=422,
                     detail={
-                        "code": codes["risk_decision_endpoint_required"],
+                        "code": 'RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED',
                         "risk_id": item.get("risk_id"),
                     },
                 )
     if "lessons_learned" in changes and len(changes["lessons_learned"]) > len(
         report.get("lessons_learned", [])
     ):
-        await get_project(report["project_id"], user, policy["permissions"]["lesson_create"])
+        await get_project(report["project_id"], user, 'testcompletion.lesson.create')
     if "testware_handover" in changes:
-        await get_project(report["project_id"], user, policy["permissions"]["handover_manage"])
+        await get_project(report["project_id"], user, 'testcompletion.handover.manage')
     changes["updated_at"] = now()
     updated = await update_completion(
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {statuses["draft"]},
+        {'DRAFT'},
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["updated"],
-        policy["entity_type"],
+        'test_completion_report_updated',
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"fields": sorted(changes)},
@@ -418,58 +417,58 @@ async def update_completion_report(report_id, payload, user):
 
 
 async def generate_completion_narrative(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    action = policy["ai_actions"]["narrative"]
-    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
+    
+    
+    report = await get_completion_for_user(report_id, user, 'testcompletion.update')
     return await completion_ai_result(
         report,
         payload,
         user,
-        action["task"],
-        action["result_type"],
+        'completion_report_narrative',
+        'COMPLETION_REPORT_NARRATIVE',
     )
 
 
 async def cluster_completion_lessons(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    action = policy["ai_actions"]["lesson_clusters"]
-    report = await get_completion_for_user(report_id, user, policy["permissions"]["update"])
+    
+    
+    report = await get_completion_for_user(report_id, user, 'testcompletion.update')
     if not report.get("lessons_learned"):
         raise HTTPException(
             status_code=422,
-            detail={"code": policy["error_codes"]["lessons_required"]},
+            detail={"code": 'LESSONS_LEARNED_REQUIRED'},
         )
     return await completion_ai_result(
         report,
         payload,
         user,
-        action["task"],
-        action["result_type"],
+        'lessons_learned_clustering',
+        'LESSONS_LEARNED_CLUSTERS',
     )
 
 
 async def decide_residual_risk(report_id, risk_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
-    report = await get_completion_for_user(report_id, user, policy["permissions"]["review"])
-    mutable_statuses = {statuses["draft"], statuses["in_review"]}
+    
+    
+    
+    report = await get_completion_for_user(report_id, user, 'testcompletion.review')
+    mutable_statuses = {'DRAFT', 'IN_REVIEW'}
     if report["status"] not in mutable_statuses:
-        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'})
     membership = await find_active_member(
         report["project_id"],
         user.id,
-        policy["source_filters"]["active_membership_status"],
+        'ACTIVE',
     )
     risks = [dict(item) for item in report.get("residual_risks", [])]
     risk = next((item for item in risks if item.get("risk_id") == risk_id), None)
     if not risk:
-        raise HTTPException(status_code=404, detail={"code": codes["risk_not_found"]})
+        raise HTTPException(status_code=404, detail={"code": 'RESIDUAL_RISK_NOT_FOUND'})
     if (
         risk.get("owner_id") != user.id
-        and (membership or {}).get("project_role") not in set(policy["qa_roles"])
+        and (membership or {}).get("project_role") not in set(['QA', 'BA'])
     ):
-        raise HTTPException(status_code=403, detail={"code": codes["risk_decision_denied"]})
+        raise HTTPException(status_code=403, detail={"code": 'RESIDUAL_RISK_DECISION_DENIED'})
     risk.update(
         {
             "treatment": payload.acceptance,
@@ -477,9 +476,9 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
             "acceptance_reason": payload.reason,
             "accepted_by": user.id,
             "accepted_at": now(),
-            "status": statuses["closed"]
-            if payload.acceptance in set(policy["risk_closed_decisions"])
-            else statuses["monitoring"],
+            "status": 'CLOSED'
+            if payload.acceptance in set(['ACCEPTED', 'AVOID'])
+            else 'MONITORING',
         }
     )
     updated = await update_completion(
@@ -490,16 +489,16 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
         {"residual_risks": risks, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     event = (
-        policy["events"]["risk_accepted"]
-        if payload.acceptance == policy["risk_closed_decisions"][0]
-        else policy["events"]["risk_decided"]
+        'residual_risk_accepted'
+        if payload.acceptance == 'ACCEPTED'
+        else 'test_completion_residual_risk_decided'
     )
     await audit(
         user.id,
         event,
-        policy["entity_type"],
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"risk_id": risk_id, "acceptance": payload.acceptance, "reason": payload.reason},
@@ -508,19 +507,19 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
 
 
 async def sign_off_completion(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
-    report = await get_completion_for_user(report_id, user, policy["permissions"]["review"])
-    if report["status"] != statuses["in_review"]:
-        raise HTTPException(status_code=409, detail={"code": codes["sign_off_state_invalid"]})
+    
+    
+    
+    report = await get_completion_for_user(report_id, user, 'testcompletion.review')
+    if report["status"] != 'IN_REVIEW':
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_SIGN_OFF_STATE_INVALID'})
     membership = await find_active_member(
         report["project_id"],
         user.id,
-        policy["source_filters"]["active_membership_status"],
+        'ACTIVE',
     )
     if not membership:
-        raise HTTPException(status_code=403, detail={"code": codes["membership_required"]})
+        raise HTTPException(status_code=403, detail={"code": 'PROJECT_MEMBERSHIP_REQUIRED'})
     sign_offs = [item for item in report.get("sign_offs", []) if item.get("user_id") != user.id]
     sign_offs.append(
         {
@@ -535,15 +534,15 @@ async def sign_off_completion(report_id, payload, user):
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {statuses["in_review"]},
+        {'IN_REVIEW'},
         {"sign_offs": sign_offs, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["signed_off"],
-        policy["entity_type"],
+        'test_completion_signed_off',
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"decision": payload.decision, "role": membership.get("project_role")},
@@ -552,39 +551,54 @@ async def sign_off_completion(report_id, payload, user):
 
 
 async def transition_completion(report_id, payload, user, transition_action):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
-    transition = policy["transitions"][transition_action]
+    
+    
+    
+    transition = {'submit_review': {'source': 'DRAFT',
+                   'target': 'IN_REVIEW',
+                   'permission': 'testcompletion.submit_review',
+                   'event': 'test_completion_submitted'},
+ 'request_changes': {'source': 'IN_REVIEW',
+                     'target': 'DRAFT',
+                     'permission': 'testcompletion.review',
+                     'event': 'test_completion_changes_requested'},
+ 'approve': {'source': 'IN_REVIEW',
+             'target': 'APPROVED',
+             'permission': 'testcompletion.approve',
+             'event': 'completion_report_approved'},
+ 'close': {'source': 'APPROVED',
+           'target': 'CLOSED',
+           'permission': 'testcompletion.close',
+           'event': 'completion_report_closed'}}[transition_action]
     source = transition["source"]
     target = transition["target"]
     report = await get_completion_for_user(report_id, user, transition["permission"])
-    if target == statuses["approved"]:
+    if target == 'APPROVED':
         await validate_completion_readiness(report)
         qa_approved = any(
-            item.get("role") == policy["qa_sign_off_role"]
-            and item.get("decision") == policy["approve_decision"]
+            item.get("role") == 'QA'
+            and item.get("decision") == 'APPROVE'
             for item in report.get("sign_offs", [])
         )
         if not qa_approved:
-            raise HTTPException(status_code=409, detail={"code": codes["qa_sign_off_required"]})
+            raise HTTPException(status_code=409, detail={"code": 'QA_SIGN_OFF_REQUIRED'})
         if any(
-            item.get("treatment", item.get("acceptance")) == statuses["pending"]
+            item.get("treatment", item.get("acceptance")) == 'PENDING'
             for item in report.get("residual_risks", [])
         ):
             raise HTTPException(
-                status_code=409, detail={"code": codes["risk_acceptance_required"]}
+                status_code=409, detail={"code": 'RESIDUAL_RISK_ACCEPTANCE_REQUIRED'}
             )
         if any(
-            item.get("decision") == policy["reject_decision"]
+            item.get("decision") == 'REJECT'
             for item in report.get("sign_offs", [])
         ):
-            raise HTTPException(status_code=409, detail={"code": codes["rejection_unresolved"]})
+            raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REJECTION_UNRESOLVED'})
     timestamp = now()
     event = {"actor_id": user.id, "action": target, "note": payload.note, "at": timestamp}
     history_field = (
         "approval_history"
-        if target in set(policy["history_statuses"])
+        if target in set(['APPROVED', 'CLOSED'])
         else "review_history"
     )
     changes = {
@@ -592,9 +606,9 @@ async def transition_completion(report_id, payload, user, transition_action):
         "updated_at": timestamp,
         history_field: [*report.get(history_field, []), event],
     }
-    if target == statuses["in_review"]:
+    if target == 'IN_REVIEW':
         changes.update({"submitted_by": user.id, "submitted_at": timestamp})
-    elif target == statuses["draft"]:
+    elif target == 'DRAFT':
         changes.update(
             {
                 "reviewed_by": user.id,
@@ -603,7 +617,7 @@ async def transition_completion(report_id, payload, user, transition_action):
                 "sign_offs": [],
             }
         )
-    elif target == statuses["approved"]:
+    elif target == 'APPROVED':
         changes.update(
             {
                 "approved_by": user.id,
@@ -612,7 +626,7 @@ async def transition_completion(report_id, payload, user, transition_action):
                 "approved_snapshot_hash": completion_hash(report),
             }
         )
-    elif target == statuses["closed"]:
+    elif target == 'CLOSED':
         changes.update({"closed_by": user.id, "closed_at": timestamp})
     updated = await update_completion(
         report_id, report["project_id"], payload.expected_revision, {source}, changes
@@ -620,12 +634,12 @@ async def transition_completion(report_id, payload, user, transition_action):
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": codes["transition_conflict"], "expected_status": source},
+            detail={"code": 'COMPLETION_TRANSITION_CONFLICT', "expected_status": source},
         )
     await audit(
         user.id,
         transition["event"],
-        policy["entity_type"],
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"from": source, "to": target, "note": payload.note},

@@ -1,29 +1,26 @@
 from src.schemas.test_monitoring import ExitCriterionDefinition
-from src.services.domain_policy import domain_policy
 
-EXIT_POLICY = domain_policy("exit_criteria")
-METRIC_BY_RULE = EXIT_POLICY["metric_by_rule"]
-MINIMUM_RULES = set(EXIT_POLICY["minimum_rules"])
-DENOMINATOR_BY_RULE = EXIT_POLICY["denominator_by_rule"]
+METRIC_BY_RULE = {'EXECUTION_PERCENT_MIN': 'execution_percent', 'PASS_RATE_MIN': 'pass_rate', 'OPEN_BLOCKER_MAX': 'open_blocker', 'OPEN_CRITICAL_MAX': 'open_critical', 'REQUIREMENT_COVERAGE_MIN': 'requirement_coverage', 'AC_COVERAGE_MIN': 'acceptance_criteria_coverage', 'CONDITION_COVERAGE_MIN': 'test_condition_coverage', 'STALE_TESTCASE_MAX': 'stale_testcases', 'ENVIRONMENT_INCIDENT_MAX': 'open_environment_incidents'}
+MINIMUM_RULES = set(['EXECUTION_PERCENT_MIN', 'PASS_RATE_MIN', 'REQUIREMENT_COVERAGE_MIN', 'AC_COVERAGE_MIN', 'CONDITION_COVERAGE_MIN'])
+DENOMINATOR_BY_RULE = {'EXECUTION_PERCENT_MIN': 'execution_denominator', 'PASS_RATE_MIN': 'pass_rate_denominator', 'REQUIREMENT_COVERAGE_MIN': 'requirement_coverage_denominator', 'AC_COVERAGE_MIN': 'acceptance_criteria_coverage_denominator', 'CONDITION_COVERAGE_MIN': 'test_condition_coverage_denominator'}
 
 
 def normalize_criterion(raw, index):
-    policy = EXIT_POLICY
     rule_type = str(raw.get("type") or raw.get("key") or "").upper()
-    rule_type = policy["aliases"].get(rule_type, rule_type)
+    rule_type = {'EXECUTION_PROGRESS': 'EXECUTION_PERCENT_MIN', 'EXECUTION_PERCENT': 'EXECUTION_PERCENT_MIN', 'PASS_RATE': 'PASS_RATE_MIN', 'OPEN_BLOCKER': 'OPEN_BLOCKER_MAX', 'OPEN_CRITICAL': 'OPEN_CRITICAL_MAX', 'REQUIREMENT_COVERAGE': 'REQUIREMENT_COVERAGE_MIN', 'AC_COVERAGE': 'AC_COVERAGE_MIN', 'ACCEPTANCE_CRITERION_COVERAGE': 'AC_COVERAGE_MIN', 'CONDITION_COVERAGE': 'CONDITION_COVERAGE_MIN', 'STALE_TESTCASES': 'STALE_TESTCASE_MAX', 'OPEN_ENVIRONMENT_INCIDENT': 'ENVIRONMENT_INCIDENT_MAX', 'OPEN_ENVIRONMENT_INCIDENT_MAX': 'ENVIRONMENT_INCIDENT_MAX'}.get(rule_type, rule_type)
     threshold = raw.get("threshold", raw.get("value"))
     supported = set(METRIC_BY_RULE) | {
-        policy["required_runs_rule"],
-        policy["manual_rule"],
+        'REQUIRED_RUNS_COMPLETED',
+        'CUSTOM_MANUAL_GATE',
     }
     if rule_type not in supported:
-        rule_type = policy["manual_rule"]
+        rule_type = 'CUSTOM_MANUAL_GATE'
         threshold = False
     return ExitCriterionDefinition(
         criterion_id=str(
             raw.get("criterion_id")
             or raw.get("id")
-            or f"{policy['criterion_id_prefix']}{index}"
+            or f"{'EXIT-'}{index}"
         ),
         criterion=str(raw.get("criterion") or raw.get("name") or rule_type),
         type=rule_type,
@@ -32,38 +29,37 @@ def normalize_criterion(raw, index):
 
 
 def evaluate_exit_criteria(definitions, metrics, completed_run_ids):
-    policy = EXIT_POLICY
-    statuses = policy["statuses"]
+    statuses = {'pass': 'PASS', 'fail': 'FAIL', 'warning': 'WARN', 'insufficient_data': 'INSUFFICIENT_DATA', 'manual_required': 'MANUAL_REQUIRED'}
     results = []
     for index, raw in enumerate(definitions, 1):
         definition = normalize_criterion(raw, index)
-        if definition.type == policy["manual_rule"]:
+        if definition.type == 'CUSTOM_MANUAL_GATE':
             actual = None
-            status = statuses["insufficient_data"]
-        elif definition.type == policy["required_runs_rule"]:
+            status = 'INSUFFICIENT_DATA'
+        elif definition.type == 'REQUIRED_RUNS_COMPLETED':
             required = set(definition.threshold)
             missing = sorted(required - set(completed_run_ids))
             actual = {"completed": sorted(required & set(completed_run_ids)), "missing": missing}
-            status = statuses["pass"] if not missing else statuses["fail"]
+            status = 'PASS' if not missing else 'FAIL'
         else:
             actual = metrics.get(METRIC_BY_RULE[definition.type], 0)
             threshold = float(definition.threshold)
             denominator_key = DENOMINATOR_BY_RULE.get(definition.type)
             if denominator_key and not metrics.get(denominator_key, 0):
                 actual = None
-                status = statuses["insufficient_data"]
+                status = 'INSUFFICIENT_DATA'
             else:
                 if (
                     definition.type in MINIMUM_RULES
-                    and policy["fraction_threshold_min"]
+                    and 0
                     <= threshold
-                    <= policy["fraction_threshold_max"]
+                    <= 1
                 ):
-                    threshold *= policy["percentage_multiplier"]
+                    threshold *= 100
                 passed = (
                     actual >= threshold if definition.type in MINIMUM_RULES else actual <= threshold
                 )
-                status = statuses["pass"] if passed else statuses["fail"]
+                status = 'PASS' if passed else 'FAIL'
         results.append(
             {
                 **definition.model_dump(),
@@ -77,12 +73,12 @@ def evaluate_exit_criteria(definitions, metrics, completed_run_ids):
 
 
 def quality_gate_status(evaluations):
-    statuses = EXIT_POLICY["statuses"]
-    if any(item["status"] == statuses["fail"] for item in evaluations):
-        return statuses["fail"]
-    incomplete = {statuses["insufficient_data"], statuses["manual_required"]}
+    statuses = {'pass': 'PASS', 'fail': 'FAIL', 'warning': 'WARN', 'insufficient_data': 'INSUFFICIENT_DATA', 'manual_required': 'MANUAL_REQUIRED'}
+    if any(item["status"] == 'FAIL' for item in evaluations):
+        return 'FAIL'
+    incomplete = {'INSUFFICIENT_DATA', 'MANUAL_REQUIRED'}
     if any(item["status"] in incomplete for item in evaluations):
-        return statuses["insufficient_data"]
-    if any(item["status"] == statuses["warning"] for item in evaluations):
-        return statuses["warning"]
-    return statuses["pass"] if evaluations else statuses["insufficient_data"]
+        return 'INSUFFICIENT_DATA'
+    if any(item["status"] == 'WARN' for item in evaluations):
+        return 'WARN'
+    return 'PASS' if evaluations else 'INSUFFICIENT_DATA'

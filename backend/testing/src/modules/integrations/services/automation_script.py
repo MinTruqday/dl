@@ -7,30 +7,29 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, get_project_entity, new_id, now, optimistic_patch
 from src.repositories.execution_asset import execution_asset_repository
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
-from src.services.domain_policy import domain_policy
 
 
-SECRET_POLICY = domain_policy("secret_detection")
-EXECUTION_ASSET_POLICY = domain_policy("execution_assets")
+
+
 
 
 def validate_source(source):
-    if re.search(SECRET_POLICY["raw_assignment_pattern"], source, re.I):
+    if re.search('(password|secret|token|api[_-]?key)(\\s*[:=]\\s*)[\'\\"](?!\\$\\{|<|Đã ẩn)[^\'\\"]{4,}[\'\\"]', source, re.I):
         raise HTTPException(
             status_code=422,
-            detail={"code": EXECUTION_ASSET_POLICY["raw_secret_code"]},
+            detail={"code": 'RAW_SECRET_IN_SCRIPT'},
         )
     return source
 
 
 def generated_script(result):
-    if result.get("status") != EXECUTION_ASSET_POLICY["success_status"] or result.get(
+    if result.get("status") != 'SUCCESS' or result.get(
         "degraded_mode"
     ):
         raise HTTPException(
             503,
             detail={
-                "code": EXECUTION_ASSET_POLICY["ai_provider_unavailable_code"],
+                "code": 'AI_PROVIDER_UNAVAILABLE',
                 "retryable": True,
             },
         )
@@ -42,60 +41,60 @@ def generated_script(result):
     ):
         raise HTTPException(
             502,
-            detail={"code": EXECUTION_ASSET_POLICY["ai_script_invalid_code"]},
+            detail={"code": 'AI_SCRIPT_INVALID'},
         )
     source = suggestions[0].get("source")
     placeholders = suggestions[0].get("secret_placeholders", [])
     if (
         not isinstance(source, str)
         or not source.strip()
-        or len(source) > int(EXECUTION_ASSET_POLICY["maximum_generated_script_characters"])
-        or source.lstrip().startswith(EXECUTION_ASSET_POLICY["generated_code_fence_prefix"])
+        or len(source) > int(100000)
+        or source.lstrip().startswith('```')
     ):
         raise HTTPException(
             502,
-            detail={"code": EXECUTION_ASSET_POLICY["ai_script_invalid_code"]},
+            detail={"code": 'AI_SCRIPT_INVALID'},
         )
     if not isinstance(placeholders, list) or any(
         not isinstance(item, str)
-        or not re.fullmatch(SECRET_POLICY["placeholder_pattern"], item)
+        or not re.fullmatch('[A-Z][A-Z0-9_]{0,99}', item)
         for item in placeholders
     ):
         raise HTTPException(
             502,
-            detail={"code": EXECUTION_ASSET_POLICY["ai_script_placeholders_invalid_code"]},
+            detail={"code": 'AI_SCRIPT_PLACEHOLDERS_INVALID'},
         )
     return validate_source(source), list(dict.fromkeys(placeholders))
 
 
 def default_filename(framework, language, version):
     key = re.sub(
-        EXECUTION_ASSET_POLICY["filename_invalid_character_pattern"],
+        '[^A-Za-z0-9_-]+',
         "-",
-        str(version.get("test_case_key") or EXECUTION_ASSET_POLICY["default_test_case_key"]),
+        str(version.get("test_case_key") or 'test-case'),
     )
-    suffix = EXECUTION_ASSET_POLICY["language_suffixes"][language]
+    suffix = {'typescript': 'spec.ts', 'javascript': 'spec.js', 'python': 'py'}[language]
     return f"{key.lower()}.{framework}.{suffix}"
 
 
 class AutomationScriptService:
     @staticmethod
     async def list(project_id, user):
-        await get_project(project_id, user, EXECUTION_ASSET_POLICY["script_export_permission"])
+        await get_project(project_id, user, 'automation.script.export')
         return await execution_asset_repository.list_script_drafts(project_id)
 
     @staticmethod
     async def get(draft_id, user):
         return await get_project_entity(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             user,
-            EXECUTION_ASSET_POLICY["script_export_permission"],
+            'automation.script.export',
         )
 
     @staticmethod
     async def generate(project_id, payload, user):
-        await get_project(project_id, user, EXECUTION_ASSET_POLICY["script_generate_permission"])
+        await get_project(project_id, user, 'ai.generate_automation_script')
         existing = await execution_asset_repository.find_script_by_idempotency_key(
             project_id, payload.idempotency_key
         )
@@ -107,21 +106,21 @@ class AutomationScriptService:
         if not version:
             raise HTTPException(
                 status_code=422,
-                detail={"code": EXECUTION_ASSET_POLICY["invalid_test_case_version_code"]},
+                detail={"code": 'INVALID_TEST_CASE_VERSION'},
             )
         evidence = [
             {
-                "artifact_type": EXECUTION_ASSET_POLICY["test_case_evidence_type"],
+                "artifact_type": 'test_case_version',
                 "artifact_id": version.get("test_case_id"),
                 "artifact_version_id": version["_id"],
-                "authority": EXECUTION_ASSET_POLICY["project_approved_test_authority"],
+                "authority": 'PROJECT_APPROVED_TEST',
                 "text": " ".join(
                     [str(version.get("title") or ""), str(version.get("plain_text_projection") or "")]
-                )[: int(EXECUTION_ASSET_POLICY["maximum_evidence_characters"])],
+                )[: int(4000)],
             }
         ]
         ai_result = await request_ai_assistance(
-            EXECUTION_ASSET_POLICY["script_generation_assistance_type"],
+            'automation_script_generation',
             project_id,
             json.dumps(
                 {"framework": payload.framework, "language": payload.language},
@@ -131,7 +130,7 @@ class AutomationScriptService:
             + (
                 [
                     {
-                        "artifact_type": EXECUTION_ASSET_POLICY["user_context_evidence_type"],
+                        "artifact_type": 'user_context',
                         "text": payload.context,
                     }
                 ]
@@ -143,7 +142,7 @@ class AutomationScriptService:
         timestamp = now()
         ai_contract = ai_contract_metadata(ai_result)
         value = {
-            "_id": new_id(EXECUTION_ASSET_POLICY["script_id_prefix"]),
+            "_id": new_id('AUTOSCR'),
             "project_id": project_id,
             "test_case_version_id": version["_id"],
             "test_case_id": version.get("test_case_id"),
@@ -158,14 +157,14 @@ class AutomationScriptService:
             "ai_contract": ai_contract,
             "ai_status": ai_contract["status"],
             "generation_status": ai_result.get(
-                "status", EXECUTION_ASSET_POLICY["success_status"]
+                "status", 'SUCCESS'
             ),
-            "status": EXECUTION_ASSET_POLICY["draft_status"],
+            "status": 'DRAFT',
             "candidate_only": True,
             "repository_write_performed": False,
             "human_confirmation_required": True,
             "idempotency_key": payload.idempotency_key,
-            "revision": EXECUTION_ASSET_POLICY["initial_revision"],
+            "revision": 1,
             "created_by": user.id,
             "created_at": timestamp,
             "updated_at": timestamp,
@@ -181,35 +180,35 @@ class AutomationScriptService:
             raise
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["script_generated_event"],
-            EXECUTION_ASSET_POLICY["script_entity"],
+            'automation_script_draft_generated',
+            'AutomationScriptDraft',
             value["_id"],
             project_id,
             {"framework": payload.framework, "test_case_version_id": version["_id"]},
         )
         return value, {
-            "status": ai_result.get("status", EXECUTION_ASSET_POLICY["success_status"]),
+            "status": ai_result.get("status", 'SUCCESS'),
             "degraded_mode": ai_result.get("degraded_mode"),
         }
 
     @staticmethod
     async def update(draft_id, payload, user):
         draft = await get_project_entity(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             user,
-            EXECUTION_ASSET_POLICY["script_update_permission"],
+            'automation.script.update',
         )
-        if draft.get("status") != EXECUTION_ASSET_POLICY["draft_status"]:
+        if draft.get("status") != 'DRAFT':
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["script_not_draft_code"]},
+                detail={"code": 'AUTOMATION_SCRIPT_NOT_DRAFT'},
             )
         changes = payload.model_dump(exclude_unset=True)
         if payload.source is not None:
             changes["source"] = validate_source(payload.source)
         updated = await optimistic_patch(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             draft["project_id"],
             payload.expected_revision,
@@ -217,8 +216,8 @@ class AutomationScriptService:
         )
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["script_updated_event"],
-            EXECUTION_ASSET_POLICY["script_entity"],
+            'automation_script_draft_updated',
+            'AutomationScriptDraft',
             draft_id,
             draft["project_id"],
         )
@@ -227,24 +226,24 @@ class AutomationScriptService:
     @staticmethod
     async def approve(draft_id, payload, user):
         draft = await get_project_entity(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             user,
-            EXECUTION_ASSET_POLICY["script_approve_permission"],
+            'automation.script.approve',
         )
-        if draft.get("status") != EXECUTION_ASSET_POLICY["draft_status"]:
+        if draft.get("status") != 'DRAFT':
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["script_not_draft_code"]},
+                detail={"code": 'AUTOMATION_SCRIPT_NOT_DRAFT'},
             )
         validate_source(draft["source"])
         updated = await optimistic_patch(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             draft["project_id"],
             payload.expected_revision,
             {
-                "status": EXECUTION_ASSET_POLICY["approved_status"],
+                "status": 'APPROVED',
                 "review_note": payload.review_note,
                 "approved_by": user.id,
                 "approved_at": now(),
@@ -253,8 +252,8 @@ class AutomationScriptService:
         )
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["script_approved_event"],
-            EXECUTION_ASSET_POLICY["script_entity"],
+            'automation_script_draft_approved',
+            'AutomationScriptDraft',
             draft_id,
             draft["project_id"],
             {"review_note": payload.review_note},
@@ -264,21 +263,21 @@ class AutomationScriptService:
     @staticmethod
     async def export(draft_id, user):
         draft = await get_project_entity(
-            EXECUTION_ASSET_POLICY["script_collection"],
+            'automation_script_drafts',
             draft_id,
             user,
-            EXECUTION_ASSET_POLICY["script_export_permission"],
+            'automation.script.export',
         )
-        if draft.get("status") != EXECUTION_ASSET_POLICY["approved_status"]:
+        if draft.get("status") != 'APPROVED':
             raise HTTPException(
                 status_code=409,
-                detail={"code": EXECUTION_ASSET_POLICY["script_not_approved_code"]},
+                detail={"code": 'AUTOMATION_SCRIPT_NOT_APPROVED'},
             )
         source = validate_source(draft["source"])
         await audit(
             user.id,
-            EXECUTION_ASSET_POLICY["script_exported_event"],
-            EXECUTION_ASSET_POLICY["script_entity"],
+            'automation_script_exported',
+            'AutomationScriptDraft',
             draft_id,
             draft["project_id"],
             {"filename": draft["filename"]},

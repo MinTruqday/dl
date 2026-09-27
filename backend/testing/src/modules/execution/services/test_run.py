@@ -9,7 +9,6 @@ from src.core.common import (
     optimistic_patch,
 )
 from src.repositories.test_run import test_run_repository
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.execution_context import resolve_execution_context
 from src.modules.execution.services.execution_policy import validate_test_versions
 from src.clients.project_knowledge import index_artifact
@@ -30,7 +29,7 @@ from src.modules.execution.services.test_run_query import (
 )
 
 
-TEST_RUN_POLICY = domain_policy("test_run")
+
 
 __all__ = [
     "abort_test_run_record",
@@ -48,15 +47,15 @@ __all__ = [
 
 
 async def create_test_run_record(payload, project_id, user):
-    policy = TEST_RUN_POLICY
+    
     if project_id is not None and payload.project_id != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
-    await get_project(payload.project_id, user, policy["create_permission"])
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    await get_project(payload.project_id, user, 'testrun.create')
     plan = None
     if payload.test_plan_id:
         plan = await test_run_repository.find_plan(payload.test_plan_id, payload.project_id)
         if not plan:
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_plan_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TEST_PLAN'})
     context = await resolve_execution_context(
         payload.project_id,
         user,
@@ -70,10 +69,10 @@ async def create_test_run_record(payload, project_id, user):
     version_ids = list(dict.fromkeys(payload.test_case_version_ids))
     if payload.test_suite_ids:
         suites = await test_run_repository.list_suites(
-            payload.project_id, payload.test_suite_ids, policy["suite_lookup_limit"]
+            payload.project_id, payload.test_suite_ids, 500
         )
         if len(suites) != len(set(payload.test_suite_ids)):
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_suite_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TEST_SUITE'})
         for suite in suites:
             version_ids.extend(suite.get("test_case_version_ids", []))
         version_ids = list(dict.fromkeys(version_ids))
@@ -89,13 +88,13 @@ async def create_test_run_record(payload, project_id, user):
         else {}
     )
     run = {
-        "_id": new_id(policy["run_id_prefix"]),
+        "_id": new_id('TRUN'),
         **payload.model_dump(),
         **context,
         **device_scope,
         "test_case_version_ids": version_ids,
-        "status": policy["draft_status"],
-        "revision": policy["initial_revision"],
+        "status": 'DRAFT',
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -106,7 +105,7 @@ async def create_test_run_record(payload, project_id, user):
             await test_run_repository.insert_results(
                 [
                     {
-                        "_id": new_id(policy["result_id_prefix"]),
+                        "_id": new_id('TRES'),
                         "project_id": payload.project_id,
                         "test_run_id": run["_id"],
                         "test_case_version_id": version_id,
@@ -116,13 +115,13 @@ async def create_test_run_record(payload, project_id, user):
                         "release_id": context["release_id"],
                         "build": context["build"],
                         "build_id": context["build_id"],
-                        "status": policy["not_run_status"],
+                        "status": 'NOT_RUN',
                         "step_results": [],
                         "actual_result_doc": {"type": "doc", "content": []},
                         "attachments": [],
                         "note": "",
                         "idempotency_key": None,
-                        "revision": policy["initial_revision"],
+                        "revision": 1,
                         "executor_id": None,
                         "started_at": None,
                         "completed_at": None,
@@ -138,21 +137,21 @@ async def create_test_run_record(payload, project_id, user):
             raise
     await audit(
         user.id,
-        policy["created_event"],
-        policy["run_entity"],
+        'test_run_created',
+        'TestRun',
         run["_id"],
         payload.project_id,
         {"test_count": len(version_ids)},
     )
     await index_artifact(
         payload.project_id,
-        policy["execution_artifact_type"],
+        'test_execution',
         run["_id"],
         run["_id"],
         run.get("name") or run["_id"],
         " ".join([run.get("name") or run["_id"], run.get("build") or ""]),
         run["status"],
-        policy["project_reference_authority"],
+        'PROJECT_REFERENCE',
         run["revision"],
         test_case_version_ids=version_ids,
     )
@@ -160,21 +159,21 @@ async def create_test_run_record(payload, project_id, user):
 
 
 async def update_test_run_record(project_id, run_id, payload, user):
-    policy = TEST_RUN_POLICY
-    run = await get_project_entity(policy["run_collection"], run_id, user, policy["update_permission"])
+    
+    run = await get_project_entity('test_runs', run_id, user, 'testrun.update')
     if run["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
-    if run.get("status") != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["scope_frozen_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    if run.get("status") != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_RUN_SCOPE_FROZEN'})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     version_ids = changes.get("test_case_version_ids", run.get("test_case_version_ids", []))
     if "test_suite_ids" in changes:
         suites = await test_run_repository.list_suites(
-            project_id, changes["test_suite_ids"], policy["suite_lookup_limit"]
+            project_id, changes["test_suite_ids"], 500
         )
         if len(suites) != len(set(changes["test_suite_ids"])):
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_suite_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TEST_SUITE'})
         version_ids = list(
             dict.fromkeys(
                 [
@@ -202,47 +201,47 @@ async def update_test_run_record(project_id, run_id, payload, user):
             )
         )
     updated = await optimistic_patch(
-        policy["run_collection"], run_id, project_id, payload.expected_revision, changes
+        'test_runs', run_id, project_id, payload.expected_revision, changes
     )
-    await audit(user.id, policy["updated_event"], policy["run_entity"], run_id, project_id)
+    await audit(user.id, 'test_run_updated', 'TestRun', run_id, project_id)
     return updated
 
 
 async def assign_test_run_record(project_id, run_id, payload, user):
-    policy = TEST_RUN_POLICY
-    run = await get_project_entity(policy["run_collection"], run_id, user, policy["assign_permission"])
+    
+    run = await get_project_entity('test_runs', run_id, user, 'testrun.assign')
     if run["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     if payload.assignee_id:
         assignee = await test_run_repository.find_active_tester(
             project_id,
             payload.assignee_id,
-            policy["active_member_status"],
-            policy["tester_role"],
+            'ACTIVE',
+            'TESTER',
         )
         if not assignee:
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["invalid_assignee_code"], "user_id": payload.assignee_id},
+                detail={"code": 'INVALID_TEST_RUN_ASSIGNEE', "user_id": payload.assignee_id},
             )
     assigned_users = set(payload.test_case_assignments.values())
     if assigned_users:
         valid_members = await test_run_repository.count_active_testers(
             project_id,
             list(assigned_users),
-            policy["active_member_status"],
-            policy["tester_role"],
+            'ACTIVE',
+            'TESTER',
         )
         if valid_members != len(assigned_users):
-            raise HTTPException(status_code=422, detail={"code": policy["invalid_case_assignee_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TEST_CASE_ASSIGNEE'})
     unknown = set(payload.test_case_assignments) - set(run.get("test_case_version_ids", []))
     if unknown:
         raise HTTPException(
             status_code=422,
-            detail={"code": policy["test_not_in_snapshot_code"], "test_case_version_ids": sorted(unknown)},
+            detail={"code": 'TEST_NOT_IN_RUN_SNAPSHOT', "test_case_version_ids": sorted(unknown)},
         )
     updated = await optimistic_patch(
-        policy["run_collection"],
+        'test_runs',
         run_id,
         project_id,
         payload.expected_revision,
@@ -253,8 +252,8 @@ async def assign_test_run_record(project_id, run_id, payload, user):
     )
     await audit(
         user.id,
-        policy["assigned_event"],
-        policy["run_entity"],
+        'test_run_assigned',
+        'TestRun',
         run_id,
         project_id,
         {"assignee_id": payload.assignee_id},

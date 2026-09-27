@@ -3,10 +3,9 @@ from fastapi import HTTPException
 from src.core.common import now
 from src.repositories.requirement_document import requirement_document_repository
 from src.clients.project_knowledge import index_artifact
-from src.services.domain_policy import domain_policy
 
 
-INDEXING_POLICY = domain_policy("requirement_indexing")
+
 
 
 async def validate_requirement_sources(project_id, source_refs):
@@ -19,7 +18,7 @@ async def validate_requirement_sources(project_id, source_refs):
     if set(by_id) != set(document_ids):
         raise HTTPException(
             status_code=422,
-            detail={"code": INDEXING_POLICY["missing_document_code"]},
+            detail={"code": 'CROSS_PROJECT_OR_MISSING_REQUIREMENT_DOCUMENT'},
         )
     for reference in references:
         expected_hash = reference.get("content_hash")
@@ -28,7 +27,7 @@ async def validate_requirement_sources(project_id, source_refs):
         ):
             raise HTTPException(
                 status_code=422,
-                detail={"code": INDEXING_POLICY["source_hash_mismatch_code"]},
+                detail={"code": 'REQUIREMENT_SOURCE_HASH_MISMATCH'},
             )
 
 
@@ -45,25 +44,25 @@ async def index_requirement_version(version):
     )
     indexed = await index_artifact(
         version["project_id"],
-        INDEXING_POLICY["artifact_type"],
+        'requirement_version',
         version["requirement_id"],
         version["_id"],
         version["title"],
         version.get("plain_text_projection", ""),
-        version.get("status", INDEXING_POLICY["draft_status"]),
-        INDEXING_POLICY["approved_authority"]
-        if version.get("status") == INDEXING_POLICY["baselined_status"]
-        else INDEXING_POLICY["draft_authority"],
+        version.get("status", 'DRAFT'),
+        'APPROVED_SOURCE'
+        if version.get("status") == 'BASELINED'
+        else 'DRAFT',
         version.get("version"),
         acceptance_criterion_ids=[item["_id"] for item in criteria],
         source_document_ids=source_document_ids,
     )
     await requirement_document_repository.set_requirement_version_index_result(
         version["_id"],
-        INDEXING_POLICY["index_ready_status"]
+        'READY'
         if indexed
-        else INDEXING_POLICY["index_failed_status"],
-        None if indexed else INDEXING_POLICY["index_failed_code"],
+        else 'FAILED',
+        None if indexed else 'KNOWLEDGE_INDEX_FAILED',
         now(),
     )
     return indexed

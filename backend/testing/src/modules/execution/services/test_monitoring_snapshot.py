@@ -1,11 +1,10 @@
 from datetime import datetime, timezone
 
 from src.repositories.test_monitoring import test_monitoring_repository
-from src.services.domain_policy import domain_policy
 
-MONITORING_POLICY = domain_policy("test_monitoring")
-TERMINAL_RESULT_STATUSES = set(MONITORING_POLICY["terminal_result_statuses"])
-OPEN_DEFECT_STATUSES = set(MONITORING_POLICY["open_defect_statuses"])
+
+TERMINAL_RESULT_STATUSES = set(['PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE'])
+OPEN_DEFECT_STATUSES = set(['NEW', 'CONFIRMED', 'IN_PROGRESS', 'READY_FOR_RETEST', 'REOPENED'])
 
 
 def percent(numerator, denominator):
@@ -25,44 +24,44 @@ def parse_datetime(value):
 
 
 async def monitoring_sources(project_id, plan, release_id, payload):
-    limits = MONITORING_POLICY["limits"]
+    
     runs = await test_monitoring_repository.list_test_runs(
-        project_id, plan["_id"], release_id, limits["runs"]
+        project_id, plan["_id"], release_id, 10000
     )
     run_ids = [item["_id"] for item in runs]
     results = await test_monitoring_repository.list_test_results(
-        project_id, run_ids, limits["results"]
+        project_id, run_ids, 50000
     )
     defects = await test_monitoring_repository.list_defects(
-        project_id, release_id, limits["defects"]
+        project_id, release_id, 50000
     )
     requirements = await test_monitoring_repository.list_baselined_requirements(
         project_id,
-        MONITORING_POLICY["baselined_requirement_status"],
-        limits["requirements"],
+        'BASELINED',
+        20000,
     )
     requirement_version_ids = [
         item.get("current_version_id") for item in requirements if item.get("current_version_id")
     ]
     criteria = await test_monitoring_repository.list_acceptance_criteria(
-        project_id, requirement_version_ids, limits["acceptance_criteria"]
+        project_id, requirement_version_ids, 50000
     )
     conditions = await test_monitoring_repository.list_approved_conditions(
-        project_id, MONITORING_POLICY["approved_status"], limits["conditions"]
+        project_id, 'APPROVED', 20000
     )
     version_ids = sorted(
         {version_id for run in runs for version_id in run.get("test_case_version_ids", [])}
     )
     versions = await test_monitoring_repository.list_test_case_versions(
-        project_id, version_ids, limits["test_case_versions"]
+        project_id, version_ids, 50000
     )
     api_operations = await test_monitoring_repository.list_api_operations(
-        project_id, limits["api_operations"]
+        project_id, 20000
     )
     nfr_plans = await test_monitoring_repository.list_approved_non_functional_plans(
         project_id,
-        MONITORING_POLICY["approved_status"],
-        limits["non_functional_plans"],
+        'APPROVED',
+        5000,
     )
     latest = await test_monitoring_repository.find_latest_snapshot(
         project_id, plan["_id"], release_id
@@ -72,21 +71,21 @@ async def monitoring_sources(project_id, plan, release_id, payload):
     )
     changes = await test_monitoring_repository.count_requirement_changes(project_id, since)
     impact_pending = await test_monitoring_repository.count_pending_impact_analyses(
-        project_id, MONITORING_POLICY["impact_terminal_statuses"]
+        project_id, ['CLOSED', 'COMPLETED']
     )
     proposal_pending = await test_monitoring_repository.count_pending_maintenance_proposals(
-        project_id, MONITORING_POLICY["proposal_pending_statuses"]
+        project_id, ['PENDING_REVIEW', 'REVIEWED', 'APPROVED']
     )
     stale = await test_monitoring_repository.count_stale_test_cases(
-        project_id, MONITORING_POLICY["stale_test_case_status"]
+        project_id, 'NEEDS_UPDATE'
     )
     incidents = await test_monitoring_repository.list_environment_incidents(
         project_id,
-        MONITORING_POLICY["active_incident_statuses"],
+        ['OPEN', 'INVESTIGATING', 'MITIGATED'],
         bool(release_id),
         [item.get("build_id") for item in runs if item.get("build_id")],
         run_ids,
-        limits["incidents"],
+        10000,
     )
     return {
         "runs": runs,
@@ -114,11 +113,11 @@ def build_metrics(plan, sources, snapshot_at):
     results = sources["results"]
     counts = {
         status: sum(item.get("status") == status for item in results)
-        for status in MONITORING_POLICY["result_statuses"]
+        for status in ['NOT_RUN', 'IN_PROGRESS', 'PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE']
     }
     planned_test_count = len(results)
     executed_test_count = sum(counts[status] for status in TERMINAL_RESULT_STATUSES)
-    decisive = sum(counts[status] for status in MONITORING_POLICY["decisive_result_statuses"])
+    decisive = sum(counts[status] for status in ['PASS', 'FAIL', 'BLOCKED'])
     versions = sources["versions"]
     covered_requirements = {
         item for version in versions for item in version.get("requirement_version_ids", [])
@@ -133,7 +132,7 @@ def build_metrics(plan, sources, snapshot_at):
         evidence.get("artifact_id") or evidence.get("artifact_version_id")
         for version in versions
         for evidence in version.get("source_evidence", [])
-        if evidence.get("artifact_type") == MONITORING_POLICY["api_operation_artifact_type"]
+        if evidence.get("artifact_type") == 'api_operation'
     }
     api_operation_ids = {item["_id"] for item in sources["api_operations"]}
     executed_version_ids = {item["_id"] for item in versions}
@@ -147,7 +146,7 @@ def build_metrics(plan, sources, snapshot_at):
     high_risk_ids = {
         item["_id"]
         for item in sources["conditions"]
-        if item.get("risk") in MONITORING_POLICY["high_risk_levels"]
+        if item.get("risk") in ['CRITICAL', 'HIGH']
     }
     defects = sources["defects"]
     open_defects = [item for item in defects if item.get("status") in OPEN_DEFECT_STATUSES]
@@ -160,13 +159,13 @@ def build_metrics(plan, sources, snapshot_at):
     resolved = sum(
         1
         for item in defects
-        if item.get("status") in MONITORING_POLICY["resolved_defect_statuses"]
+        if item.get("status") in ['RESOLVED', 'READY_FOR_RETEST', 'CLOSED']
         and (not since or bool(item.get("updated_at") and item["updated_at"] > since))
     )
     reopened = sum(
         1
         for item in defects
-        if item.get("status") == MONITORING_POLICY["reopened_defect_status"]
+        if item.get("status") == 'REOPENED'
         and (not since or bool(item.get("updated_at") and item["updated_at"] > since))
     )
     ages = [
@@ -200,14 +199,14 @@ def build_metrics(plan, sources, snapshot_at):
         "acceptance_criteria_coverage_denominator": len(sources["criteria"]),
         "test_condition_coverage_denominator": len(condition_ids),
         "execution_percent": percent(executed_test_count, planned_test_count),
-        "pass_rate": percent(counts[MONITORING_POLICY["pass_status"]], decisive),
-        "not_run": counts[MONITORING_POLICY["not_run_status"]],
-        "in_progress": counts[MONITORING_POLICY["in_progress_status"]],
-        "pass": counts[MONITORING_POLICY["pass_status"]],
-        "fail": counts[MONITORING_POLICY["failed_status"]],
-        "blocked": counts[MONITORING_POLICY["blocked_status"]],
-        "skipped": counts[MONITORING_POLICY["skipped_status"]],
-        "not_applicable": counts[MONITORING_POLICY["not_applicable_status"]],
+        "pass_rate": percent(counts['PASS'], decisive),
+        "not_run": counts['NOT_RUN'],
+        "in_progress": counts['IN_PROGRESS'],
+        "pass": counts['PASS'],
+        "fail": counts['FAIL'],
+        "blocked": counts['BLOCKED'],
+        "skipped": counts['SKIPPED'],
+        "not_applicable": counts['NOT_APPLICABLE'],
         "requirement_coverage": percent(
             len(
                 covered_requirements
@@ -232,11 +231,11 @@ def build_metrics(plan, sources, snapshot_at):
         if sources["nfr_plans"]
         else None,
         "open_blocker": sum(
-            str(item.get("severity", "")).upper() == MONITORING_POLICY["blocker_severity"]
+            str(item.get("severity", "")).upper() == 'BLOCKER'
             for item in open_defects
         ),
         "open_critical": sum(
-            str(item.get("severity", "")).upper() == MONITORING_POLICY["critical_severity"]
+            str(item.get("severity", "")).upper() == 'CRITICAL'
             for item in open_defects
         ),
         "new_defects": new_defects,
@@ -259,7 +258,7 @@ def build_metrics(plan, sources, snapshot_at):
         else None,
         "open_environment_incidents": len(sources["environment_incidents"]),
         "blocker_environment_incidents": sum(
-            item.get("severity") in MONITORING_POLICY["blocking_incident_severities"]
+            item.get("severity") in ['BLOCKER', 'CRITICAL']
             for item in sources["environment_incidents"]
         ),
         "environment_downtime_seconds": sum(
@@ -275,7 +274,7 @@ def build_deviations(metrics):
     if metrics["schedule_variance"] is not None and metrics["schedule_variance"] > 0:
         values.append(
             {
-                "type": MONITORING_POLICY["schedule_deviation_type"],
+                "type": 'SCHEDULE',
                 "planned": 0,
                 "actual": metrics["schedule_variance"],
                 "unit": "days",
@@ -284,7 +283,7 @@ def build_deviations(metrics):
     if metrics["effort_variance"] is not None and metrics["effort_variance"] > 0:
         values.append(
             {
-                "type": MONITORING_POLICY["effort_deviation_type"],
+                "type": 'EFFORT',
                 "planned": metrics["planned_effort"],
                 "actual": metrics["actual_effort"],
                 "unit": "hours",
@@ -293,7 +292,7 @@ def build_deviations(metrics):
     if metrics["blocked"]:
         values.append(
             {
-                "type": MONITORING_POLICY["blocked_tests_deviation_type"],
+                "type": 'BLOCKED_TESTS',
                 "planned": 0,
                 "actual": metrics["blocked"],
                 "unit": "tests",

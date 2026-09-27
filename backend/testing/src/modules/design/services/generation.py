@@ -9,20 +9,18 @@ from src.schemas.contracts.design import (
     TestCaseDraftCreate,
 )
 from src.core.ai_assistance import request_ai_assistance
-from src.services.domain_policy import domain_policy
 
 
-GENERATION_POLICY = domain_policy("generation")
 
 
 class GeneratedStep(BaseModel):
     action: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     expected: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     test_data: dict = Field(default_factory=dict)
 
@@ -30,104 +28,104 @@ class GeneratedStep(BaseModel):
 class SecurityCandidate(BaseModel):
     category: str
     title: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_title_length"],
+        min_length=2,
+        max_length=300,
     )
     preconditions: list[str] = Field(
-        min_length=1, max_length=GENERATION_POLICY["maximum_preconditions"]
+        min_length=1, max_length=30
     )
     action: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     expected: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     requirement_version_ids: list[str] = Field(
-        default_factory=list, max_length=GENERATION_POLICY["maximum_list_length"]
+        default_factory=list, max_length=100
     )
 
     @field_validator("category")
     @classmethod
     def validate_category(cls, value):
-        if value not in GENERATION_POLICY["security_categories"]:
-            raise ValueError(GENERATION_POLICY["invalid_categories_code"])
+        if value not in ['authorization', 'authentication', 'input_validation', 'session', 'data_protection']:
+            raise ValueError('INVALID_GENERATION_CATEGORIES')
         return value
 
 
 class PerformanceScenario(BaseModel):
     workload_type: str
     title: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_title_length"],
+        min_length=2,
+        max_length=300,
     )
-    virtual_users: int = Field(ge=1, le=GENERATION_POLICY["maximum_virtual_users"])
+    virtual_users: int = Field(ge=1, le=1000000)
     requests_per_second: float | None = Field(default=None, gt=0)
-    duration_minutes: int = Field(ge=1, le=GENERATION_POLICY["maximum_duration_minutes"])
+    duration_minutes: int = Field(ge=1, le=10080)
     ramp_pattern: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_short_text_length"],
+        min_length=2,
+        max_length=2000,
     )
     actions: list[str] = Field(
-        min_length=1, max_length=GENERATION_POLICY["maximum_steps"]
+        min_length=1, max_length=50
     )
     expected: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
 
     @field_validator("workload_type")
     @classmethod
     def validate_workload_type(cls, value):
-        if value not in GENERATION_POLICY["performance_workloads"]:
-            raise ValueError(GENERATION_POLICY["invalid_categories_code"])
+        if value not in ['baseline', 'load', 'stress', 'spike', 'soak']:
+            raise ValueError('INVALID_GENERATION_CATEGORIES')
         return value
 
 
 def validated_suggestions(result, schema):
-    if result.get("status") != GENERATION_POLICY["success_status"] or result.get(
+    if result.get("status") != 'SUCCESS' or result.get(
         "degraded_mode"
     ):
         raise HTTPException(
             503,
-            detail={"code": GENERATION_POLICY["provider_unavailable_code"], "retryable": True},
+            detail={"code": 'AI_PROVIDER_UNAVAILABLE', "retryable": True},
         )
     try:
         items = result.get("suggestions")
         if (
             not isinstance(items, list)
-            or not 1 <= len(items) <= GENERATION_POLICY["maximum_suggestions"]
+            or not 1 <= len(items) <= 100
         ):
             raise ValueError("invalid suggestion count")
         return [schema.model_validate(item).model_dump() for item in items]
     except (ValueError, TypeError, ValidationError) as error:
         raise HTTPException(
             502,
-            detail={"code": GENERATION_POLICY["invalid_output_code"], "retryable": True},
+            detail={"code": 'AI_GENERATION_INVALID', "retryable": True},
         ) from error
 
 
 class GeneratedCase(BaseModel):
     title: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_title_length"],
+        min_length=2,
+        max_length=300,
     )
     category: str
     objective: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     preconditions: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     steps: list[GeneratedStep] = Field(
-        min_length=1, max_length=GENERATION_POLICY["maximum_steps"]
+        min_length=1, max_length=50
     )
     expected: str = Field(
-        min_length=GENERATION_POLICY["minimum_text_length"],
-        max_length=GENERATION_POLICY["maximum_text_length"],
+        min_length=2,
+        max_length=5000,
     )
     acceptance_criterion_ids: list[str] = Field(default_factory=list)
 
@@ -140,26 +138,26 @@ def document(text):
 
 
 async def generate_requirement_drafts(version, criteria, payload, scenario=False):
-    categories = payload.categories or GENERATION_POLICY["default_categories"]
+    categories = payload.categories or ['happy_path', 'negative', 'boundary', 'validation']
     allowed = ScenarioCreate.model_fields["category"].annotation.__args__
     if len(set(categories)) != len(categories) or any(item not in allowed for item in categories):
-        raise HTTPException(422, detail={"code": GENERATION_POLICY["invalid_categories_code"]})
-    if len(categories) * payload.count_per_category > GENERATION_POLICY["maximum_suggestions"]:
-        raise HTTPException(422, detail={"code": GENERATION_POLICY["limit_exceeded_code"]})
+        raise HTTPException(422, detail={"code": 'INVALID_GENERATION_CATEGORIES'})
+    if len(categories) * payload.count_per_category > 100:
+        raise HTTPException(422, detail={"code": 'GENERATION_LIMIT_EXCEEDED'})
     evidence = [
         {
-            "artifact_type": GENERATION_POLICY["requirement_evidence_type"],
+            "artifact_type": 'requirement_version',
             "artifact_version_id": version["_id"],
             "text": version["plain_text_projection"],
         }
     ]
     evidence.extend(
         {
-            "artifact_type": GENERATION_POLICY["criterion_evidence_type"],
+            "artifact_type": 'acceptance_criterion',
             "artifact_version_id": item["_id"],
             "text": item.get("plain_text") or plain_text(item.get("content_doc", {})),
         }
-        for item in criteria[: GENERATION_POLICY["maximum_criteria_evidence"]]
+        for item in criteria[: 99]
     )
     instruction = json.dumps(
         {
@@ -169,24 +167,24 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
         },
         ensure_ascii=False,
     )
-    if len(instruction) > GENERATION_POLICY["maximum_instruction_length"]:
+    if len(instruction) > 5000:
         raise HTTPException(
-            422, detail={"code": GENERATION_POLICY["instruction_too_long_code"]}
+            422, detail={"code": 'GENERATION_INSTRUCTION_TOO_LONG'}
         )
     result = await request_ai_assistance(
-        GENERATION_POLICY["scenario_capability"]
+        'scenario_generation'
         if scenario
-        else GENERATION_POLICY["test_capability"],
+        else 'test_generation',
         version["project_id"],
         instruction,
         evidence,
     )
-    if result.get("status") != GENERATION_POLICY["success_status"] or result.get(
+    if result.get("status") != 'SUCCESS' or result.get(
         "degraded_mode"
     ):
         raise HTTPException(
             503,
-            detail={"code": GENERATION_POLICY["provider_unavailable_code"], "retryable": True},
+            detail={"code": 'AI_PROVIDER_UNAVAILABLE', "retryable": True},
         )
     try:
         generated = [GeneratedCase.model_validate(item) for item in result.get("suggestions", [])]
@@ -201,11 +199,11 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
                 raise ValueError("unknown evidence")
             common = {
                 "title": item.title,
-                "priority": version.get("priority", GENERATION_POLICY["default_priority"]),
-                "risk": version.get("risk", GENERATION_POLICY["default_risk"]),
+                "priority": version.get("priority", 'medium'),
+                "risk": version.get("risk", 'medium'),
                 "requirement_version_ids": [version["_id"]],
                 "acceptance_criterion_ids": item.acceptance_criterion_ids,
-                "origin": GENERATION_POLICY["generated_origin"],
+                "origin": 'ai_generated',
             }
             if scenario:
                 drafts.append(
@@ -214,7 +212,7 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
             else:
                 steps = [
                     {
-                        "id": f"{GENERATION_POLICY['step_id_prefix']}{index}",
+                        "id": f"{'step-'}{index}",
                         "order": index,
                         "action_doc": document(step.action),
                         "expected_doc": document(step.expected),
@@ -236,6 +234,6 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
     except (ValueError, TypeError, ValidationError) as error:
         raise HTTPException(
             502,
-            detail={"code": GENERATION_POLICY["invalid_output_code"], "retryable": True},
+            detail={"code": 'AI_GENERATION_INVALID', "retryable": True},
         ) from error
     return drafts, result

@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from src.core.common import audit, get_project, get_project_entity, new_id, now
 from src.repositories.impact_analysis import impact_analysis_repository
 from src.modules.quality.services.change_analysis import classify_test_impact, semantic_candidate_score
-from src.services.domain_policy import domain_policy
 from src.modules.quality.services.impact_assistance import (
     ai_new_test_requirements,
     apply_ai_impact_suggestions,
@@ -20,24 +19,24 @@ async def create_impact_analysis_record(
     supersedes=None,
     rerun_input=None,
 ):
-    impact_policy = domain_policy("impact_analysis")
-    model_version = model_version or impact_policy["model_version"]
+    
+    model_version = model_version or 'evidence_impact_analysis'
     change_set = await get_project_entity(
-        "requirement_change_sets", change_set_id, user, impact_policy["execute_permission"]
+        "requirement_change_sets", change_set_id, user, 'impact.execute'
     )
     if project_id is not None and change_set["project_id"] != project_id:
         raise HTTPException(
-            status_code=422, detail={"code": impact_policy["project_mismatch_code"]}
+            status_code=422, detail={"code": 'PROJECT_MISMATCH'}
         )
-    if change_set.get("status") not in impact_policy["eligible_change_statuses"]:
+    if change_set.get("status") not in ['REVIEWED', 'ANALYZED']:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": impact_policy["change_review_required_code"],
+                "code": 'CHANGE_SET_REVIEW_REQUIRED',
                 "status": change_set.get("status"),
             },
         )
-    await get_project(change_set["project_id"], user, impact_policy["ai_permission"])
+    await get_project(change_set["project_id"], user, 'ai.run_impact')
     existing = await impact_analysis_repository.find_by_change_and_model(
         change_set_id, model_version
     )
@@ -45,7 +44,7 @@ async def create_impact_analysis_record(
         return existing
     criteria = await impact_analysis_repository.list_acceptance_criteria(
         [change_set["from_version_id"], change_set["to_version_id"]],
-        impact_policy["criterion_limit"],
+        10000,
     )
     source_ids = {
         change_set["from_version_id"],
@@ -55,14 +54,14 @@ async def create_impact_analysis_record(
     links = await impact_analysis_repository.list_trace_links(
         change_set["project_id"],
         list(source_ids),
-        impact_policy["trace_statuses"],
-        impact_policy["trace_limit"],
+        ['CONFIRMED', 'STALE'],
+        50000,
     )
     direct_targets = {link["target_id"] for link in links}
     current_tests = await impact_analysis_repository.list_current_tests(
         change_set["project_id"],
-        impact_policy["current_test_statuses"],
-        impact_policy["test_limit"],
+        ['ACTIVE', 'NEEDS_UPDATE'],
+        20000,
     )
     versions = await impact_analysis_repository.list_test_versions(
         [
@@ -70,7 +69,7 @@ async def create_impact_analysis_record(
             for item in current_tests
             if item.get("current_version_id")
         ],
-        impact_policy["test_limit"],
+        20000,
     )
     from_version = await impact_analysis_repository.find_requirement_version(
         change_set["from_version_id"], change_set["project_id"]
@@ -91,25 +90,25 @@ async def create_impact_analysis_record(
             requirement_text, str(version.get("plain_text_projection", ""))
         )
         item = classify_test_impact(version, change_set["changes"], direct_trace)
-        if not direct_trace and semantic_score >= impact_policy["semantic_candidate_minimum"]:
-            item["classification"] = impact_policy["potentially_affected_classification"]
+        if not direct_trace and semantic_score >= 0.2:
+            item["classification"] = 'POTENTIALLY_AFFECTED'
             item["confidence"] = max(
                 item["confidence"],
                 round(
                     min(
-                        impact_policy["semantic_confidence_maximum"],
-                        impact_policy["semantic_confidence_base"]
-                        + semantic_score * impact_policy["semantic_confidence_weight"],
+                        0.9,
+                        0.55
+                        + semantic_score * 0.35,
                     ),
                     4,
                 ),
             )
             item["reasons"].append(
-                impact_policy["semantic_overlap_reason"]
+                'Ứng viên semantic có nội dung giao nhau với Requirement thay đổi'
             )
         item["evidence"].append(
             {
-                "artifact_type": impact_policy["semantic_artifact_type"],
+                "artifact_type": 'semantic_candidate',
                 "semantic_score": round(semantic_score, 4),
                 "direct_trace": direct_trace,
             }
@@ -120,35 +119,35 @@ async def create_impact_analysis_record(
     affected = [
         item
         for item in impacted
-        if item["classification"] != impact_policy["still_valid_classification"]
+        if item["classification"] != 'STILL_VALID'
         or item["test_case_version_id"] in direct_targets
     ]
     new_test_requirements = ai_new_test_requirements(ai_result, change_set["to_version_id"])
     analysis = {
-        "_id": new_id(impact_policy["analysis_id_prefix"]),
+        "_id": new_id('IMP'),
         "project_id": change_set["project_id"],
         "change_set_id": change_set_id,
         "affected_test_cases": affected,
         "new_test_requirements": new_test_requirements,
-        "status": impact_policy["review_ready_status"],
-        "revision": impact_policy["initial_revision"],
-        "mode": impact_policy["ai_mode"]
-        if ai_result.get("status") == impact_policy["success_status"]
-        else impact_policy["degraded_mode"],
+        "status": 'REVIEW_READY',
+        "revision": 1,
+        "mode": 'AI_ASSISTED'
+        if ai_result.get("status") == 'SUCCESS'
+        else 'DEGRADED_AI',
         "model_version": model_version,
         "algorithm_version": (
-            rerun_input.algorithm_version if rerun_input else impact_policy["algorithm_version"]
+            rerun_input.algorithm_version if rerun_input else 'impact_pipeline'
         ),
         "knowledge_index_version": rerun_input.knowledge_index_version if rerun_input else None,
         "snapshot_number": (
-            int((supersedes or {}).get("snapshot_number", impact_policy["initial_snapshot"]))
+            int((supersedes or {}).get("snapshot_number", 1))
             + 1
             if supersedes
-            else impact_policy["initial_snapshot"]
+            else 1
         ),
         "supersedes_analysis_id": (supersedes or {}).get("_id"),
         "rerun_reason": rerun_input.reason if rerun_input else None,
-        "pipeline": impact_policy["pipeline"],
+        "pipeline": ['direct_trace', 'semantic_candidate', 'deterministic_check', 'evidence_classification'],
         "ai_result": ai_result,
         "ai_applied_version_ids": ai_applied_version_ids,
         "created_by": user.id,
@@ -158,13 +157,13 @@ async def create_impact_analysis_record(
     await impact_analysis_repository.set_change_status(
         change_set_id,
         change_set["project_id"],
-        impact_policy["analyzed_status"],
+        'ANALYZED',
         now(),
     )
     await audit(
         user.id,
-        impact_policy["created_event"],
-        impact_policy["entity_type"],
+        'impact_analysis_created',
+        'ImpactAnalysis',
         analysis["_id"],
         change_set["project_id"],
         {"affected_count": len(affected)},
@@ -173,16 +172,16 @@ async def create_impact_analysis_record(
 
 
 async def get_change_set_impact_record(change_set_id, user):
-    policy = domain_policy("impact_analysis")
+    
     change_set = await get_project_entity(
-        "requirement_change_sets", change_set_id, user, policy["read_permission"]
+        "requirement_change_sets", change_set_id, user, 'impact.read'
     )
     analysis = await impact_analysis_repository.find_latest_for_change(
         change_set_id, change_set["project_id"]
     )
     if not analysis:
         raise HTTPException(
-            status_code=404, detail={"code": policy["entity_not_found_code"]}
+            status_code=404, detail={"code": 'ENTITY_NOT_FOUND'}
         )
     return analysis
 
@@ -192,19 +191,19 @@ async def get_impact_analysis_record(analysis_id, user, permission=None):
         "impact_analyses",
         analysis_id,
         user,
-        permission or domain_policy("impact_analysis")["read_permission"],
+        permission or 'impact.read',
     )
 
 
 async def rerun_impact_analysis_record(analysis_id, payload, user):
-    policy = domain_policy("impact_analysis")
+    
     analysis = await get_impact_analysis_record(
-        analysis_id, user, policy["execute_permission"]
+        analysis_id, user, 'impact.execute'
     )
-    await get_project(analysis["project_id"], user, policy["ai_permission"])
-    if analysis.get("status") not in policy["rerunnable_statuses"]:
+    await get_project(analysis["project_id"], user, 'ai.run_impact')
+    if analysis.get("status") not in ['REVIEW_READY', 'REVIEWED']:
         raise HTTPException(
-            status_code=409, detail={"code": policy["not_rerunnable_code"]}
+            status_code=409, detail={"code": 'IMPACT_NOT_RERUNNABLE'}
         )
     previous_status = analysis["status"]
     claimed = await impact_analysis_repository.transition_analysis(
@@ -213,7 +212,7 @@ async def rerun_impact_analysis_record(analysis_id, payload, user):
         payload.expected_revision,
         previous_status,
         {
-            "status": policy["rerunning_status"],
+            "status": 'RERUNNING',
             "rerun_requested_by": user.id,
             "rerun_requested_at": now(),
             "updated_at": now(),
@@ -221,17 +220,17 @@ async def rerun_impact_analysis_record(analysis_id, payload, user):
     )
     if not claimed:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     snapshot_number = int(
-        analysis.get("snapshot_number", policy["initial_snapshot"])
+        analysis.get("snapshot_number", 1)
     ) + 1
     try:
         replacement = await create_impact_analysis_record(
             analysis["change_set_id"],
             analysis["project_id"],
             user,
-            model_version=policy["rerun_model_template"].format(
+            model_version='evidence_impact_analysis-rerun-{snapshot_number}'.format(
                 snapshot_number=snapshot_number
             ),
             allow_existing=False,
@@ -242,9 +241,9 @@ async def rerun_impact_analysis_record(analysis_id, payload, user):
             analysis_id,
             analysis["project_id"],
             claimed["revision"],
-            policy["rerunning_status"],
+            'RERUNNING',
             {
-                "status": policy["superseded_status"],
+                "status": 'SUPERSEDED',
                 "superseded_by_analysis_id": replacement["_id"],
                 "superseded_at": now(),
                 "superseded_by": user.id,
@@ -256,29 +255,29 @@ async def rerun_impact_analysis_record(analysis_id, payload, user):
                 replacement["_id"], analysis["project_id"]
             )
             raise HTTPException(
-                status_code=409, detail={"code": policy["rerun_conflict_code"]}
+                status_code=409, detail={"code": 'IMPACT_RERUN_CONFLICT'}
             )
     except Exception:
         await impact_analysis_repository.restore_analysis_status(
             analysis_id,
             analysis["project_id"],
-            policy["rerunning_status"],
+            'RERUNNING',
             previous_status,
             now(),
         )
         await impact_analysis_repository.set_change_status(
             analysis["change_set_id"],
             analysis["project_id"],
-            policy["reviewed_status"]
-            if previous_status == policy["reviewed_status"]
-            else policy["analyzed_status"],
+            'REVIEWED'
+            if previous_status == 'REVIEWED'
+            else 'ANALYZED',
             now(),
         )
         raise
     await audit(
         user.id,
-        policy["rerun_event"],
-        policy["entity_type"],
+        'impact_analysis_rerun',
+        'ImpactAnalysis',
         replacement["_id"],
         analysis["project_id"],
         {
@@ -292,27 +291,27 @@ async def rerun_impact_analysis_record(analysis_id, payload, user):
 
 
 async def review_impact_analysis_record(analysis_id, payload, user):
-    policy = domain_policy("impact_analysis")
+    
     analysis = await get_impact_analysis_record(
-        analysis_id, user, policy["close_permission"]
+        analysis_id, user, 'impact.close'
     )
-    await get_project(analysis["project_id"], user, policy["review_permission"])
-    if analysis["status"] == policy["reviewed_status"]:
+    await get_project(analysis["project_id"], user, 'impact.review')
+    if analysis["status"] == 'REVIEWED':
         return analysis
-    if analysis["status"] != policy["review_ready_status"]:
+    if analysis["status"] != 'REVIEW_READY':
         raise HTTPException(
-            status_code=409, detail={"code": policy["invalid_transition_code"]}
+            status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'}
         )
     if analysis["revision"] != payload.expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": analysis["revision"],
             },
         )
     if payload.overrides:
-        await get_project(analysis["project_id"], user, policy["override_permission"])
+        await get_project(analysis["project_id"], user, 'impact.override')
     by_version = {
         item["test_case_version_id"]: dict(item) for item in analysis["affected_test_cases"]
     }
@@ -325,7 +324,7 @@ async def review_impact_analysis_record(analysis_id, payload, user):
         raise HTTPException(
             status_code=422,
             detail={
-                "code": policy["invalid_override_target_code"],
+                "code": 'IMPACT_OVERRIDE_TARGET_INVALID',
                 "test_case_version_ids": unknown,
             },
         )
@@ -350,9 +349,9 @@ async def review_impact_analysis_record(analysis_id, payload, user):
         analysis_id,
         analysis["project_id"],
         payload.expected_revision,
-        policy["review_ready_status"],
+        'REVIEW_READY',
         {
-            "status": policy["reviewed_status"],
+            "status": 'REVIEWED',
             "reviewed_affected_test_cases": list(by_version.values()),
             "review_overrides": override_events,
             "review_note": payload.review_note,
@@ -363,12 +362,12 @@ async def review_impact_analysis_record(analysis_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await impact_analysis_repository.set_change_status(
         analysis["change_set_id"],
         analysis["project_id"],
-        policy["reviewed_status"],
+        'REVIEWED',
         timestamp,
     )
     analysis = await impact_analysis_repository.find_analysis(
@@ -376,8 +375,8 @@ async def review_impact_analysis_record(analysis_id, payload, user):
     )
     await audit(
         user.id,
-        policy["reviewed_event"],
-        policy["entity_type"],
+        'impact_analysis_reviewed',
+        'ImpactAnalysis',
         analysis_id,
         analysis["project_id"],
         {"override_count": len(override_events), "review_note": payload.review_note},
@@ -386,17 +385,17 @@ async def review_impact_analysis_record(analysis_id, payload, user):
 
 
 async def add_impact_review_perspective_record(analysis_id, payload, user):
-    policy = domain_policy("impact_analysis")
+    
     analysis = await get_impact_analysis_record(
-        analysis_id, user, policy["review_permission"]
+        analysis_id, user, 'impact.review'
     )
     note = str(payload.get("review_note") or "").strip()
-    if not policy["review_note_minimum"] <= len(note) <= policy["review_note_maximum"]:
+    if not 2 <= len(note) <= 5000:
         raise HTTPException(
-            status_code=422, detail={"code": policy["review_note_required_code"]}
+            status_code=422, detail={"code": 'IMPACT_REVIEW_NOTE_REQUIRED'}
         )
     perspective = {
-        "_id": new_id(policy["perspective_id_prefix"]),
+        "_id": new_id('IMPR'),
         "project_id": analysis["project_id"],
         "impact_analysis_id": analysis_id,
         "review_note": note,
@@ -406,8 +405,8 @@ async def add_impact_review_perspective_record(analysis_id, payload, user):
     await impact_analysis_repository.insert_perspective(perspective)
     await audit(
         user.id,
-        policy["perspective_added_event"],
-        policy["entity_type"],
+        'impact_review_perspective_added',
+        'ImpactAnalysis',
         analysis_id,
         analysis["project_id"],
     )

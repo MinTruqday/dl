@@ -5,49 +5,48 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.repositories.statistical_quality import statistical_quality_repository
-from src.services.domain_policy import domain_policy
 
 
 def round_measurement(value):
-    return round(value, domain_policy("process_control")["measurement_precision"])
+    return round(value, 6)
 
 def control_statistics(values):
-    policy = domain_policy("process_control")
-    if len(values) < policy["minimum_baseline_points"]:
-        raise ValueError(policy["baseline_insufficient_code"])
+    
+    if len(values) < 5:
+        raise ValueError('STATISTICAL_BASELINE_INSUFFICIENT')
     center = sum(values) / len(values)
     variance = sum((value - center) ** 2 for value in values) / len(values)
     deviation = math.sqrt(variance)
     return (
         round_measurement(center),
         round_measurement(
-            max(0, center - policy["standard_deviation_multiplier"] * deviation)
+            max(0, center - 3 * deviation)
         ),
-        round_measurement(center + policy["standard_deviation_multiplier"] * deviation),
+        round_measurement(center + 3 * deviation),
     )
 
 
 async def get_statistical_analysis(analysis_id, user, permission=None):
-    policy = domain_policy("process_control")
+    
     value = await statistical_quality_repository.find_analysis(analysis_id)
     if not value:
-        raise HTTPException(status_code=404, detail={"code": policy["entity_not_found_code"]})
-    await get_project(value["project_id"], user, permission or policy["read_permission"])
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
+    await get_project(value["project_id"], user, permission or 'statisticalquality.read')
     return value
 
 
 async def list_statistical_analyses(project_id, user):
-    policy = domain_policy("process_control")
-    await get_project(project_id, user, policy["read_permission"])
+    
+    await get_project(project_id, user, 'statisticalquality.read')
     items = await statistical_quality_repository.list_analyses(
-        {"project_id": project_id}, policy["analysis_limit"]
+        {"project_id": project_id}, 1000
     )
     return {"items": items, "total": len(items)}
 
 
 async def create_statistical_baseline(project_id, payload, user):
-    policy = domain_policy("process_control")
-    await get_project(project_id, user, policy["manage_permission"])
+    
+    await get_project(project_id, user, 'statisticalquality.manage')
     if payload.idempotency_key:
         existing = await statistical_quality_repository.find_by_idempotency(
             project_id, payload.idempotency_key
@@ -55,7 +54,7 @@ async def create_statistical_baseline(project_id, payload, user):
         if existing:
             if existing.get("measurement_definition_id") != payload.measurement_definition_id:
                 raise HTTPException(
-                    status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                    status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
                 )
             return existing
     definition = await statistical_quality_repository.find_definition(
@@ -65,18 +64,18 @@ async def create_statistical_baseline(project_id, payload, user):
         project_id,
         payload.measurement_definition_id,
         payload.measurement_snapshot_refs,
-        policy["snapshot_limit"],
+        1000,
     )
     if not definition or len(snapshots) != len(payload.measurement_snapshot_refs):
         raise HTTPException(
-            status_code=422, detail={"code": policy["source_not_in_project_code"]}
+            status_code=422, detail={"code": 'STATISTICAL_SOURCE_NOT_IN_PROJECT'}
         )
     if any(
         not isinstance(item.get("value"), (int, float)) or isinstance(item.get("value"), bool)
         for item in snapshots
     ):
         raise HTTPException(
-            status_code=422, detail={"code": policy["value_not_numeric_code"]}
+            status_code=422, detail={"code": 'STATISTICAL_VALUE_NOT_NUMERIC'}
         )
     values = [float(item["value"]) for item in snapshots]
     center, lower, upper = control_statistics(values)
@@ -92,7 +91,7 @@ async def create_statistical_baseline(project_id, payload, user):
     outliers = [item["snapshot_id"] for item in points if item["outlier"]]
     timestamp = now()
     result = {
-        "_id": new_id(policy["analysis_id_prefix"]),
+        "_id": new_id('SQC'),
         "project_id": project_id,
         **payload.model_dump(),
         "measurement_key": definition.get("key"),
@@ -102,14 +101,14 @@ async def create_statistical_baseline(project_id, payload, user):
         "lower_control_limit": lower,
         "upper_control_limit": upper,
         "outlier_snapshot_refs": outliers,
-        "process_status": policy["unstable_status"] if outliers else policy["stable_status"],
+        "process_status": 'UNSTABLE' if outliers else 'STABLE',
         "alerts": [
-            {"code": policy["instability_alert_code"], "snapshot_id": reference}
+            {"code": 'PROCESS_INSTABILITY_DETECTED', "snapshot_id": reference}
             for reference in outliers
         ],
-        "calculation": policy["calculation_type"],
+        "calculation": 'DETERMINISTIC',
         "special_causes": [],
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -124,8 +123,8 @@ async def create_statistical_baseline(project_id, payload, user):
         raise
     await audit(
         user.id,
-        policy["baseline_event"],
-        policy["entity"],
+        'statistical_baseline_calculated',
+        'StatisticalQualityAnalysis',
         result["_id"],
         project_id,
         {
@@ -139,15 +138,15 @@ async def create_statistical_baseline(project_id, payload, user):
 
 
 async def annotate_special_cause(analysis_id, payload, user):
-    policy = domain_policy("process_control")
-    value = await get_statistical_analysis(analysis_id, user, policy["annotate_permission"])
+    
+    value = await get_statistical_analysis(analysis_id, user, 'statisticalquality.annotate')
     if payload.measurement_snapshot_id not in {item["snapshot_id"] for item in value["points"]}:
         raise HTTPException(
-            status_code=422, detail={"code": policy["point_not_in_window_code"]}
+            status_code=422, detail={"code": 'STATISTICAL_POINT_NOT_IN_WINDOW'}
         )
     timestamp = now()
     cause = {
-        "annotation_id": new_id(policy["annotation_id_prefix"]),
+        "annotation_id": new_id('SQCANN'),
         "measurement_snapshot_id": payload.measurement_snapshot_id,
         "cause": payload.cause,
         "evidence_refs": payload.evidence_refs,
@@ -158,11 +157,11 @@ async def annotate_special_cause(analysis_id, payload, user):
         analysis_id, payload.expected_revision, cause, timestamp
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["annotation_event"],
-        policy["entity"],
+        'statistical_special_cause_annotated',
+        'StatisticalQualityAnalysis',
         analysis_id,
         value["project_id"],
         {"snapshot_id": payload.measurement_snapshot_id, "evidence_refs": payload.evidence_refs},
@@ -171,23 +170,23 @@ async def annotate_special_cause(analysis_id, payload, user):
 
 
 async def compare_statistical_analyses(project_id, payload, user):
-    policy = domain_policy("process_control")
-    await get_project(project_id, user, policy["read_permission"])
+    
+    await get_project(project_id, user, 'statisticalquality.read')
     rows = await statistical_quality_repository.list_analyses_by_ids(
         project_id,
         [payload.before_analysis_id, payload.after_analysis_id],
-        policy["comparison_limit"],
+        2,
     )
     by_id = {item["_id"]: item for item in rows}
     if len(by_id) != 2:
         raise HTTPException(
-            status_code=422, detail={"code": policy["comparison_source_code"]}
+            status_code=422, detail={"code": 'STATISTICAL_COMPARISON_SOURCE_NOT_IN_PROJECT'}
         )
     before = by_id[payload.before_analysis_id]
     after = by_id[payload.after_analysis_id]
     if before.get("measurement_definition_id") != after.get("measurement_definition_id"):
         raise HTTPException(
-            status_code=422, detail={"code": policy["definition_mismatch_code"]}
+            status_code=422, detail={"code": 'STATISTICAL_DEFINITION_MISMATCH'}
         )
     proposal = None
     if payload.process_improvement_id:
@@ -196,7 +195,7 @@ async def compare_statistical_analyses(project_id, payload, user):
         )
         if not proposal:
             raise HTTPException(
-                status_code=422, detail={"code": policy["improvement_not_in_project_code"]}
+                status_code=422, detail={"code": 'IMPROVEMENT_NOT_IN_PROJECT'}
             )
     return {
         "project_id": project_id,
@@ -214,5 +213,5 @@ async def compare_statistical_analyses(project_id, payload, user):
         ),
         "outlier_count_before": len(before.get("outlier_snapshot_refs", [])),
         "outlier_count_after": len(after.get("outlier_snapshot_refs", [])),
-        "calculation": policy["calculation_type"],
+        "calculation": 'DETERMINISTIC',
     }

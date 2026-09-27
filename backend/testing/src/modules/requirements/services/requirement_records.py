@@ -14,13 +14,11 @@ from src.core.common import (
     validate_doc,
 )
 from src.repositories.requirement import requirement_repository
-from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_indexing import (
     index_requirement_version,
     validate_requirement_sources,
 )
 
-RECORD_POLICY = domain_policy("requirement_records")
 
 
 async def persist_acceptance_criteria(version, values):
@@ -28,18 +26,18 @@ async def persist_acceptance_criteria(version, values):
     keys = [value.key if hasattr(value, "key") else value.get("key") for value in values]
     if len(keys) != len(set(keys)):
         raise HTTPException(
-            status_code=422, detail={"code": RECORD_POLICY["duplicate_criterion_code"]}
+            status_code=422, detail={"code": 'DUPLICATE_ACCEPTANCE_CRITERION_KEY'}
         )
     for value in values:
         item = value.model_dump() if hasattr(value, "model_dump") else dict(value)
         if (
-            version.get("status") == RECORD_POLICY["draft_status"]
-            and item.get("status") != RECORD_POLICY["criterion_obsolete_status"]
+            version.get("status") == 'DRAFT'
+            and item.get("status") != 'obsolete'
         ):
-            item["status"] = RECORD_POLICY["criterion_draft_status"]
+            item["status"] = 'draft'
         validate_doc(item["content_doc"])
         criterion = {
-            "_id": new_id(RECORD_POLICY["criterion_id_prefix"]),
+            "_id": new_id('AC'),
             "project_id": version["project_id"],
             "requirement_version_id": version["_id"],
             **item,
@@ -60,12 +58,12 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
     await validate_requirement_sources(project_id, payload.source_refs)
     validate_doc(payload.content_doc)
     requirement_key = payload.requirement_key or await next_key(
-        project_id, RECORD_POLICY["counter_name"], RECORD_POLICY["key_prefix"]
+        project_id, 'requirement', 'REQ'
     )
     timestamp = now()
-    requirement_id = new_id(RECORD_POLICY["requirement_id_prefix"])
+    requirement_id = new_id('REQ')
     version = {
-        "_id": new_id(RECORD_POLICY["version_id_prefix"]),
+        "_id": new_id('REQV'),
         "project_id": project_id,
         "requirement_id": requirement_id,
         "requirement_key": requirement_key,
@@ -84,9 +82,9 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
         "owner_id": payload.owner_id or user.id,
         "acceptance_criterion_ids": [],
         "parent_version_id": None,
-        "change_reason": RECORD_POLICY["initial_change_reason"],
-        "status": RECORD_POLICY["draft_status"],
-        "revision": RECORD_POLICY["initial_revision"],
+        "change_reason": 'Khởi tạo Requirement',
+        "status": 'DRAFT',
+        "revision": 1,
         "origin": origin,
         "created_by": user.id,
         "created_at": timestamp,
@@ -97,7 +95,7 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
         "project_id": project_id,
         "requirement_key": requirement_key,
         "current_version_id": version["_id"],
-        "status": RECORD_POLICY["draft_status"],
+        "status": 'DRAFT',
         "owner_id": payload.owner_id or user.id,
         "tags": payload.tags,
         "created_at": timestamp,
@@ -108,7 +106,7 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
         await requirement_repository.insert_version(version)
     except DuplicateKeyError:
         await requirement_repository.delete_requirement(requirement_id)
-        raise HTTPException(status_code=409, detail={"code": RECORD_POLICY["key_exists_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REQUIREMENT_KEY_EXISTS'})
     try:
         await persist_acceptance_criteria(version, payload.acceptance_criteria)
     except Exception:
@@ -139,13 +137,13 @@ async def list_requirement_records(
 ):
     await get_project(project_id, user, "requirement.read")
     requirements = await requirement_repository.list_requirements(
-        project_id, status, RECORD_POLICY["requirement_limit"]
+        project_id, status, 20000
     )
     version_ids = [
         item.get("current_version_id") for item in requirements if item.get("current_version_id")
     ]
     versions = await requirement_repository.list_versions_by_ids(
-        project_id, version_ids, RECORD_POLICY["requirement_limit"]
+        project_id, version_ids, 20000
     )
     by_id = {item["_id"]: item for item in versions}
     items = [
@@ -155,16 +153,16 @@ async def list_requirement_records(
     confirmed_links = await requirement_repository.list_confirmed_trace_sources(
         project_id,
         version_ids,
-        RECORD_POLICY["confirmed_trace_status"],
-        RECORD_POLICY["requirement_trace_source_type"],
-        RECORD_POLICY["trace_limit"],
+        'CONFIRMED',
+        'requirement_version',
+        50000,
     )
     covered_ids = {item["source_id"] for item in confirmed_links}
     change_sets = await requirement_repository.list_pending_change_targets(
         project_id,
         version_ids,
-        RECORD_POLICY["completed_change_statuses"],
-        RECORD_POLICY["requirement_limit"],
+        ['REVIEWED', 'CLOSED', 'REJECTED'],
+        20000,
     )
     pending_ids = {item["to_version_id"] for item in change_sets}
     for item in items:
@@ -198,7 +196,7 @@ async def list_requirement_records(
         normalized = coverage.lower()
         if normalized not in {"covered", "uncovered"}:
             raise HTTPException(
-                status_code=422, detail={"code": RECORD_POLICY["invalid_coverage_code"]}
+                status_code=422, detail={"code": 'INVALID_COVERAGE_FILTER'}
             )
         items = [item for item in items if item.get("covered") is (normalized == "covered")]
     if source_type:
@@ -223,7 +221,7 @@ async def get_requirement_record(requirement_id, user):
     requirement = await get_project_entity("requirements", requirement_id, user, "requirement.read")
     version = await requirement_repository.find_version(requirement["current_version_id"])
     criteria = await requirement_repository.list_acceptance_criteria(
-        version["_id"], RECORD_POLICY["criterion_limit"]
+        version["_id"], 500
     )
     return {**requirement, "current_version": {**version, "acceptance_criteria": criteria}}
 
@@ -233,19 +231,19 @@ async def update_requirement_draft_record(project_id, requirement_id, payload, u
         "requirements", requirement_id, user, "requirement.update"
     )
     if requirement["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": RECORD_POLICY["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     version = await requirement_repository.find_version(
         requirement["current_version_id"], project_id
     )
-    if not version or version.get("status") != RECORD_POLICY["draft_status"]:
+    if not version or version.get("status") != 'DRAFT':
         raise HTTPException(
-            status_code=409, detail={"code": RECORD_POLICY["immutable_version_code"]}
+            status_code=409, detail={"code": 'IMMUTABLE_REQUIREMENT_VERSION'}
         )
     if version.get("revision") != payload.expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": RECORD_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": version.get("revision"),
             },
         )
@@ -265,7 +263,7 @@ async def update_requirement_draft_record(project_id, requirement_id, payload, u
         if len(keys) != len(set(keys)):
             raise HTTPException(
                 status_code=422,
-                detail={"code": RECORD_POLICY["duplicate_criterion_code"]},
+                detail={"code": 'DUPLICATE_ACCEPTANCE_CRITERION_KEY'},
             )
         for item in criteria:
             validate_doc(item["content_doc"])
@@ -283,18 +281,18 @@ async def update_requirement_draft_record(project_id, requirement_id, payload, u
         )
         if duplicate:
             raise HTTPException(
-                status_code=409, detail={"code": RECORD_POLICY["key_exists_code"]}
+                status_code=409, detail={"code": 'REQUIREMENT_KEY_EXISTS'}
             )
     updated_version = await requirement_repository.update_draft(
         version["_id"],
         project_id,
         payload.expected_revision,
-        RECORD_POLICY["draft_status"],
+        'DRAFT',
         {**changes, "updated_at": now()},
     )
     if not updated_version:
         raise HTTPException(
-            status_code=409, detail={"code": RECORD_POLICY["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     identity_changes = {key: changes[key] for key in ("owner_id", "tags") if key in changes}
     if identity_changes:
@@ -306,7 +304,7 @@ async def update_requirement_draft_record(project_id, requirement_id, payload, u
         )
     if criteria is not None:
         previous_criteria = await requirement_repository.list_acceptance_criteria(
-            version["_id"], RECORD_POLICY["criterion_limit"]
+            version["_id"], 500
         )
         await requirement_repository.delete_acceptance_criteria(version["_id"])
         try:
@@ -320,7 +318,7 @@ async def update_requirement_draft_record(project_id, requirement_id, payload, u
             raise
         updated_version = await requirement_repository.find_version(version["_id"])
         current_criteria = await requirement_repository.list_acceptance_criteria(
-            version["_id"], RECORD_POLICY["criterion_limit"]
+            version["_id"], 500
         )
         updated_version = {**updated_version, "acceptance_criteria": current_criteria}
     parent_changes = {key: changes[key] for key in ("requirement_key",) if key in changes}
@@ -340,7 +338,7 @@ async def create_requirement_version_record(requirement_id, payload, user):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": RECORD_POLICY["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_version_id": requirement["current_version_id"],
             },
         )
@@ -349,7 +347,7 @@ async def create_requirement_version_record(requirement_id, payload, user):
     latest = await requirement_repository.find_latest_version(requirement_id)
     timestamp = now()
     version = {
-        "_id": new_id(RECORD_POLICY["version_id_prefix"]),
+        "_id": new_id('REQV'),
         "project_id": requirement["project_id"],
         "requirement_id": requirement_id,
         "requirement_key": requirement["requirement_key"],
@@ -369,7 +367,7 @@ async def create_requirement_version_record(requirement_id, payload, user):
         "acceptance_criterion_ids": [],
         "parent_version_id": parent["_id"],
         "change_reason": payload.change_reason,
-        "status": RECORD_POLICY["draft_status"],
+        "status": 'DRAFT',
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -386,7 +384,7 @@ async def create_requirement_version_record(requirement_id, payload, user):
     await requirement_repository.activate_version(
         requirement_id,
         version["_id"],
-        RECORD_POLICY["changed_status"],
+        'CHANGED',
         payload.tags,
         payload.owner_id or requirement.get("owner_id"),
         timestamp,
@@ -405,5 +403,5 @@ async def create_requirement_version_record(requirement_id, payload, user):
 async def list_requirement_version_records(requirement_id, user):
     await get_project_entity("requirements", requirement_id, user, "requirement.version.read")
     return await requirement_repository.list_versions(
-        requirement_id, RECORD_POLICY["version_limit"]
+        requirement_id, 500
     )

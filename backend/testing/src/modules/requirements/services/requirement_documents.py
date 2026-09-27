@@ -15,16 +15,14 @@ from src.modules.requirements.services.requirement_import import (
     supported_requirement_formats,
 )
 from src.modules.requirements.services.requirement_workflow import serialized_content
-from src.services.domain_policy import domain_policy
 
 
-DOCUMENT_POLICY = domain_policy("requirement_documents")
 
 
 @dataclass(frozen=True)
 class RequirementDocumentResult:
     data: dict
-    status: str = DOCUMENT_POLICY["result_statuses"]["success"]
+    status: str = 'SUCCESS'
     degraded_mode: str | None = None
 
 
@@ -52,51 +50,47 @@ async def require_document_access(document, user, permission):
 
 
 async def require_document_owner(document, user):
-    await get_project(document["project_id"], user, DOCUMENT_POLICY["permissions"]["read"])
+    await get_project(document["project_id"], user, 'requirement_document.read')
     if user.is_system_admin or document.get("created_by") == user.id:
         return document
     raise HTTPException(status_code=403, detail={"code": "DOCUMENT_ACCESS_MANAGEMENT_DENIED"})
 
 
 async def create_requirement_document_record(project_id, payload, user):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
-    index_statuses = policy["index_statuses"]
-    codes = policy["error_codes"]
-    await get_project(project_id, user, policy["permissions"]["upload"])
+    await get_project(project_id, user, 'requirement_document.upload')
     shared_with = await validate_document_recipients(project_id, payload.shared_with)
     content = serialized_content(payload.content)
     if len(content.encode("utf-8")) > 26214400:
-        raise HTTPException(status_code=413, detail={"code": codes["import_too_large"]})
+        raise HTTPException(status_code=413, detail={"code": 'IMPORT_TOO_LARGE'})
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
     existing = await requirement_document_repository.find_by_hash(project_id, content_hash)
     if existing:
         return existing
     timestamp = now()
     document = {
-        "_id": new_id(policy["id_prefix"]),
+        "_id": new_id('RDOC'),
         "project_id": project_id,
         "filename": payload.filename,
         "format": payload.format,
         "content_hash": content_hash,
         "raw_source": {
-            "storage": policy["embedded_storage"],
+            "storage": 'embedded',
             "content": payload.content,
             "sha256": content_hash,
             "size": len(content.encode("utf-8")),
         },
         "normalized_content": payload.content,
         "normalized_content_hash": content_hash,
-        "source_version": policy["source_version"],
-        "source_type": policy["source_type"],
-        "authority": policy["authority"],
-        "approval_status": policy["approval_status"],
-        "status": statuses["ready"],
+        "source_version": '1',
+        "source_type": 'REFERENCE',
+        "authority": 'PROJECT_REFERENCE',
+        "approval_status": 'DRAFT',
+        "status": 'READY',
         "index_status": "NOT_REQUESTED",
         "visibility": payload.visibility,
         "shared_with": shared_with,
         "ai_enabled": False,
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -112,8 +106,8 @@ async def create_requirement_document_record(project_id, payload, user):
         raise
     await audit(
         user.id,
-        policy["events"]["created"],
-        policy["entity_type"],
+        'requirement_document_created',
+        'RequirementDocument',
         document["_id"],
         project_id,
         {"content_hash": content_hash, "format": payload.format},
@@ -128,16 +122,15 @@ async def store_raw_requirement_source(project_id, document_id, filename, conten
 
 
 async def read_raw_requirement_source(document):
-    policy = DOCUMENT_POLICY
     source = document.get("raw_source") or {}
-    if source.get("storage") == policy["embedded_storage"]:
+    if source.get("storage") == 'embedded':
         content = serialized_content(source.get("content"))
         return content.encode("utf-8")
     object_key = source.get("object_key")
     if not object_key:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["raw_source_unavailable"]},
+            detail={"code": 'RAW_SOURCE_UNAVAILABLE'},
         )
     return await storage_client.read_requirement_source(
         document["project_id"], document["_id"], object_key
@@ -145,24 +138,22 @@ async def read_raw_requirement_source(document):
 
 
 async def index_requirement_document(document):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
     indexed = await index_artifact(
         document["project_id"],
-        policy["artifact_type"],
+        'requirement_document',
         document["_id"],
         document["_id"],
         document.get("title") or document.get("filename") or document["_id"],
         serialized_content(document.get("normalized_content") or ""),
-        document.get("status", statuses["ready"]),
-        document.get("authority", policy["authority"]),
-        document.get("source_version", policy["source_version"]),
+        document.get("status", 'READY'),
+        document.get("authority", 'PROJECT_REFERENCE'),
+        document.get("source_version", '1'),
         module=document.get("module", ""),
         component=document.get("component"),
         product_area=document.get("product_area"),
         release_id=document.get("release_id"),
         external_source_id=document.get("external_source_id"),
-        approval_status=document.get("approval_status", policy["approval_status"]),
+        approval_status=document.get("approval_status", 'DRAFT'),
         owner_id=document.get("owner_id"),
         created_by=document.get("created_by"),
         visibility=document.get("visibility", "private"),
@@ -175,9 +166,9 @@ async def index_requirement_document(document):
     await requirement_document_repository.set_index_result(
         document["_id"],
         document["project_id"],
-        policy["index_statuses"]["indexed"]
+        'INDEXED'
         if indexed
-        else policy["index_statuses"]["failed"],
+        else 'FAILED',
         now(),
     )
     return indexed
@@ -193,26 +184,20 @@ async def upload_requirement_document_record(
     visibility="private",
     shared_with=None,
 ):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
-    index_statuses = policy["index_statuses"]
-    result_statuses = policy["result_statuses"]
-    degraded_modes = policy["degraded_modes"]
-    codes = policy["error_codes"]
     if format not in supported_requirement_formats():
-        raise HTTPException(status_code=422, detail={"code": codes["unsupported_format"]})
+        raise HTTPException(status_code=422, detail={"code": 'UNSUPPORTED_IMPORT_FORMAT'})
     if not data:
-        raise HTTPException(status_code=422, detail={"code": codes["empty_import"]})
+        raise HTTPException(status_code=422, detail={"code": 'EMPTY_IMPORT'})
     if len(data) > 26214400:
-        raise HTTPException(status_code=413, detail={"code": codes["import_too_large"]})
-    await get_project(project_id, user, policy["permissions"]["upload"])
+        raise HTTPException(status_code=413, detail={"code": 'IMPORT_TOO_LARGE'})
+    await get_project(project_id, user, 'requirement_document.upload')
     shared_with = await validate_document_recipients(project_id, shared_with or [])
-    resolved_filename = filename or f"{policy['default_filename_prefix']}.{format}"
+    resolved_filename = filename or f"{'requirements'}.{format}"
     content_hash = hashlib.sha256(data).hexdigest()
     existing = await requirement_document_repository.find_by_hash(project_id, content_hash)
     if existing:
         return RequirementDocumentResult(existing)
-    document_id = new_id(policy["id_prefix"])
+    document_id = new_id('RDOC')
     source = await store_raw_requirement_source(
         project_id,
         document_id,
@@ -229,16 +214,16 @@ async def upload_requirement_document_record(
         "content_hash": source["sha256"],
         "raw_source": source,
         "normalized_content": None,
-        "source_version": policy["source_version"],
-        "source_type": policy["source_type"],
-        "authority": policy["authority"],
-        "approval_status": policy["approval_status"],
-        "status": statuses["uploaded"],
+        "source_version": '1',
+        "source_type": 'REFERENCE',
+        "authority": 'PROJECT_REFERENCE',
+        "approval_status": 'DRAFT',
+        "status": 'UPLOADED',
         "index_status": "NOT_REQUESTED",
         "visibility": visibility,
         "shared_with": shared_with,
         "ai_enabled": False,
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -254,8 +239,8 @@ async def upload_requirement_document_record(
         raise
     await audit(
         user.id,
-        policy["events"]["uploaded"],
-        policy["entity_type"],
+        'requirement_document_uploaded',
+        'RequirementDocument',
         document_id,
         project_id,
         {
@@ -271,7 +256,7 @@ async def upload_requirement_document_record(
             document_id,
             project_id,
             {
-                "status": statuses["parse_failed"],
+                "status": 'PARSE_FAILED',
                 "parse_error_type": type(error).__name__,
                 "updated_at": now(),
             },
@@ -280,14 +265,14 @@ async def upload_requirement_document_record(
         document = await requirement_document_repository.find(document_id, project_id)
         await audit(
             user.id,
-            policy["events"]["parse_failed"],
-            policy["entity_type"],
+            'requirement_document_parse_failed',
+            'RequirementDocument',
             document_id,
             project_id,
             {"error_type": type(error).__name__},
         )
         return RequirementDocumentResult(
-            document, result_statuses["degraded"], degraded_modes["parser"]
+            document, 'DEGRADED', 'PARSER_FAILED'
         )
     normalized = serialized_content(content)
     await requirement_document_repository.update(
@@ -296,7 +281,7 @@ async def upload_requirement_document_record(
         {
             "normalized_content": content,
             "normalized_content_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
-            "status": statuses["ready"],
+            "status": 'READY',
             "updated_at": now(),
         },
         increment_revision=True,
@@ -306,7 +291,7 @@ async def upload_requirement_document_record(
 
 
 async def list_requirement_document_records(project_id, status, query_text, limit, user):
-    await get_project(project_id, user, DOCUMENT_POLICY["permissions"]["read"])
+    await get_project(project_id, user, 'requirement_document.read')
     query = {"project_id": project_id}
     if status:
         query["status"] = status.upper()
@@ -327,43 +312,38 @@ async def list_requirement_document_records(project_id, status, query_text, limi
 
 
 async def get_requirement_document_record(document_id, user, permission=None):
-    policy = DOCUMENT_POLICY
     document = await get_project_entity(
-        policy["collection"],
+        'requirement_documents',
         document_id,
         user,
-        permission or policy["permissions"]["read"],
+        permission or 'requirement_document.read',
     )
     return await require_document_access(
-        document, user, permission or policy["permissions"]["read"]
+        document, user, permission or 'requirement_document.read'
     )
 
 
 async def update_requirement_document_record(document_id, payload, user):
-    policy = DOCUMENT_POLICY
-    result_statuses = policy["result_statuses"]
-    degraded_modes = policy["degraded_modes"]
-    codes = policy["error_codes"]
     document = await get_requirement_document_record(
-        document_id, user, policy["permissions"]["manage"]
+        document_id, user, 'knowledge.manage'
     )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     resulting = {**document, **changes}
-    if resulting.get("approval_status") == policy["statuses"]["approved"] and (
+    if resulting.get("approval_status") == 'APPROVED' and (
         not resulting.get("approved_by") or not resulting.get("approved_at")
     ):
         raise HTTPException(
             status_code=422,
-            detail={"code": codes["approval_provenance_required"]},
+            detail={"code": 'APPROVAL_PROVENANCE_REQUIRED'},
         )
     if changes.get("release_id"):
         if not await requirement_document_repository.release_exists(
             document["project_id"], changes["release_id"]
         ):
-            raise HTTPException(status_code=422, detail={"code": codes["invalid_release"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_RELEASE'})
     if document.get("ai_enabled"):
-        changes["index_status"] = policy["index_statuses"]["pending"]
+        changes["index_status"] = 'PENDING'
     updated = await requirement_document_repository.update_with_revision(
         document_id,
         document["project_id"],
@@ -371,7 +351,7 @@ async def update_requirement_document_record(document_id, payload, user):
         {**changes, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     indexed = True
     if updated.get("ai_enabled"):
         indexed = await index_requirement_document(updated)
@@ -380,25 +360,25 @@ async def update_requirement_document_record(document_id, payload, user):
     )
     await audit(
         user.id,
-        policy["events"]["metadata_updated"],
-        policy["entity_type"],
+        'requirement_document_metadata_updated',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"fields": sorted(changes)},
     )
     return RequirementDocumentResult(
         updated,
-        result_statuses["success"] if indexed else result_statuses["degraded"],
-        None if indexed else degraded_modes["vector"],
+        'SUCCESS' if indexed else 'DEGRADED',
+        None if indexed else 'DEGRADED_VECTOR',
     )
 
 
 async def update_requirement_document_access(document_id, payload, user):
     document = await get_project_entity(
-        DOCUMENT_POLICY["collection"],
+        'requirement_documents',
         document_id,
         user,
-        DOCUMENT_POLICY["permissions"]["read"],
+        'requirement_document.read',
     )
     await require_document_owner(document, user)
     shared_with = await validate_document_recipients(
@@ -421,7 +401,7 @@ async def update_requirement_document_access(document_id, payload, user):
     await audit(
         user.id,
         "requirement_document.access_updated",
-        DOCUMENT_POLICY["entity_type"],
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"visibility": payload.visibility, "shared_with": shared_with},
@@ -431,10 +411,10 @@ async def update_requirement_document_access(document_id, payload, user):
 
 async def update_requirement_document_ai_read(document_id, payload, user):
     document = await get_project_entity(
-        DOCUMENT_POLICY["collection"],
+        'requirement_documents',
         document_id,
         user,
-        DOCUMENT_POLICY["permissions"]["read"],
+        'requirement_document.read',
     )
     await require_document_owner(document, user)
     if payload.ai_enabled and not document.get("normalized_content"):
@@ -464,7 +444,7 @@ async def update_requirement_document_ai_read(document_id, payload, user):
     await audit(
         user.id,
         "requirement_document.ai_read_updated",
-        DOCUMENT_POLICY["entity_type"],
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"ai_enabled": payload.ai_enabled},
@@ -475,16 +455,13 @@ async def update_requirement_document_ai_read(document_id, payload, user):
 
 
 async def reindex_requirement_document_record(document_id, user):
-    policy = DOCUMENT_POLICY
-    result_statuses = policy["result_statuses"]
-    degraded_modes = policy["degraded_modes"]
     document = await get_requirement_document_record(
-        document_id, user, policy["permissions"]["manage"]
+        document_id, user, 'knowledge.manage'
     )
-    if document.get("status") == policy["statuses"]["archived"]:
+    if document.get("status") == 'ARCHIVED':
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["document_archived"]},
+            detail={"code": 'DOCUMENT_ARCHIVED'},
         )
     if not document.get("ai_enabled"):
         return RequirementDocumentResult(document)
@@ -500,26 +477,24 @@ async def reindex_requirement_document_record(document_id, user):
     )
     await audit(
         user.id,
-        policy["events"]["reindexed"],
-        policy["entity_type"],
+        'requirement_document_reindexed',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"indexed": indexed},
     )
     return RequirementDocumentResult(
         updated,
-        result_statuses["success"] if indexed else result_statuses["degraded"],
-        None if indexed else degraded_modes["vector"],
+        'SUCCESS' if indexed else 'DEGRADED',
+        None if indexed else 'DEGRADED_VECTOR',
     )
 
 
 async def archive_requirement_document_record(document_id, payload, user):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
     document = await get_requirement_document_record(
-        document_id, user, policy["permissions"]["archive"]
+        document_id, user, 'requirement_document.archive'
     )
-    if document.get("status") == statuses["archived"]:
+    if document.get("status") == 'ARCHIVED':
         return document
     timestamp = now()
     updated = await requirement_document_repository.update_with_revision(
@@ -527,8 +502,8 @@ async def archive_requirement_document_record(document_id, payload, user):
         document["project_id"],
         payload.expected_revision,
         {
-            "status_before_archive": document.get("status", statuses["ready"]),
-            "status": statuses["archived"],
+            "status_before_archive": document.get("status", 'READY'),
+            "status": 'ARCHIVED',
             "archived_by": user.id,
             "archived_at": timestamp,
             "archive_reason": payload.reason,
@@ -538,14 +513,14 @@ async def archive_requirement_document_record(document_id, payload, user):
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["revision_conflict"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     if updated.get("ai_enabled"):
         await remove_artifact(updated["project_id"], updated["_id"])
     await audit(
         user.id,
-        policy["events"]["archived"],
-        policy["entity_type"],
+        'requirement_document_archived',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"reason": payload.reason},
@@ -554,12 +529,10 @@ async def archive_requirement_document_record(document_id, payload, user):
 
 
 async def restore_requirement_document_record(document_id, payload, user):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
     document = await get_requirement_document_record(
-        document_id, user, policy["permissions"]["restore"]
+        document_id, user, 'requirement_document.restore'
     )
-    if document.get("status") != statuses["archived"]:
+    if document.get("status") != 'ARCHIVED':
         return document
     timestamp = now()
     updated = await requirement_document_repository.update_with_revision(
@@ -567,23 +540,23 @@ async def restore_requirement_document_record(document_id, payload, user):
         document["project_id"],
         payload.expected_revision,
         {
-            "status": document.get("status_before_archive", statuses["ready"]),
+            "status": document.get("status_before_archive", 'READY'),
             "restored_by": user.id,
             "restored_at": timestamp,
             "restore_reason": payload.reason,
             "updated_at": timestamp,
         },
-        status=statuses["archived"],
+        status='ARCHIVED',
     )
     if not updated:
         raise HTTPException(
             status_code=409,
-            detail={"code": policy["error_codes"]["revision_conflict"]},
+            detail={"code": 'REVISION_CONFLICT'},
         )
     await audit(
         user.id,
-        policy["events"]["restored"],
-        policy["entity_type"],
+        'requirement_document_restored',
+        'RequirementDocument',
         document_id,
         document["project_id"],
         {"reason": payload.reason},
@@ -592,31 +565,26 @@ async def restore_requirement_document_record(document_id, payload, user):
 
 
 async def retry_requirement_document_parse_record(document_id, payload, user):
-    policy = DOCUMENT_POLICY
-    statuses = policy["statuses"]
-    result_statuses = policy["result_statuses"]
-    degraded_modes = policy["degraded_modes"]
-    codes = policy["error_codes"]
     document = await get_requirement_document_record(
-        document_id, user, policy["permissions"]["extract"]
+        document_id, user, 'requirement_document.extract'
     )
-    if document.get("status") == statuses["ready"]:
+    if document.get("status") == 'READY':
         return RequirementDocumentResult(document)
-    if document.get("status") != statuses["parse_failed"]:
+    if document.get("status") != 'PARSE_FAILED':
         raise HTTPException(
             status_code=409,
-            detail={"code": codes["document_not_retryable"], "status": document.get("status")},
+            detail={"code": 'DOCUMENT_NOT_RETRYABLE', "status": document.get("status")},
         )
     claimed = await requirement_document_repository.claim_status(
         document_id,
         document["project_id"],
-        statuses["parse_failed"],
+        'PARSE_FAILED',
         payload.expected_revision,
-        statuses["parsing"],
+        'PARSING',
         now(),
     )
     if claimed.matched_count != 1:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     try:
         data = await read_raw_requirement_source(document)
         content = extract_file_content(data, document["format"])
@@ -624,9 +592,9 @@ async def retry_requirement_document_parse_record(document_id, payload, user):
         await requirement_document_repository.transition_status(
             document_id,
             document["project_id"],
-            statuses["parsing"],
+            'PARSING',
             {
-                "status": statuses["parse_failed"],
+                "status": 'PARSE_FAILED',
                 "parse_error_type": type(error).__name__,
                 "updated_at": now(),
             },
@@ -636,34 +604,34 @@ async def retry_requirement_document_parse_record(document_id, payload, user):
         )
         await audit(
             user.id,
-            policy["events"]["parse_retry_failed"],
-            policy["entity_type"],
+            'requirement_document_parse_retry_failed',
+            'RequirementDocument',
             document_id,
             document["project_id"],
             {"error_type": type(error).__name__},
         )
         return RequirementDocumentResult(
-            failed, result_statuses["degraded"], degraded_modes["parser"]
+            failed, 'DEGRADED', 'PARSER_FAILED'
         )
     normalized = serialized_content(content)
     updated = await requirement_document_repository.transition_status(
         document_id,
         document["project_id"],
-        statuses["parsing"],
+        'PARSING',
         {
             "normalized_content": content,
             "normalized_content_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
-            "status": statuses["ready"],
+            "status": 'READY',
             "parse_error_type": None,
             "updated_at": now(),
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["parse_retry_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'PARSE_RETRY_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["parse_retry_succeeded"],
-        policy["entity_type"],
+        'requirement_document_parse_retry_succeeded',
+        'RequirementDocument',
         document_id,
         document["project_id"],
     )

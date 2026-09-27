@@ -1,26 +1,25 @@
 from fastapi import HTTPException
 
 from src.repositories.test_completion import find_project_settings, list_monitoring_overrides
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.exit_criteria import evaluate_exit_criteria
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 def default_completion_recommendation(gate, unresolved_items, residual_risks):
-    readiness = COMPLETION_POLICY["readiness"]
-    if gate == readiness["fail_status"] or any(
-        item.get("severity") in set(COMPLETION_POLICY["blocking_severities"])
+    
+    if gate == 'FAIL' or any(
+        item.get("severity") in set(['blocker', 'critical', 'BLOCKER', 'CRITICAL'])
         for item in unresolved_items
         if isinstance(item, dict)
     ):
-        return COMPLETION_POLICY["recommendations"]["failed"]
-    if gate != readiness["pass_status"]:
-        return COMPLETION_POLICY["recommendations"]["incomplete"]
+        return 'NOT_READY'
+    if gate != 'PASS':
+        return 'CONTINUE_TESTING'
     if residual_risks:
-        return COMPLETION_POLICY["recommendations"]["residual_risk"]
-    return COMPLETION_POLICY["recommendations"]["ready"]
+        return 'READY_WITH_RISK'
+    return 'READY_FOR_RELEASE'
 
 
 async def reevaluate_completion_exit_criteria(plan, snapshot, completed_run_ids):
@@ -43,40 +42,40 @@ async def reevaluate_completion_exit_criteria(plan, snapshot, completed_run_ids)
 
 
 async def validate_completion_readiness(report):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    readiness = policy["readiness"]
-    codes = policy["error_codes"]
+    
+    
+    
+    
     project = await find_project_settings(report["project_id"]) or {}
     settings = project.get("settings") or {}
     mandatory_incomplete = [
         item.get("run_id")
         for item in (report.get("scope_snapshot") or {}).get("runs", [])
-        if item.get("mandatory", True) and item.get("status") != statuses["completed"]
+        if item.get("mandatory", True) and item.get("status") != 'COMPLETED'
     ]
     if mandatory_incomplete:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": codes["report_not_ready"],
-                "reason_code": codes["mandatory_runs_incomplete"],
+                "code": 'COMPLETION_REPORT_NOT_READY',
+                "reason_code": 'COMPLETION_MANDATORY_RUNS_INCOMPLETE',
                 "run_ids": mandatory_incomplete,
             },
         )
     blocker_threshold = int(
         settings.get(
-            readiness["blocker_threshold_setting"],
-            readiness["default_blocker_threshold"],
+            'completion_open_blocker_threshold',
+            0,
         )
-        or readiness["default_blocker_threshold"]
+        or 0
     )
     open_blockers = int((report.get("defect_summary") or {}).get("open_blocker", 0) or 0)
     if open_blockers > blocker_threshold:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": codes["report_not_ready"],
-                "reason_code": codes["blocker_threshold_exceeded"],
+                "code": 'COMPLETION_REPORT_NOT_READY',
+                "reason_code": 'COMPLETION_OPEN_BLOCKER_THRESHOLD_EXCEEDED',
                 "open_blockers": open_blockers,
                 "threshold": blocker_threshold,
             },
@@ -84,27 +83,27 @@ async def validate_completion_readiness(report):
     ownerless_critical = [
         item.get("risk_id")
         for item in report.get("residual_risks", [])
-        if item.get("severity") == readiness["critical_severity"]
+        if item.get("severity") == 'CRITICAL'
         and not item.get("owner_id")
     ]
     if ownerless_critical:
         raise HTTPException(
             status_code=409,
-            detail={"code": codes["risk_owner_required"], "risk_ids": ownerless_critical},
+            detail={"code": 'RESIDUAL_RISK_OWNER_REQUIRED', "risk_ids": ownerless_critical},
         )
     failed_criteria = [
         item.get("criterion_id")
         for item in report.get(
             "exit_criteria_evaluations", report.get("exit_criteria_evaluation", [])
         )
-        if item.get("status") == readiness["fail_status"]
+        if item.get("status") == 'FAIL'
     ]
     if failed_criteria:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": codes["report_not_ready"],
-                "reason_code": codes["exit_criteria_failed"],
+                "code": 'COMPLETION_REPORT_NOT_READY',
+                "reason_code": 'COMPLETION_EXIT_CRITERIA_FAILED',
                 "criterion_ids": failed_criteria,
             },
         )
@@ -117,8 +116,8 @@ async def validate_completion_readiness(report):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": codes["report_not_ready"],
-                "reason_code": codes["unexecuted_reason_required"],
+                "code": 'COMPLETION_REPORT_NOT_READY',
+                "reason_code": 'COMPLETION_UNEXECUTED_SCOPE_REASON_REQUIRED',
                 "item_ids": reasonless_scope,
             },
         )

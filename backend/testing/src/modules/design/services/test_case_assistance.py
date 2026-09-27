@@ -1,7 +1,6 @@
 from src.core.common import audit, get_project, get_project_entity
 from src.repositories.analysis import analysis_repository
 from src.core.ai_assistance import ai_contract_metadata
-from src.services.domain_policy import domain_policy
 from src.modules.design.services.generation import generate_requirement_drafts
 from src.modules.design.services.linters import duplicate_score
 from src.modules.design.services.test_case_records import create_test_case_draft_record
@@ -36,18 +35,18 @@ async def generate_test_case_draft_records(version_id, payload, user):
 async def find_duplicate_test_case_records(project_id, user):
     await get_project(project_id, user, "testcase.duplicate_check")
     await get_project(project_id, user, "ai.run_duplicate_check")
-    policy = domain_policy("duplicate_detection")
+    
     versions = await analysis_repository.list_active_test_case_versions(
-        project_id, policy["test_case_active_status"]
+        project_id, 'ACTIVE'
     )
     pairs = []
     for index, left in enumerate(versions):
         for right in versions[index + 1 :]:
             score, reasons = duplicate_score(left, right)
-            if score >= policy["test_case_minimum"]:
+            if score >= 0.72:
                 pairs.append(
                     {"left": left, "right": right, "similarity": score, "reasons": reasons}
                 )
     return sorted(pairs, key=lambda item: item["similarity"], reverse=True)[
-        : policy["maximum_pairs"]
+        : 100
     ]

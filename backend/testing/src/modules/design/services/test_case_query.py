@@ -3,10 +3,9 @@ from fastapi import HTTPException
 from src.core.common import audit, get_project, get_project_entity, now, page_payload, sort_spec
 from src.schemas.contracts.design import TestCaseDraftCreate
 from src.repositories.test_design import test_design_repository
-from src.services.domain_policy import domain_policy
 from src.modules.design.services.test_case_records import create_test_case_draft_record
 
-QUERY_POLICY = domain_policy("test_case_query")
+
 
 
 async def list_test_case_records(
@@ -30,27 +29,27 @@ async def list_test_case_records(
     page_size=50,
     sort="-updated_at",
 ):
-    await get_project(project_id, user, QUERY_POLICY["read_permission"])
+    await get_project(project_id, user, 'testcase.read')
     tests = await test_design_repository.list_cases(
-        project_id, status, QUERY_POLICY["case_limit"]
+        project_id, status, 20000
     )
     version_ids = [item["current_version_id"] for item in tests if item.get("current_version_id")]
     versions = await test_design_repository.list_case_versions_by_ids(
-        project_id, version_ids, QUERY_POLICY["case_limit"]
+        project_id, version_ids, 20000
     )
     by_id = {item["_id"]: item for item in versions}
     items = [{**item, "current_version": by_id.get(item.get("current_version_id"))} for item in tests]
     traces = await test_design_repository.list_confirmed_case_traces(
         project_id,
         version_ids,
-        QUERY_POLICY["confirmed_trace_status"],
-        QUERY_POLICY["trace_limit"],
+        'CONFIRMED',
+        50000,
     )
     trace_counts = {}
     for trace in traces:
         trace_counts[trace["target_id"]] = trace_counts.get(trace["target_id"], 0) + 1
     results = await test_design_repository.list_case_results(
-        project_id, version_ids, QUERY_POLICY["result_limit"]
+        project_id, version_ids, 50000
     )
     latest_results = {}
     for result in results:
@@ -59,14 +58,14 @@ async def list_test_case_records(
     if suite_id:
         suite = await test_design_repository.find_suite(suite_id, project_id)
         if not suite:
-            raise HTTPException(status_code=422, detail={"code": QUERY_POLICY["invalid_suite_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'INVALID_TEST_SUITE'})
         suite_version_ids = set(suite.get("test_case_version_ids", []))
     requirement_version_ids = set()
     if requirement_id:
         requirement_version_ids = {
             item["_id"]
             for item in await test_design_repository.list_requirement_version_ids(
-                project_id, requirement_id, QUERY_POLICY["requirement_version_limit"]
+                project_id, requirement_id, 1000
             )
         }
         requirement_version_ids.add(requirement_id)
@@ -76,9 +75,9 @@ async def list_test_case_records(
         item["trace_count"] = trace_counts.get(version_id, 0)
         item["latest_result"] = latest_results.get(version_id)
         item["stale_status"] = version.get("stale_status") or (
-            QUERY_POLICY["stale_status"]
-            if item.get("status") == QUERY_POLICY["needs_update_status"]
-            else QUERY_POLICY["fresh_status"]
+            'STALE'
+            if item.get("status") == 'NEEDS_UPDATE'
+            else 'FRESH'
         )
         item["owner_id"] = version.get("owner_id")
         item["tags"] = sorted(set(item.get("tags", [])) | set(version.get("tags", [])))
@@ -146,12 +145,12 @@ def matches_test_case(item, terms):
 
 
 async def list_test_case_drafts(project_id, limit, user):
-    await get_project(project_id, user, QUERY_POLICY["read_permission"])
+    await get_project(project_id, user, 'testcase.read')
     return await test_design_repository.list_case_drafts(project_id, limit)
 
 
 async def get_test_case_record(test_case_id, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["read_permission"])
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.read')
     version = await test_design_repository.find_case_version(
         test_case.get("current_version_id"), test_case["project_id"]
     )
@@ -159,30 +158,30 @@ async def get_test_case_record(test_case_id, user):
 
 
 async def clone_test_case_record(test_case_id, payload, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["clone_permission"])
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.clone')
     if test_case.get("current_version_id") != payload.expected_current_version_id:
         raise HTTPException(
             status_code=409,
-            detail={"code": QUERY_POLICY["revision_conflict_code"], "current_version_id": test_case.get("current_version_id")},
+            detail={"code": 'REVISION_CONFLICT', "current_version_id": test_case.get("current_version_id")},
         )
     version = await test_design_repository.find_case_version(
         payload.expected_current_version_id, test_case["project_id"]
     )
     if not version or version.get("test_case_id") != test_case_id:
-        raise HTTPException(status_code=422, detail={"code": QUERY_POLICY["version_not_found_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'TEST_CASE_VERSION_NOT_FOUND'})
     source_evidence = [
         *version.get("source_evidence", []),
         {
-            "artifact_type": QUERY_POLICY["version_artifact_type"],
+            "artifact_type": 'test_case_version',
             "artifact_id": test_case_id,
             "artifact_version_id": version["_id"],
-            "relation": QUERY_POLICY["clone_relation"],
+            "relation": 'cloned_from',
         },
     ]
     result = await create_test_case_draft_record(
         test_case["project_id"],
         TestCaseDraftCreate(
-            title=payload.title or f"{version['title']}{QUERY_POLICY['clone_title_suffix']}",
+            title=payload.title or f"{version['title']}{' bản sao'}",
             type=version["type"],
             priority=version["priority"],
             risk=version["risk"],
@@ -195,22 +194,22 @@ async def clone_test_case_record(test_case_id, payload, user):
             tags=version.get("tags", []),
             techniques=version.get("techniques", []),
             automation_status=version.get(
-                "automation_status", QUERY_POLICY["manual_automation_status"]
+                "automation_status", 'manual'
             ),
             attachments=version.get("attachments", []),
             data_set_version_ids=version.get("data_set_version_ids", []),
             requirement_version_ids=version.get("requirement_version_ids", []),
             acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
             scenario_id=version.get("scenario_id"),
-            origin=QUERY_POLICY["clone_origin"],
+            origin='clone',
             source_evidence=source_evidence,
         ),
         user,
     )
     await audit(
         user.id,
-        QUERY_POLICY["cloned_event"],
-        QUERY_POLICY["draft_entity"],
+        'test_case_cloned',
+        'TestCaseDraft',
         result["_id"],
         test_case["project_id"],
         {"source_test_case_id": test_case_id, "source_version_id": version["_id"]},
@@ -219,28 +218,28 @@ async def clone_test_case_record(test_case_id, payload, user):
 
 
 async def list_test_case_versions(test_case_id, user):
-    await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["version_read_permission"])
+    await get_project_entity('test_cases', test_case_id, user, 'testcase.version.read')
     return await test_design_repository.list_versions_for_case(
-        test_case_id, QUERY_POLICY["version_limit"]
+        test_case_id, 500
     )
 
 
 async def create_test_case_version_draft_record(test_case_id, payload, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["version_create_permission"])
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.version.create')
     expected_version_id = str(payload.get("expected_current_version_id") or "")
     if expected_version_id != test_case.get("current_version_id"):
         raise HTTPException(
             status_code=409,
-            detail={"code": QUERY_POLICY["revision_conflict_code"], "current_version_id": test_case.get("current_version_id")},
+            detail={"code": 'REVISION_CONFLICT', "current_version_id": test_case.get("current_version_id")},
         )
     reason = str(payload.get("change_reason") or "").strip()
     if len(reason) < 2:
-        raise HTTPException(status_code=422, detail={"code": QUERY_POLICY["change_reason_required_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'CHANGE_REASON_REQUIRED'})
     version = await test_design_repository.find_case_version(
         expected_version_id, test_case["project_id"]
     )
     if not version or version.get("test_case_id") != test_case_id:
-        raise HTTPException(status_code=404, detail={"code": QUERY_POLICY["entity_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
     result = await create_test_case_draft_record(
         test_case["project_id"],
         TestCaseDraftCreate(
@@ -258,21 +257,21 @@ async def create_test_case_version_draft_record(test_case_id, payload, user):
             tags=version.get("tags", []),
             techniques=version.get("techniques", []),
             automation_status=version.get(
-                "automation_status", QUERY_POLICY["manual_automation_status"]
+                "automation_status", 'manual'
             ),
             attachments=version.get("attachments", []),
             data_set_version_ids=version.get("data_set_version_ids", []),
             requirement_version_ids=version.get("requirement_version_ids", []),
             acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
             scenario_id=version.get("scenario_id"),
-            origin=QUERY_POLICY["manual_origin"],
+            origin='manual',
             source_evidence=[
                 *version.get("source_evidence", []),
                 {
-                    "artifact_type": QUERY_POLICY["version_artifact_type"],
+                    "artifact_type": 'test_case_version',
                     "artifact_id": test_case_id,
                     "artifact_version_id": version["_id"],
-                    "relation": QUERY_POLICY["new_version_relation"],
+                    "relation": 'new_version_from',
                 },
             ],
         ),
@@ -287,13 +286,13 @@ async def create_test_case_version_draft_record(test_case_id, payload, user):
 
 
 async def diff_test_case_version_records(test_case_id, from_version, to_version, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["version_read_permission"])
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.version.read')
     versions = await test_design_repository.list_selected_case_versions(
         test_case["project_id"], test_case_id, [from_version, to_version]
     )
     by_id = {item["_id"]: item for item in versions}
     if from_version not in by_id or to_version not in by_id:
-        raise HTTPException(status_code=404, detail={"code": QUERY_POLICY["entity_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
     before = by_id[from_version]
     after = by_id[to_version]
     fields = [
@@ -314,24 +313,24 @@ async def diff_test_case_version_records(test_case_id, from_version, to_version,
 
 
 async def set_test_case_obsolete(test_case_id, payload, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["archive_permission"])
-    if test_case.get("status") == QUERY_POLICY["obsolete_status"]:
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.archive')
+    if test_case.get("status") == 'OBSOLETE':
         return test_case
     if test_case.get("status") not in {
-        QUERY_POLICY["active_status"],
-        QUERY_POLICY["needs_update_status"],
+        'ACTIVE',
+        'NEEDS_UPDATE',
     }:
-        raise HTTPException(status_code=409, detail={"code": QUERY_POLICY["invalid_transition_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if payload.get("expected_current_version_id") != test_case.get("current_version_id"):
-        raise HTTPException(status_code=409, detail={"code": QUERY_POLICY["revision_conflict_code"], "current_version_id": test_case.get("current_version_id")})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT', "current_version_id": test_case.get("current_version_id")})
     reason = str(payload.get("reason") or "").strip()
     if len(reason) < 2:
-        raise HTTPException(status_code=422, detail={"code": QUERY_POLICY["obsolete_reason_required_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'OBSOLETE_REASON_REQUIRED'})
     timestamp = now()
     updated = await test_design_repository.set_case_lifecycle_status(
         test_case_id,
         test_case["project_id"],
-        QUERY_POLICY["obsolete_status"],
+        'OBSOLETE',
         {
             "obsolete_reason": reason,
             "obsolete_by": user.id,
@@ -339,24 +338,24 @@ async def set_test_case_obsolete(test_case_id, payload, user):
             "updated_at": timestamp,
         },
     )
-    await audit(user.id, QUERY_POLICY["obsolete_event"], QUERY_POLICY["case_entity"], test_case_id, test_case["project_id"], {"reason": reason})
+    await audit(user.id, 'test_case_marked_obsolete', 'TestCase', test_case_id, test_case["project_id"], {"reason": reason})
     return updated
 
 
 async def restore_test_case_record(test_case_id, payload, user):
-    test_case = await get_project_entity(QUERY_POLICY["case_collection"], test_case_id, user, QUERY_POLICY["restore_permission"])
-    if test_case.get("status") != QUERY_POLICY["obsolete_status"]:
+    test_case = await get_project_entity('test_cases', test_case_id, user, 'testcase.restore')
+    if test_case.get("status") != 'OBSOLETE':
         return test_case
     if payload.get("expected_current_version_id") != test_case.get("current_version_id"):
-        raise HTTPException(status_code=409, detail={"code": QUERY_POLICY["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     reason = str(payload.get("reason") or "").strip()
     if len(reason) < 2:
-        raise HTTPException(status_code=422, detail={"code": QUERY_POLICY["restore_reason_required_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'RESTORE_REASON_REQUIRED'})
     timestamp = now()
     updated = await test_design_repository.set_case_lifecycle_status(
         test_case_id,
         test_case["project_id"],
-        QUERY_POLICY["active_status"],
+        'ACTIVE',
         {
             "restore_reason": reason,
             "restored_by": user.id,
@@ -364,5 +363,5 @@ async def restore_test_case_record(test_case_id, payload, user):
             "updated_at": timestamp,
         },
     )
-    await audit(user.id, QUERY_POLICY["restored_event"], QUERY_POLICY["case_entity"], test_case_id, test_case["project_id"], {"reason": reason})
+    await audit(user.id, 'test_case_restored', 'TestCase', test_case_id, test_case["project_id"], {"reason": reason})
     return updated

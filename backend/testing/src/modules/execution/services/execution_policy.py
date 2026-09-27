@@ -4,18 +4,42 @@ from bson.json_util import dumps as bson_dumps
 from fastapi import HTTPException
 
 from src.repositories.execution_policy import execution_policy_repository
-from src.services.domain_policy import domain_policy
 
 
-EXECUTION_POLICY = domain_policy("execution")
-FROZEN_RUN_SCOPE_FIELDS = tuple(EXECUTION_POLICY["frozen_run_scope_fields"])
+
+FROZEN_RUN_SCOPE_FIELDS = tuple(['test_plan_id',
+ 'test_suite_ids',
+ 'test_case_version_ids',
+ 'environment',
+ 'environment_id',
+ 'release',
+ 'release_id',
+ 'build',
+ 'build_id',
+ 'device_matrix_id',
+ 'device_profile_keys',
+ 'device_matrix_snapshot'])
 DEFECT_TRANSITIONS = {
     status: set(targets)
-    for status, targets in EXECUTION_POLICY["defect_transitions"].items()
+    for status, targets in {'NEW': ['CONFIRMED', 'REJECTED', 'DUPLICATE'],
+ 'CONFIRMED': ['IN_PROGRESS', 'REJECTED', 'DUPLICATE'],
+ 'IN_PROGRESS': ['RESOLVED'],
+ 'RESOLVED': ['READY_FOR_RETEST', 'REOPENED'],
+ 'READY_FOR_RETEST': [],
+ 'REOPENED': ['IN_PROGRESS', 'RESOLVED'],
+ 'CLOSED': ['REOPENED'],
+ 'REJECTED': ['REOPENED'],
+ 'DUPLICATE': ['REOPENED']}.items()
 }
 EXECUTION_TRANSITIONS = {
     status: set(targets)
-    for status, targets in EXECUTION_POLICY["result_transitions"].items()
+    for status, targets in {'NOT_RUN': ['IN_PROGRESS', 'SKIPPED'],
+ 'IN_PROGRESS': ['PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE'],
+ 'PASS': [],
+ 'FAIL': [],
+ 'BLOCKED': [],
+ 'SKIPPED': [],
+ 'NOT_APPLICABLE': []}.items()
 }
 
 
@@ -29,46 +53,46 @@ def frozen_run_scope_hash(scope):
 
 
 async def enforce_not_applicable_policy(project_id, status, step_results=None):
-    uses_not_applicable = status == EXECUTION_POLICY["not_applicable_status"] or any(
-        item.status == EXECUTION_POLICY["not_applicable_status"] for item in step_results or []
+    uses_not_applicable = status == 'NOT_APPLICABLE' or any(
+        item.status == 'NOT_APPLICABLE' for item in step_results or []
     )
     if not uses_not_applicable:
         return
     project = await execution_policy_repository.project_settings(project_id)
     if not project or not (project.get("settings") or {}).get(
-        EXECUTION_POLICY["not_applicable_setting"],
-        EXECUTION_POLICY["not_applicable_setting_default"],
+        'allow_not_applicable_results',
+        False,
     ):
         raise HTTPException(
             status_code=409,
-            detail={"code": EXECUTION_POLICY["not_applicable_disabled_code"]},
+            detail={"code": 'NOT_APPLICABLE_POLICY_DISABLED'},
         )
 
 
 async def select_resume_execution(run, user):
     version_ids = list(run.get("test_case_version_ids", []))
     membership = await execution_policy_repository.active_membership_role(
-        run["project_id"], user.id, EXECUTION_POLICY["active_membership_status"]
+        run["project_id"], user.id, 'ACTIVE'
     )
     assignments = run.get("test_case_assignments") or {}
     eligible_ids = version_ids
-    assignment_mode = EXECUTION_POLICY["project_scope_mode"]
-    if membership and membership.get("project_role") == EXECUTION_POLICY["tester_role"]:
+    
+    if membership and membership.get("project_role") == 'TESTER':
         explicit_ids = [
             version_id for version_id in version_ids if assignments.get(version_id) == user.id
         ]
         if explicit_ids:
             eligible_ids = explicit_ids
-            assignment_mode = EXECUTION_POLICY["case_assignment_mode"]
+            
         elif run.get("assignee_id") == user.id:
             eligible_ids = [
                 version_id for version_id in version_ids if version_id not in assignments
             ]
-            assignment_mode = EXECUTION_POLICY["run_assignment_mode"]
+            
         elif run.get("assignee_id") or assignments:
             raise HTTPException(
                 status_code=403,
-                detail={"code": EXECUTION_POLICY["assignment_required_code"]},
+                detail={"code": 'TEST_RUN_ASSIGNMENT_REQUIRED'},
             )
     results = await execution_policy_repository.list_results(run["_id"], eligible_ids)
     by_version = {item["test_case_version_id"]: item for item in results}
@@ -77,7 +101,7 @@ async def select_resume_execution(run, user):
             version_id
             for version_id in eligible_ids
             if by_version.get(version_id, {}).get("status")
-            == EXECUTION_POLICY["in_progress_status"]
+            == 'IN_PROGRESS'
         ),
         None,
     )
@@ -87,7 +111,7 @@ async def select_resume_execution(run, user):
                 version_id
                 for version_id in eligible_ids
                 if by_version.get(version_id, {}).get("status")
-                == EXECUTION_POLICY["not_run_status"]
+                == 'NOT_RUN'
             ),
             None,
         )
@@ -106,10 +130,10 @@ async def select_resume_execution(run, user):
         "total_count": len(version_ids),
         "remaining_count": sum(
             by_version.get(version_id, {}).get("status")
-            in set(EXECUTION_POLICY["remaining_statuses"])
+            in set(['NOT_RUN', 'IN_PROGRESS'])
             for version_id in eligible_ids
         ),
-        "assignment_mode": assignment_mode,
+        "assignment_mode": 'RUN_ASSIGNMENT',
     }
 
 
@@ -135,7 +159,7 @@ async def replay_resume_event(run, event):
         "total_count": event.get("total_count", len(run.get("test_case_version_ids", []))),
         "remaining_count": event.get("remaining_count", 0),
         "assignment_mode": event.get(
-            "assignment_mode", EXECUTION_POLICY["project_scope_mode"]
+            "assignment_mode", 'PROJECT_SCOPE'
         ),
         "scope_fingerprint": event.get("scope_fingerprint"),
     }
@@ -148,5 +172,5 @@ async def validate_test_versions(project_id, version_ids):
     if count != len(set(version_ids)):
         raise HTTPException(
             status_code=422,
-            detail={"code": EXECUTION_POLICY["missing_test_version_code"]},
+            detail={"code": 'CROSS_PROJECT_OR_MISSING_TEST_VERSION'},
         )

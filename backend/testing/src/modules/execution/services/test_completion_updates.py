@@ -3,42 +3,41 @@ from fastapi import HTTPException
 from src.core.common import audit, new_id, now
 from src.repositories.test_completion import update_completion
 from src.modules.execution.services.test_completion_query import get_completion_for_user, validate_people
-from src.services.domain_policy import domain_policy
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 async def add_completion_residual_risk(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     report = await get_completion_for_user(
-        report_id, user, policy["permissions"]["risk_manage"]
+        report_id, user, 'testcompletion.risk.manage'
     )
-    if report["status"] != statuses["draft"]:
-        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+    if report["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'})
     risk = payload.risk.model_dump()
-    if risk["treatment"] != statuses["pending"]:
+    if risk["treatment"] != 'PENDING':
         raise HTTPException(
-            status_code=422, detail={"code": codes["risk_decision_endpoint_required"]}
+            status_code=422, detail={"code": 'RESIDUAL_RISK_DECISION_ENDPOINT_REQUIRED'}
         )
     if any(item.get("risk_id") == risk["risk_id"] for item in report.get("residual_risks", [])):
-        raise HTTPException(status_code=409, detail={"code": codes["risk_duplicate"]})
+        raise HTTPException(status_code=409, detail={"code": 'RESIDUAL_RISK_DUPLICATE'})
     await validate_people(report["project_id"], [risk["owner_id"]])
     updated = await update_completion(
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {statuses["draft"]},
+        {'DRAFT'},
         {"residual_risks": [*report.get("residual_risks", []), risk], "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["risk_added"],
-        policy["entity_type"],
+        'test_completion_residual_risk_added',
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"risk_id": risk["risk_id"]},
@@ -47,33 +46,33 @@ async def add_completion_residual_risk(report_id, payload, user):
 
 
 async def add_completion_lesson(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     report = await get_completion_for_user(
-        report_id, user, policy["permissions"]["lesson_create"]
+        report_id, user, 'testcompletion.lesson.create'
     )
-    if report["status"] != statuses["draft"]:
-        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+    if report["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'})
     lesson = {
         **payload.lesson.model_dump(),
         "lesson_id": payload.lesson.lesson_id
-        or new_id(policy["id_prefixes"]["lesson"]),
+        or new_id('LESSON'),
     }
     await validate_people(report["project_id"], [lesson.get("owner_id")])
     updated = await update_completion(
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {statuses["draft"]},
+        {'DRAFT'},
         {"lessons_learned": [*report.get("lessons_learned", []), lesson], "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["lesson_added"],
-        policy["entity_type"],
+        'test_completion_lesson_added',
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {"lesson_id": lesson["lesson_id"], "category": lesson["category"]},
@@ -82,14 +81,14 @@ async def add_completion_lesson(report_id, payload, user):
 
 
 async def manage_completion_handover(report_id, payload, user):
-    policy = COMPLETION_POLICY
-    statuses = policy["statuses"]
-    codes = policy["error_codes"]
+    
+    
+    
     report = await get_completion_for_user(
-        report_id, user, policy["permissions"]["handover_manage"]
+        report_id, user, 'testcompletion.handover.manage'
     )
-    if report["status"] != statuses["draft"]:
-        raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
+    if report["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_IMMUTABLE'})
     item = payload.item.model_dump()
     identity = (item["artifact_type"], item["artifact_id"], item.get("artifact_version_id"))
     handover = [
@@ -103,15 +102,15 @@ async def manage_completion_handover(report_id, payload, user):
         report_id,
         report["project_id"],
         payload.expected_revision,
-        {statuses["draft"]},
+        {'DRAFT'},
         {"testware_handover": handover, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": codes["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_REPORT_REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["handover_managed"],
-        policy["entity_type"],
+        'test_completion_handover_managed',
+        'TestCompletionReport',
         report_id,
         report["project_id"],
         {

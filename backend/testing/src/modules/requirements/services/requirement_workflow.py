@@ -2,10 +2,9 @@ import hashlib
 import json
 
 from src.core.common import plain_text
-from src.services.domain_policy import domain_policy
 
 
-WORKFLOW_POLICY = domain_policy("requirement_workflow")
+
 
 
 def text_doc(value):
@@ -33,23 +32,25 @@ def normalized_business_rule_lines(values):
             continue
         prefix, separator, remainder = text.partition(":")
         identity = prefix.upper()
-        prefix_length = len(WORKFLOW_POLICY["business_rule_prefix"])
+        prefix_length = len('BR-')
         if (
             separator
-            and identity.startswith(WORKFLOW_POLICY["business_rule_prefix"])
+            and identity.startswith('BR-')
             and identity[prefix_length:].isdigit()
         ):
             normalized.append(f"{identity}: {remainder.strip()}")
         else:
-            normalized.append(f"{WORKFLOW_POLICY['business_rule_prefix']}{index:02d}: {text}")
+            normalized.append(f"{'BR-'}{index:02d}: {text}")
     return normalized
 
 
 def prepare_requirement_ai_suggestion(candidate, acceptance_criteria):
     suggestion = dict(candidate)
     patch = {}
-    mappings = WORKFLOW_POLICY["revised_field_mappings"]
-    for source, target in mappings.items():
+    
+    for source, target in {'revised_actors': 'actors',
+ 'revised_business_rules': 'business_rules',
+ 'revised_dependencies': 'dependencies'}.items():
         if suggestion.get(source) is not None:
             patch[target] = (
                 normalized_business_rule_lines(suggestion[source])
@@ -63,7 +64,7 @@ def prepare_requirement_ai_suggestion(candidate, acceptance_criteria):
                 "key": item["key"],
                 "content_doc": text_doc(item["content"]),
                 "status": existing.get(item["key"], {}).get(
-                    "status", WORKFLOW_POLICY["default_criterion_status"]
+                    "status", 'draft'
                 ),
                 "source_span": existing.get(item["key"], {}).get("source_span"),
             }
@@ -106,11 +107,11 @@ def prepare_requirement_candidates(job_id, candidates):
     for index, value in enumerate(candidates):
         candidate = dict(value)
         candidate["candidate_id"] = candidate.get("candidate_id") or (
-            f"{job_id}{WORKFLOW_POLICY['candidate_suffix']}{index + 1}"
+            f"{job_id}{'-CAND-'}{index + 1}"
         )
-        candidate["candidate_status"] = WORKFLOW_POLICY["active_candidate_status"]
+        candidate["candidate_status"] = 'ACTIVE'
         candidate["candidate_revision"] = int(
-            candidate.get("candidate_revision", WORKFLOW_POLICY["initial_candidate_revision"])
+            candidate.get("candidate_revision", 1)
         )
         candidate["parent_candidate_ids"] = list(candidate.get("parent_candidate_ids", []))
         prepared.append(candidate)

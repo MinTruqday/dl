@@ -14,31 +14,30 @@ from src.repositories.test_completion import (
     list_results,
     list_runs,
 )
-from src.services.domain_policy import domain_policy
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 async def completion_sources(project_id, snapshot, plan, build_id):
-    policy = COMPLETION_POLICY
-    codes = policy["error_codes"]
-    source_filters = policy["source_filters"]
+    
+    
+    
     release_id = snapshot.get("release_id") or plan.get("release_id")
     if not release_id:
-        raise HTTPException(status_code=409, detail={"code": codes["release_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'COMPLETION_RELEASE_REQUIRED'})
     release = await find_release(project_id, release_id)
     if not release:
-        raise HTTPException(status_code=422, detail={"code": codes["invalid_release"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_RELEASE'})
     build = await find_build(project_id, build_id)
     if not build:
-        raise HTTPException(status_code=422, detail={"code": codes["invalid_build"]})
+        raise HTTPException(status_code=422, detail={"code": 'INVALID_BUILD'})
     if build.get("release_id") and build["release_id"] != release_id:
-        raise HTTPException(status_code=422, detail={"code": codes["build_release_mismatch"]})
+        raise HTTPException(status_code=422, detail={"code": 'BUILD_RELEASE_MISMATCH'})
     strategy_version_id = plan.get("strategy_version_id")
     if not strategy_version_id:
         raise HTTPException(
-            status_code=409, detail={"code": codes["strategy_version_required"]}
+            status_code=409, detail={"code": 'COMPLETION_STRATEGY_VERSION_REQUIRED'}
         )
     strategy = await find_strategy(project_id, strategy_version_id)
     if (
@@ -47,7 +46,7 @@ async def completion_sources(project_id, snapshot, plan, build_id):
         or strategy.get("snapshot_hash") != plan.get("strategy_snapshot_hash")
     ):
         raise HTTPException(
-            status_code=409, detail={"code": codes["strategy_snapshot_invalid"]}
+            status_code=409, detail={"code": 'COMPLETION_STRATEGY_SNAPSHOT_INVALID'}
         )
     source_state = snapshot.get("source_state") or {}
     run_states = [item for item in source_state.get("runs", []) if item.get("id")]
@@ -105,19 +104,19 @@ async def completion_sources(project_id, snapshot, plan, build_id):
     )
     environments = await list_environments(project_id, environment_ids)
     data_sets = await list_active_data_sets(
-        project_id, source_filters["data_set_excluded_status"]
+        project_id, 'ARCHIVED'
     )
     automation = await list_approved_automation(
-        project_id, source_filters["automation_statuses"]
+        project_id, ['APPROVED', 'EXPORTED']
     )
     status_reports = await list_approved_status_reports(
-        project_id, release_id, source_filters["status_report_statuses"]
+        project_id, release_id, ['APPROVED', 'PUBLISHED']
     )
     archived_testcases = await list_archived_test_cases(
-        project_id, source_filters["archived_test_case_statuses"]
+        project_id, ['ARCHIVED', 'OBSOLETE']
     )
     archived_documents = await list_archived_requirement_documents(
-        project_id, source_filters["archived_requirement_document_status"]
+        project_id, 'ARCHIVED'
     )
     return (
         release,
@@ -136,7 +135,7 @@ async def completion_sources(project_id, snapshot, plan, build_id):
 
 
 def handover_records(artifact_type, items, storage_prefix):
-    handover_policy = COMPLETION_POLICY["handover"]
+    
     records = []
     for raw_item in items:
         item = raw_item if isinstance(raw_item, dict) else {"id": raw_item}
@@ -148,11 +147,11 @@ def handover_records(artifact_type, items, storage_prefix):
                 "artifact_type": artifact_type,
                 "artifact_id": artifact_id,
                 "artifact_version_id": artifact_id
-                if artifact_type in set(handover_policy["versioned_artifact_types"])
+                if artifact_type in set(['TEST_CASE_VERSION', 'STATUS_REPORT'])
                 else None,
-                "handover_to": handover_policy["destination"],
+                "handover_to": 'Dự án',
                 "storage_location": f"{storage_prefix}/{artifact_id}",
-                "status": handover_policy["ready_status"],
+                "status": 'READY',
                 "note": "",
             }
         )

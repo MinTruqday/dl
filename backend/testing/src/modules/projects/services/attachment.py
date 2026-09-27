@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from src.core.auth import CurrentUser
 from src.core.common import audit, get_project, get_project_entity, get_project_role, new_id, now
 from src.repositories.test_design import test_design_repository
-from src.services.domain_policy import domain_policy
 from src.schemas.contracts.requirements import (
     AttachmentCreate,
     AttachmentModeration,
@@ -11,8 +10,6 @@ from src.schemas.contracts.requirements import (
 
 
 class AttachmentService:
-    artifact_collections = domain_policy("test_design")["attachment_artifact_collections"]
-    policy = domain_policy("attachment")
 
     @staticmethod
     async def register(project_id: str, payload: AttachmentCreate, user: CurrentUser):
@@ -20,37 +17,47 @@ class AttachmentService:
         if (payload.artifact_type is None) != (payload.artifact_id is None):
             raise HTTPException(
                 status_code=422,
-                detail={"code": AttachmentService.policy["reference_incomplete_code"]},
+                detail={"code": 'ATTACHMENT_REFERENCE_INCOMPLETE'},
             )
         if payload.artifact_type and payload.artifact_id:
-            collection = AttachmentService.artifact_collections.get(payload.artifact_type)
+            collection = {
+                "requirement": "requirements",
+                "requirement_document": "requirement_documents",
+                "test_case_draft": "test_case_drafts",
+                "test_case_version": "test_case_versions",
+                "test_result": "test_results",
+                "defect": "defects",
+                "review_comment": "review_comments",
+                "test_status_report": "test_status_reports",
+                "test_completion_report": "test_completion_reports",
+            }.get(payload.artifact_type)
             if not collection:
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": AttachmentService.policy["artifact_type_invalid_code"]},
+                    detail={"code": 'ATTACHMENT_ARTIFACT_TYPE_INVALID'},
                 )
             if not await test_design_repository.artifact_exists(
                 collection, project_id, payload.artifact_id
             ):
                 raise HTTPException(
                     status_code=404,
-                    detail={"code": AttachmentService.policy["artifact_not_found_code"]},
+                    detail={"code": 'ATTACHMENT_ARTIFACT_NOT_FOUND'},
                 )
         existing = await test_design_repository.find_active_attachment(
             project_id,
             user.id,
             payload.url,
-            AttachmentService.policy["active_status"],
+            'ACTIVE',
         )
         if existing:
             return existing
         attachment = {
-            "_id": new_id(AttachmentService.policy["id_prefix"]),
+            "_id": new_id('ATT'),
             "project_id": project_id,
             "owner_id": user.id,
             **payload.model_dump(),
-            "status": AttachmentService.policy["active_status"],
-            "revision": AttachmentService.policy["initial_revision"],
+            "status": 'ACTIVE',
+            "revision": 1,
             "created_at": now(),
             "updated_at": now(),
         }
@@ -73,11 +80,11 @@ class AttachmentService:
         user: CurrentUser,
     ):
         await get_project(project_id, user, "attachment.read")
-        query = {"project_id": project_id, "status": AttachmentService.policy["active_status"]}
+        query = {"project_id": project_id, "status": 'ACTIVE'}
         role = await get_project_role(project_id, user.id)
-        if role == AttachmentService.policy["viewer_role"] and artifact_type == "defect":
+        if role == 'VIEWER' and artifact_type == "defect":
             return []
-        if role == AttachmentService.policy["viewer_role"]:
+        if role == 'VIEWER':
             query["artifact_type"] = {"$ne": "defect"}
         if artifact_type:
             query["artifact_type"] = artifact_type
@@ -88,7 +95,7 @@ class AttachmentService:
     @staticmethod
     async def delete(attachment_id: str, user: CurrentUser):
         attachment = await get_project_entity(
-            AttachmentService.policy["collection"], attachment_id, user, "attachment.read"
+            'attachments', attachment_id, user, "attachment.read"
         )
         permission = (
             "attachment.delete_own_unreferenced"
@@ -99,7 +106,7 @@ class AttachmentService:
         if attachment.get("artifact_id"):
             raise HTTPException(
                 status_code=409,
-                detail={"code": AttachmentService.policy["referenced_immutable_code"]},
+                detail={"code": 'ATTACHMENT_REFERENCED_IMMUTABLE'},
             )
         updated = await AttachmentService._mark_deleted(attachment_id, attachment, user.id)
         await audit(
@@ -114,13 +121,13 @@ class AttachmentService:
         user: CurrentUser,
     ):
         attachment = await get_project_entity(
-            AttachmentService.policy["collection"], attachment_id, user, "attachment.moderate"
+            'attachments', attachment_id, user, "attachment.moderate"
         )
-        if attachment.get("status") == AttachmentService.policy["deleted_status"]:
+        if attachment.get("status") == 'DELETED':
             return {
                 "deleted": True,
                 "attachment_id": attachment_id,
-            }, attachment.get("revision", AttachmentService.policy["initial_revision"])
+            }, attachment.get("revision", 1)
         updated = await AttachmentService._mark_deleted(
             attachment_id, attachment, user.id, payload.reason
         )
@@ -142,7 +149,7 @@ class AttachmentService:
         reason: str | None = None,
     ):
         changes = {
-            "status": AttachmentService.policy["deleted_status"],
+            "status": 'DELETED',
             "deleted_by": actor_id,
             "deleted_at": now(),
             "updated_at": now(),
@@ -152,13 +159,13 @@ class AttachmentService:
         updated = await test_design_repository.mark_attachment_deleted(
             attachment_id,
             attachment["project_id"],
-            attachment.get("revision", AttachmentService.policy["initial_revision"]),
-            AttachmentService.policy["active_status"],
+            attachment.get("revision", 1),
+            'ACTIVE',
             changes,
         )
         if not updated:
             raise HTTPException(
                 status_code=409,
-                detail={"code": AttachmentService.policy["revision_conflict_code"]},
+                detail={"code": 'ATTACHMENT_REVISION_CONFLICT'},
             )
         return updated

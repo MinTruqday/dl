@@ -58,11 +58,18 @@ export async function testingStreamRequest(path, options = {}) {
       ...requestOptions.headers,
     },
   });
+  const messageOf = (body, fallback) =>
+    body?.error?.message ||
+    body?.detail?.message ||
+    body?.detail?.code ||
+    body?.error?.code ||
+    body?.detail ||
+    fallback;
   if (!response.ok || !response.body) {
     const body = await response.json().catch(() => null);
-    const error = new Error(body?.error?.message || "Không thể hoàn tất yêu cầu AI");
+    const error = new Error(messageOf(body, "Không thể hoàn tất yêu cầu AI"));
     error.status = response.status;
-    error.code = body?.error?.code;
+    error.code = body?.error?.code || body?.detail?.code;
     throw error;
   }
   notify("streaming");
@@ -87,9 +94,9 @@ export async function testingStreamRequest(path, options = {}) {
     if (event.type === "result") result = event.data;
     if (event.type === "error") {
       const body = event.data;
-      const error = new Error(body?.error?.message || "Không thể hoàn tất yêu cầu AI");
-      error.status = event.status;
-      error.code = body?.error?.code || event.code;
+      const error = new Error(messageOf(body, event.code || "Không thể hoàn tất yêu cầu AI"));
+      error.status = event.status || response.status;
+      error.code = body?.error?.code || body?.detail?.code || event.code;
       throw error;
     }
   };

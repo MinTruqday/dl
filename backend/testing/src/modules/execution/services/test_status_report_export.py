@@ -4,10 +4,8 @@ import json
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from src.services.domain_policy import domain_policy
 
 
-EXPORT_POLICY = domain_policy("status_report_export")
 
 
 def display(value):
@@ -89,41 +87,41 @@ def export_pdf(report):
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfgen import canvas
 
-    font_name = EXPORT_POLICY["pdf_fallback_font"]
-    font_path = EXPORT_POLICY["pdf_font_path"]
+    font_name = 'Helvetica'
+    font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
     try:
-        pdfmetrics.registerFont(TTFont(EXPORT_POLICY["pdf_font_name"], font_path))
-        font_name = EXPORT_POLICY["pdf_font_name"]
+        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+        font_name = 'DejaVuSans'
     except (OSError, ValueError):
-        font_name = EXPORT_POLICY["pdf_fallback_font"]
+        font_name = 'Helvetica'
     stream = io.BytesIO()
     page = canvas.Canvas(stream, pagesize=A4)
     width, height = A4
-    margin = EXPORT_POLICY["pdf_margin"]
+    margin = 42
     y = height - margin
-    page.setFont(font_name, EXPORT_POLICY["pdf_title_size"])
+    page.setFont(font_name, 13)
     page.drawString(margin, y, "Báo cáo trạng thái kiểm thử")
-    y -= EXPORT_POLICY["pdf_title_gap"]
-    page.setFont(font_name, EXPORT_POLICY["pdf_body_size"])
+    y -= 28
+    page.setFont(font_name, 8)
     for label, value in report_rows(report):
         text = f"{label}: {value}"
         while text:
-            line = text[: EXPORT_POLICY["pdf_line_length"]]
-            text = text[EXPORT_POLICY["pdf_line_length"] :]
+            line = text[: 120]
+            text = text[120 :]
             if y < margin:
                 page.showPage()
-                page.setFont(font_name, EXPORT_POLICY["pdf_body_size"])
+                page.setFont(font_name, 8)
                 y = height - margin
             page.drawString(margin, y, line)
-            y -= EXPORT_POLICY["pdf_line_height"]
+            y -= 12
     page.save()
     return stream.getvalue()
 
 
 def export_status_report(report, format_name):
     exporters = dict(
-        zip(EXPORT_POLICY["supported_formats"], (export_csv, export_docx, export_pdf))
+        zip(['csv', 'docx', 'pdf'], (export_csv, export_docx, export_pdf))
     )
     if format_name not in exporters:
-        raise ValueError(EXPORT_POLICY["unsupported_format_code"])
+        raise ValueError('STATUS_REPORT_EXPORT_FORMAT_UNSUPPORTED')
     return exporters[format_name](report)

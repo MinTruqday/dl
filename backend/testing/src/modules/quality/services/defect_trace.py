@@ -4,44 +4,47 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project_entity, new_id, now, optimistic_patch
 from src.repositories.defect import defect_repository
 from src.modules.quality.services.defect_analysis import build_defect_trace_candidates
-from src.services.domain_policy import domain_policy
 
 
 async def suggest_defect_trace_record(project_id, defect_id, payload, user):
-    policy = domain_policy("defect")
+    
     defect = await get_project_entity(
-        policy["collection"], defect_id, user, policy["trace_suggest_permission"]
+        'defects', defect_id, user, 'ai.suggest_bug_trace'
     )
     if defect["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     existing = await defect_repository.find_ai_result_by_idempotency(
         project_id, payload.idempotency_key
     )
     if existing:
         if (
             existing.get("subject_id") != defect_id
-            or existing.get("result_type") != policy["trace_result_type"]
+            or existing.get("result_type") != 'BUG_TRACE_SUGGESTION'
         ):
             raise HTTPException(
-                status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
             )
         return existing
     requirement_candidates, test_case_candidates = await build_defect_trace_candidates(defect)
     result = {
-        "_id": new_id(policy["ai_result_id_prefix"]),
+        "_id": new_id('AIR'),
         "project_id": project_id,
-        "result_type": policy["trace_result_type"],
-        "subject_type": policy["trace_subject_type"],
+        "result_type": 'BUG_TRACE_SUGGESTION',
+        "subject_type": 'defect',
         "subject_id": defect_id,
-        "status": policy["success_status"],
+        "status": 'SUCCESS',
         "candidate_only": True,
         "human_confirmation_required": True,
         "requirement_candidates": requirement_candidates,
         "test_case_candidates": test_case_candidates,
-        "model": policy["trace_model"],
+        "model": {'provider': 'hybrid-deterministic',
+ 'model': 'defect_trace_evidence',
+ 'prompt_version': 'defect_trace',
+ 'tool_schema_version': '1',
+ 'retrieval_version': 'project_evidence'},
         "idempotency_key": payload.idempotency_key,
-        "review_status": policy["pending_review_status"],
-        "revision": policy["initial_revision"],
+        "review_status": 'PENDING',
+        "revision": 1,
         "created_by": user.id,
         "created_at": now(),
         "updated_at": now(),
@@ -56,16 +59,16 @@ async def suggest_defect_trace_record(project_id, defect_id, payload, user):
             raise
         if (
             existing.get("subject_id") != defect_id
-            or existing.get("result_type") != policy["trace_result_type"]
+            or existing.get("result_type") != 'BUG_TRACE_SUGGESTION'
         ):
             raise HTTPException(
-                status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
             )
         return existing
     await audit(
         user.id,
-        policy["trace_suggested_event"],
-        policy["ai_result_entity"],
+        'bug_trace_suggestion_generated',
+        'AIResult',
         result["_id"],
         project_id,
         {
@@ -78,27 +81,27 @@ async def suggest_defect_trace_record(project_id, defect_id, payload, user):
 
 
 async def list_defect_trace_candidates(defect_id, user):
-    policy = domain_policy("defect")
+    
     defect = await get_project_entity(
-        policy["collection"], defect_id, user, policy["trace_suggest_permission"]
+        'defects', defect_id, user, 'ai.suggest_bug_trace'
     )
     _, test_case_candidates = await build_defect_trace_candidates(defect)
     return test_case_candidates
 
 
 async def update_defect_trace_record(project_id, defect_id, payload, user):
-    policy = domain_policy("defect")
-    trace_policy = domain_policy("defect_trace")
+    
+    
     defect = await get_project_entity(
-        policy["collection"],
+        'defects',
         defect_id,
         user,
-        policy["trace_manage_permission"],
-        assigned_role=policy["developer_role"],
+        'defect.trace.manage',
+        assigned_role='DEVELOPER',
         assigned_user_field="assignee",
     )
     if defect["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     changes = {}
     fields = payload.model_fields_set
     if "linked_test_result_id" in fields:
@@ -106,11 +109,11 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
             result = await defect_repository.find_test_result(
                 payload.linked_test_result_id,
                 project_id,
-                policy["failed_result_status"],
+                'FAIL',
             )
             if not result:
                 raise HTTPException(
-                    status_code=422, detail={"code": policy["failed_result_required_code"]}
+                    status_code=422, detail={"code": 'DEFECT_REQUIRES_FAILED_RESULT'}
                 )
         changes["linked_test_result_id"] = payload.linked_test_result_id
     if "linked_test_case_version_id" in fields:
@@ -120,7 +123,7 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
             )
             if not version:
                 raise HTTPException(
-                    status_code=422, detail={"code": policy["invalid_test_version_code"]}
+                    status_code=422, detail={"code": 'INVALID_TEST_CASE_VERSION'}
                 )
         changes["linked_test_case_version_id"] = payload.linked_test_case_version_id
     if "linked_requirement_version_ids" in fields:
@@ -131,7 +134,7 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
         if count != len(requirement_ids):
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["invalid_requirement_version_code"]},
+                detail={"code": 'INVALID_REQUIREMENT_VERSION'},
             )
         changes["linked_requirement_version_ids"] = requirement_ids
     ai_result = None
@@ -139,12 +142,12 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
         ai_result = await defect_repository.find_ai_result(
             payload.ai_result_id,
             project_id,
-            policy["trace_result_type"],
+            'BUG_TRACE_SUGGESTION',
             defect_id,
         )
         if not ai_result:
             raise HTTPException(
-                status_code=422, detail={"code": policy["invalid_ai_result_code"]}
+                status_code=422, detail={"code": 'INVALID_AI_RESULT'}
             )
         candidates = ai_result.get("requirement_candidates", []) + ai_result.get(
             "test_case_candidates", []
@@ -155,7 +158,7 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
             or not set(payload.accepted_candidate_ids) <= candidate_ids
         ):
             raise HTTPException(
-                status_code=422, detail={"code": policy["invalid_ai_candidate_code"]}
+                status_code=422, detail={"code": 'INVALID_AI_CANDIDATE'}
             )
         accepted = {
             item["candidate_id"]: item
@@ -165,12 +168,12 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
         accepted_requirements = {
             item["artifact_id"]
             for item in accepted.values()
-            if item.get("artifact_type") == trace_policy["requirement_artifact_type"]
+            if item.get("artifact_type") == 'requirement_version'
         }
         accepted_test_cases = {
             item["artifact_id"]
             for item in accepted.values()
-            if item.get("artifact_type") == trace_policy["test_case_artifact_type"]
+            if item.get("artifact_type") == 'test_case_version'
         }
         new_requirements = set(changes.get("linked_requirement_version_ids", [])) - set(
             defect.get("linked_requirement_version_ids", [])
@@ -182,10 +185,10 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
             and selected_test_case not in accepted_test_cases
         ):
             raise HTTPException(
-                status_code=422, detail={"code": policy["ai_candidate_mismatch_code"]}
+                status_code=422, detail={"code": 'AI_CANDIDATE_CHANGE_MISMATCH'}
             )
     updated = await optimistic_patch(
-        policy["collection"], defect_id, project_id, payload.expected_revision, changes
+        'defects', defect_id, project_id, payload.expected_revision, changes
     )
     if ai_result:
         timestamp = now()
@@ -193,7 +196,7 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
             ai_result["_id"],
             project_id,
             {
-                "review_status": policy["reviewed_status"],
+                "review_status": 'REVIEWED',
                 "accepted_candidate_ids": list(dict.fromkeys(payload.accepted_candidate_ids)),
                 "review_reason": payload.reason,
                 "reviewed_by": user.id,
@@ -203,8 +206,8 @@ async def update_defect_trace_record(project_id, defect_id, payload, user):
         )
     await audit(
         user.id,
-        policy["trace_updated_event"],
-        policy["entity"],
+        'defect_trace_updated',
+        'Defect',
         defect_id,
         project_id,
         {

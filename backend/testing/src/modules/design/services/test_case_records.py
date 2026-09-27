@@ -11,7 +11,6 @@ from src.core.common import (
     plain_text,
 )
 from src.repositories.test_design import test_design_repository
-from src.services.domain_policy import domain_policy
 
 
 def project_test_text(value):
@@ -37,7 +36,7 @@ async def validate_design_sources(
     scenario_id=None,
     test_condition_ids=None,
 ):
-    policy = domain_policy("test_case_records")
+    
     requirement_ids = list(dict.fromkeys(requirement_version_ids or []))
     criterion_ids = list(dict.fromkeys(acceptance_criterion_ids or []))
     if requirement_ids:
@@ -46,7 +45,7 @@ async def validate_design_sources(
         )
         if count != len(requirement_ids):
             raise HTTPException(
-                status_code=422, detail={"code": policy["missing_requirement_code"]}
+                status_code=422, detail={"code": 'CROSS_PROJECT_OR_MISSING_REQUIREMENT_VERSION'}
             )
     if criterion_ids:
         query = {"project_id": project_id, "_id": {"$in": criterion_ids}}
@@ -55,7 +54,7 @@ async def validate_design_sources(
         count = await test_design_repository.count_acceptance_criteria(query)
         if count != len(criterion_ids):
             raise HTTPException(
-                status_code=422, detail={"code": policy["missing_criterion_code"]}
+                status_code=422, detail={"code": 'CROSS_PROJECT_OR_MISSING_ACCEPTANCE_CRITERION'}
             )
     if scenario_id:
         scenario = await test_design_repository.find_scenario(
@@ -63,7 +62,7 @@ async def validate_design_sources(
         )
         if not scenario:
             raise HTTPException(
-                status_code=422, detail={"code": policy["missing_scenario_code"]}
+                status_code=422, detail={"code": 'CROSS_PROJECT_OR_MISSING_TEST_SCENARIO'}
             )
     condition_ids = list(dict.fromkeys(test_condition_ids or []))
     if condition_ids:
@@ -71,7 +70,7 @@ async def validate_design_sources(
         query = {
             "project_id": project_id,
             "_id": {"$in": condition_ids},
-            "status": {"$ne": policy["archived_status"]},
+            "status": {"$ne": 'ARCHIVED'},
         }
         conditions = await test_design_repository.list_conditions(query, len(condition_ids))
         found_ids = {item["_id"] for item in conditions}
@@ -81,29 +80,29 @@ async def validate_design_sources(
         if missing_ids:
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["condition_not_found_code"], "condition_ids": missing_ids},
+                detail={"code": 'TEST_CONDITION_NOT_FOUND', "condition_ids": missing_ids},
             )
         strict = settings.get(
-            policy["approval_setting"],
-            settings.get(policy["legacy_approval_setting"], False),
+            'require_condition_approval_before_testcase',
+            settings.get('require_approved_test_conditions', False),
         )
         unapproved_ids = [
             item["_id"]
             for item in conditions
-            if item.get("status") != policy["approved_status"]
+            if item.get("status") != 'APPROVED'
         ]
         if strict and unapproved_ids:
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "code": policy["condition_not_approved_code"],
+                    "code": 'TEST_CONDITION_NOT_APPROVED',
                     "condition_ids": unapproved_ids,
                 },
             )
 
 
 async def validate_data_set_versions(project_id, data_set_version_ids):
-    policy = domain_policy("test_case_records")
+    
     version_ids = list(dict.fromkeys(data_set_version_ids or []))
     if not version_ids:
         return
@@ -112,12 +111,12 @@ async def validate_data_set_versions(project_id, data_set_version_ids):
     )
     if count != len(version_ids):
         raise HTTPException(
-            status_code=422, detail={"code": policy["missing_data_set_code"]}
+            status_code=422, detail={"code": 'CROSS_PROJECT_OR_MISSING_DATA_SET_VERSION'}
         )
 
 
 async def create_test_case_draft_record(project_id, payload, user):
-    policy = domain_policy("test_case_records")
+    
     await get_project(project_id, user, "testcase.create")
     await validate_design_sources(
         project_id,
@@ -128,12 +127,12 @@ async def create_test_case_draft_record(project_id, payload, user):
     )
     await validate_data_set_versions(project_id, payload.data_set_version_ids)
     draft = {
-        "_id": new_id(policy["draft_id_prefix"]),
+        "_id": new_id('TCD'),
         "project_id": project_id,
         **payload.model_dump(),
         "test_case_key": payload.test_case_key
-        or await next_key(project_id, policy["counter_name"], policy["key_prefix"]),
-        "status": policy["draft_status"],
+        or await next_key(project_id, 'test_case', 'TC'),
+        "status": 'DRAFT',
         "revision": 1,
         "created_by": user.id,
         "created_at": now(),
@@ -145,12 +144,12 @@ async def create_test_case_draft_record(project_id, payload, user):
 
 
 async def update_test_case_draft_record(draft_id, payload, user, project_id=None):
-    policy = domain_policy("test_case_records")
+    
     draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.update")
     if project_id is not None and draft["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
-    if draft["status"] != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["immutable_draft_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+    if draft["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'IMMUTABLE_TEST_CASE_DRAFT'})
     if payload.attachments is not None:
         await get_project(draft["project_id"], user, "attachment.manage")
     await validate_design_sources(

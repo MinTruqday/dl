@@ -3,7 +3,6 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.repositories.process_improvement import process_improvement_repository
-from src.services.domain_policy import domain_policy
 from src.modules.quality.services.statistical_quality import (
     annotate_special_cause,
     compare_statistical_analyses,
@@ -18,39 +17,39 @@ async def require_member(project_id, user_id, code):
     member = await process_improvement_repository.find_active_member(
         project_id,
         user_id,
-        domain_policy("process_improvement")["active_membership_status"],
+        'ACTIVE',
     )
     if not member:
         raise HTTPException(status_code=422, detail={"code": code})
 
 
 async def get_proposal(proposal_id, user, permission=None):
-    policy = domain_policy("process_improvement")
+    
     value = await process_improvement_repository.find_proposal(proposal_id)
     if not value:
         raise HTTPException(
-            status_code=404, detail={"code": policy["entity_not_found_code"]}
+            status_code=404, detail={"code": 'ENTITY_NOT_FOUND'}
         )
     await get_project(
-        value["project_id"], user, permission or policy["read_permission"]
+        value["project_id"], user, permission or 'processimprovement.read'
     )
     return value
 
 
 async def list_proposals(project_id, user):
-    policy = domain_policy("process_improvement")
-    await get_project(project_id, user, policy["read_permission"])
+    
+    await get_project(project_id, user, 'processimprovement.read')
     items = await process_improvement_repository.list_proposals(
-        project_id, policy["proposal_limit"]
+        project_id, 1000
     )
     return {"items": items, "total": len(items)}
 
 
 async def create_proposal(project_id, payload, user):
-    policy = domain_policy("process_improvement")
-    await get_project(project_id, user, policy["create_permission"])
+    
+    await get_project(project_id, user, 'processimprovement.create')
     await require_member(
-        project_id, payload.owner_id, policy["owner_not_member_code"]
+        project_id, payload.owner_id, 'IMPROVEMENT_OWNER_NOT_PROJECT_MEMBER'
     )
     if payload.idempotency_key:
         existing = await process_improvement_repository.find_by_idempotency(
@@ -59,12 +58,12 @@ async def create_proposal(project_id, payload, user):
         if existing:
             if existing.get("observed_problem") != payload.observed_problem:
                 raise HTTPException(
-                    status_code=409, detail={"code": policy["idempotency_reused_code"]}
+                    status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'}
                 )
             return existing
     timestamp = now()
     value = {
-        "_id": new_id(policy["proposal_id_prefix"]),
+        "_id": new_id('PIM'),
         "project_id": project_id,
         **payload.model_dump(),
         "lesson_refs": [],
@@ -72,9 +71,9 @@ async def create_proposal(project_id, payload, user):
         "baseline_metrics": [],
         "result_metrics": [],
         "decision": None,
-        "status": policy["proposed_status"],
+        "status": 'PROPOSED',
         "history": [],
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -89,8 +88,8 @@ async def create_proposal(project_id, payload, user):
         raise
     await audit(
         user.id,
-        policy["created_event"],
-        policy["entity_type"],
+        'process_improvement_created',
+        'ProcessImprovementProposal',
         value["_id"],
         project_id,
         {"source": value["source"], "owner_id": value["owner_id"]},
@@ -99,33 +98,33 @@ async def create_proposal(project_id, payload, user):
 
 
 async def update_proposal(proposal_id, payload, user):
-    policy = domain_policy("process_improvement")
-    value = await get_proposal(proposal_id, user, policy["update_permission"])
-    if value["status"] != policy["proposed_status"]:
+    
+    value = await get_proposal(proposal_id, user, 'processimprovement.update')
+    if value["status"] != 'PROPOSED':
         raise HTTPException(
-            status_code=409, detail={"code": policy["immutable_code"]}
+            status_code=409, detail={"code": 'IMPROVEMENT_PROPOSAL_IMMUTABLE'}
         )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "owner_id" in changes:
         await require_member(
-            value["project_id"], changes["owner_id"], policy["owner_not_member_code"]
+            value["project_id"], changes["owner_id"], 'IMPROVEMENT_OWNER_NOT_PROJECT_MEMBER'
         )
     changes["updated_at"] = now()
     updated = await process_improvement_repository.update_proposal(
         proposal_id,
         payload.expected_revision,
-        policy["proposed_status"],
+        'PROPOSED',
         changes,
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["updated_event"],
-        policy["entity_type"],
+        'process_improvement_updated',
+        'ProcessImprovementProposal',
         proposal_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -134,21 +133,21 @@ async def update_proposal(proposal_id, payload, user):
 
 
 async def link_sources(proposal_id, payload, user):
-    policy = domain_policy("process_improvement")
-    value = await get_proposal(proposal_id, user, policy["update_permission"])
-    if value["status"] != policy["proposed_status"]:
+    
+    value = await get_proposal(proposal_id, user, 'processimprovement.update')
+    if value["status"] != 'PROPOSED':
         raise HTTPException(
-            status_code=409, detail={"code": policy["immutable_code"]}
+            status_code=409, detail={"code": 'IMPROVEMENT_PROPOSAL_IMMUTABLE'}
         )
     causal = await process_improvement_repository.list_causal_analyses(
-        value["project_id"], payload.causal_analysis_refs, policy["source_limit"]
+        value["project_id"], payload.causal_analysis_refs, 1000
     )
     if len(causal) != len(set(payload.causal_analysis_refs)):
         raise HTTPException(
-            status_code=422, detail={"code": policy["rca_not_in_project_code"]}
+            status_code=422, detail={"code": 'RCA_NOT_IN_PROJECT'}
         )
     reports = await process_improvement_repository.list_completion_lessons(
-        value["project_id"], payload.lesson_refs, policy["source_limit"]
+        value["project_id"], payload.lesson_refs, 1000
     )
     known_lessons = {
         item.get("lesson_id")
@@ -158,12 +157,12 @@ async def link_sources(proposal_id, payload, user):
     }
     if set(payload.lesson_refs) - known_lessons:
         raise HTTPException(
-            status_code=422, detail={"code": policy["lesson_not_in_project_code"]}
+            status_code=422, detail={"code": 'LESSON_NOT_IN_PROJECT'}
         )
     updated = await process_improvement_repository.update_proposal(
         proposal_id,
         payload.expected_revision,
-        policy["proposed_status"],
+        'PROPOSED',
         {
             "lesson_refs": sorted(set(payload.lesson_refs)),
             "causal_analysis_refs": sorted(set(payload.causal_analysis_refs)),
@@ -172,12 +171,12 @@ async def link_sources(proposal_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["sources_linked_event"],
-        policy["entity_type"],
+        'process_improvement_sources_linked',
+        'ProcessImprovementProposal',
         proposal_id,
         value["project_id"],
         {"lesson_refs": payload.lesson_refs, "causal_analysis_refs": payload.causal_analysis_refs},
@@ -186,13 +185,13 @@ async def link_sources(proposal_id, payload, user):
 
 
 async def metric_snapshots(project_id, references):
-    policy = domain_policy("process_improvement")
+    
     items = await process_improvement_repository.list_measurement_snapshots(
-        project_id, references, policy["source_limit"]
+        project_id, references, 1000
     )
     if len(items) != len(set(references)):
         raise HTTPException(
-            status_code=422, detail={"code": policy["measurement_not_in_project_code"]}
+            status_code=422, detail={"code": 'MEASUREMENT_NOT_IN_PROJECT'}
         )
     return [
         {
@@ -207,16 +206,19 @@ async def metric_snapshots(project_id, references):
 
 
 async def transition_proposal(proposal_id, payload, user, target, permission, event):
-    policy = domain_policy("process_improvement")
+    
     value = await get_proposal(proposal_id, user, permission)
-    allowed = {tuple(item) for item in policy["allowed_transitions"]}
+    allowed = {tuple(item) for item in [['PROPOSED', 'APPROVED_EXPERIMENT'],
+ ['APPROVED_EXPERIMENT', 'RUNNING'],
+ ['EVALUATED', 'ADOPTED'],
+ ['EVALUATED', 'REJECTED']]}
     if (value["status"], target) not in allowed:
         raise HTTPException(
-            status_code=409, detail={"code": policy["invalid_transition_code"]}
+            status_code=409, detail={"code": 'INVALID_IMPROVEMENT_TRANSITION'}
         )
-    if target == policy["running_status"] and not value.get("baseline_metrics"):
+    if target == 'RUNNING' and not value.get("baseline_metrics"):
         raise HTTPException(
-            status_code=409, detail={"code": policy["baseline_required_code"]}
+            status_code=409, detail={"code": 'IMPROVEMENT_BASELINE_REQUIRED'}
         )
     timestamp = now()
     entry = {
@@ -227,11 +229,11 @@ async def transition_proposal(proposal_id, payload, user, target, permission, ev
         "at": timestamp,
     }
     changes = {"status": target, "updated_at": timestamp}
-    if target in policy["decision_statuses"]:
-        expected = policy["decision_by_status"][target]
+    if target in ['ADOPTED', 'REJECTED']:
+        expected = {'ADOPTED': 'ADOPT', 'REJECTED': 'REJECT'}[target]
         if value.get("decision") != expected:
             raise HTTPException(
-                status_code=409, detail={"code": policy["decision_mismatch_code"]}
+                status_code=409, detail={"code": 'IMPROVEMENT_DECISION_MISMATCH'}
             )
         changes["decided_by"] = user.id
         changes["decided_at"] = timestamp
@@ -244,20 +246,20 @@ async def transition_proposal(proposal_id, payload, user, target, permission, ev
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
-        user.id, event, policy["entity_type"], proposal_id, value["project_id"], entry
+        user.id, event, 'ProcessImprovementProposal', proposal_id, value["project_id"], entry
     )
     return updated
 
 
 async def record_baseline(proposal_id, payload, user):
-    policy = domain_policy("process_improvement")
-    value = await get_proposal(proposal_id, user, policy["measure_permission"])
-    if value["status"] != policy["approved_experiment_status"]:
+    
+    value = await get_proposal(proposal_id, user, 'processimprovement.measure')
+    if value["status"] != 'APPROVED_EXPERIMENT':
         raise HTTPException(
-            status_code=409, detail={"code": policy["not_approved_code"]}
+            status_code=409, detail={"code": 'IMPROVEMENT_NOT_APPROVED'}
         )
     metrics = await metric_snapshots(
         value["project_id"], payload.measurement_snapshot_refs
@@ -265,7 +267,7 @@ async def record_baseline(proposal_id, payload, user):
     updated = await process_improvement_repository.update_proposal(
         proposal_id,
         payload.expected_revision,
-        policy["approved_experiment_status"],
+        'APPROVED_EXPERIMENT',
         {
             "baseline_metrics": metrics,
             "baseline_note": payload.note,
@@ -274,12 +276,12 @@ async def record_baseline(proposal_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["baseline_recorded_event"],
-        policy["entity_type"],
+        'process_improvement_baseline_recorded',
+        'ProcessImprovementProposal',
         proposal_id,
         value["project_id"],
         {"snapshot_refs": payload.measurement_snapshot_refs},
@@ -337,11 +339,11 @@ def compare_metric_results(baseline_metrics, result_metrics):
 
 
 async def evaluate_proposal(proposal_id, payload, user):
-    policy = domain_policy("process_improvement")
-    value = await get_proposal(proposal_id, user, policy["evaluate_permission"])
-    if value["status"] != policy["running_status"]:
+    
+    value = await get_proposal(proposal_id, user, 'processimprovement.evaluate')
+    if value["status"] != 'RUNNING':
         raise HTTPException(
-            status_code=409, detail={"code": policy["not_running_code"]}
+            status_code=409, detail={"code": 'IMPROVEMENT_NOT_RUNNING'}
         )
     metrics = await metric_snapshots(
         value["project_id"], payload.measurement_snapshot_refs
@@ -349,8 +351,8 @@ async def evaluate_proposal(proposal_id, payload, user):
     comparison = compare_metric_results(value.get("baseline_metrics", []), metrics)
     timestamp = now()
     history = {
-        "from": policy["running_status"],
-        "to": policy["evaluated_status"],
+        "from": 'RUNNING',
+        "to": 'EVALUATED',
         "actor_id": user.id,
         "note": payload.note,
         "at": timestamp,
@@ -358,13 +360,13 @@ async def evaluate_proposal(proposal_id, payload, user):
     updated = await process_improvement_repository.update_proposal(
         proposal_id,
         payload.expected_revision,
-        policy["running_status"],
+        'RUNNING',
         {
             "result_metrics": metrics,
             "result_comparison": comparison,
             "decision": payload.decision,
             "conclusion": payload.conclusion,
-            "status": policy["evaluated_status"],
+            "status": 'EVALUATED',
             "evaluated_by": user.id,
             "evaluated_at": timestamp,
             "updated_at": timestamp,
@@ -373,12 +375,12 @@ async def evaluate_proposal(proposal_id, payload, user):
     )
     if not updated:
         raise HTTPException(
-            status_code=409, detail={"code": policy["revision_conflict_code"]}
+            status_code=409, detail={"code": 'REVISION_CONFLICT'}
         )
     await audit(
         user.id,
-        policy["evaluated_event"],
-        policy["entity_type"],
+        'process_improvement_evaluated',
+        'ProcessImprovementProposal',
         proposal_id,
         value["project_id"],
         {
@@ -413,7 +415,18 @@ class ProcessImprovementService:
 
     @staticmethod
     async def transition_action(proposal_id, payload, user, action):
-        transition = domain_policy("process_improvement")["transition_actions"][action]
+        transition = {'approve': {'target': 'APPROVED_EXPERIMENT',
+             'permission': 'processimprovement.approve',
+             'event': 'process_improvement_experiment_approved'},
+ 'start': {'target': 'RUNNING',
+           'permission': 'processimprovement.evaluate',
+           'event': 'process_improvement_experiment_started'},
+ 'adopt': {'target': 'ADOPTED',
+           'permission': 'processimprovement.decide',
+           'event': 'process_improvement_adopted'},
+ 'reject': {'target': 'REJECTED',
+            'permission': 'processimprovement.decide',
+            'event': 'process_improvement_rejected'}}[action]
         return await transition_proposal(
             proposal_id,
             payload,

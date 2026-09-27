@@ -10,24 +10,23 @@ from src.modules.quality.services.causal_analysis_query import (
     suggest_candidates,
     validate_member,
 )
-from src.services.domain_policy import domain_policy
 
-CAUSAL_POLICY = domain_policy("causal_analysis")
+
 
 
 async def create_analysis(project_id, payload, user):
-    policy = CAUSAL_POLICY
-    await get_project(project_id, user, policy["permissions"]["create"])
+    
+    await get_project(project_id, user, 'causalanalysis.create')
     defect_ids = list(dict.fromkeys(payload.defect_ids))
     if defect_ids:
         defects = await causal_analysis_repository.list_defects(
             {"_id": {"$in": defect_ids}, "project_id": project_id},
-            policy["analysis_limit"],
+            1000,
         )
         if len(defects) != len(defect_ids):
             raise HTTPException(
                 status_code=422,
-                detail={"code": policy["error_codes"]["defect_not_in_project"]},
+                detail={"code": 'DEFECT_NOT_IN_PROJECT'},
             )
     await validate_member(project_id, payload.owner_id)
     if payload.idempotency_key:
@@ -38,11 +37,11 @@ async def create_analysis(project_id, payload, user):
             if set(existing.get("defect_ids", [])) != set(defect_ids):
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": policy["error_codes"]["idempotency_reused"]},
+                    detail={"code": 'IDEMPOTENCY_KEY_REUSED'},
                 )
             return existing
     timestamp = now()
-    identifier = new_id(policy["analysis_id_prefix"])
+    identifier = new_id('RCA')
     data = payload.model_dump(exclude={"evidence"})
     value = {
         "_id": identifier,
@@ -57,8 +56,8 @@ async def create_analysis(project_id, payload, user):
         "preventive_actions": [],
         "approved_by": None,
         "effectiveness_reviews": [],
-        "status": policy["draft_status"],
-        "revision": policy["initial_revision"],
+        "status": 'DRAFT',
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -73,8 +72,8 @@ async def create_analysis(project_id, payload, user):
         raise
     await audit(
         user.id,
-        policy["events"]["created"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_created',
+        'CausalAnalysis',
         value["_id"],
         project_id,
         {"defect_ids": defect_ids},
@@ -83,10 +82,10 @@ async def create_analysis(project_id, payload, user):
 
 
 async def update_analysis(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
-    if value["status"] != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["not_draft"]})
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
+    if value["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_NOT_DRAFT'})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "owner_id" in changes:
@@ -96,16 +95,16 @@ async def update_analysis(analysis_id, payload, user):
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
         },
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["updated"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_updated',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"fields": sorted(changes)},
@@ -114,32 +113,32 @@ async def update_analysis(analysis_id, payload, user):
 
 
 async def link_defects(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
-    if value["status"] != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["not_draft"]})
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
+    if value["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_NOT_DRAFT'})
     defect_ids = list(dict.fromkeys(payload.defect_ids))
     defects = await causal_analysis_repository.list_defects(
         {"_id": {"$in": defect_ids}, "project_id": value["project_id"]},
-        policy["analysis_limit"],
+        1000,
     )
     if len(defects) != len(defect_ids):
-        raise HTTPException(status_code=422, detail={"code": policy["error_codes"]["defect_not_in_project"]})
+        raise HTTPException(status_code=422, detail={"code": 'DEFECT_NOT_IN_PROJECT'})
     linked = list(dict.fromkeys([*value.get("defect_ids", []), *defect_ids]))
     updated = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
         },
         {"defect_ids": linked, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["defects_linked"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_defects_linked',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"defect_ids": defect_ids},
@@ -148,28 +147,28 @@ async def link_defects(analysis_id, payload, user):
 
 
 async def add_five_why(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
-    if value["status"] != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["not_draft"]})
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
+    if value["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_NOT_DRAFT'})
     five_whys = list(value.get("five_whys", []))
-    if len(five_whys) >= policy["maximum_five_whys"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["five_whys_limit"]})
+    if len(five_whys) >= 5:
+        raise HTTPException(status_code=409, detail={"code": 'FIVE_WHYS_LIMIT_REACHED'})
     five_whys.append(payload.why)
     updated = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
         },
         {"five_whys": five_whys, "updated_at": now()},
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["five_why_added"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_five_why_added',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"sequence": len(five_whys)},
@@ -178,10 +177,10 @@ async def add_five_why(analysis_id, payload, user):
 
 
 async def record_root_cause(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
-    if value["status"] != policy["draft_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["not_draft"]})
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
+    if value["status"] != 'DRAFT':
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_NOT_DRAFT'})
     root_cause = {
         "category": payload.category,
         "detail": payload.detail,
@@ -193,7 +192,7 @@ async def record_root_cause(analysis_id, payload, user):
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
         },
         {
             "root_causes": [root_cause],
@@ -202,11 +201,11 @@ async def record_root_cause(analysis_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["root_cause_recorded"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_root_cause_recorded',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"category": payload.category},
@@ -215,54 +214,54 @@ async def record_root_cause(analysis_id, payload, user):
 
 
 async def create_action(analysis_id, payload, user, action_type):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["action_manage"])
+    
+    value = await get_analysis(analysis_id, user, 'preventionaction.manage')
     if value["status"] not in {
-        policy["approved_status"],
-        policy["action_in_progress_status"],
+        'APPROVED',
+        'ACTION_IN_PROGRESS',
     }:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["not_approved"]})
-    if value["status"] == policy["closed_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["closed_immutable"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_NOT_APPROVED'})
+    if value["status"] == 'CLOSED':
+        raise HTTPException(status_code=409, detail={"code": 'CLOSED_CAUSAL_ANALYSIS_IMMUTABLE'})
     timestamp = now()
     action = {
-        "_id": new_id(policy["action_id_prefix"]),
+        "_id": new_id('CAPA'),
         "causal_analysis_id": analysis_id,
         "project_id": value["project_id"],
         **payload.model_dump(),
         "action_type": action_type,
         "owner_id": None,
-        "status": policy["open_action_status"],
+        "status": 'OPEN',
         "result": "",
-        "revision": policy["initial_revision"],
+        "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
     }
     await causal_analysis_repository.insert_action(action)
     field = (
-        policy["corrective_action_field"]
-        if action_type == policy["corrective_action_type"]
-        else policy["preventive_action_field"]
+        'corrective_actions'
+        if action_type == 'CORRECTIVE'
+        else 'preventive_actions'
     )
     analysis = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": value["revision"],
             "status": {
-                "$in": [policy["approved_status"], policy["action_in_progress_status"]]
+                "$in": ['APPROVED', 'ACTION_IN_PROGRESS']
             },
         },
-        {"status": policy["action_in_progress_status"], "updated_at": timestamp},
+        {"status": 'ACTION_IN_PROGRESS', "updated_at": timestamp},
         {field: action["_id"]},
     )
     if not analysis:
         await causal_analysis_repository.delete_action(action["_id"])
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["action_created"],
-        policy["entity_types"]["action"],
+        'capa_action_created',
+        'PreventionAction',
         action["_id"],
         value["project_id"],
         {"causal_analysis_id": analysis_id, "type": action_type},
@@ -271,20 +270,20 @@ async def create_action(analysis_id, payload, user, action_type):
 
 
 async def assign_action(action_id, payload, user):
-    policy = CAUSAL_POLICY
+    
     action = await causal_analysis_repository.find_action(action_id)
     if not action:
-        raise HTTPException(status_code=404, detail={"code": policy["error_codes"]["entity_not_found"]})
-    await get_project(action["project_id"], user, policy["permissions"]["action_manage"])
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
+    await get_project(action["project_id"], user, 'preventionaction.manage')
     await validate_member(action["project_id"], payload.owner_id)
-    if action["status"] == policy["closed_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["action_closed"]})
+    if action["status"] == 'CLOSED':
+        raise HTTPException(status_code=409, detail={"code": 'CAPA_ACTION_CLOSED'})
     timestamp = now()
     updated = await causal_analysis_repository.update_action(
         {
             "_id": action_id,
             "revision": payload.expected_revision,
-            "status": {"$ne": policy["closed_status"]},
+            "status": {"$ne": 'CLOSED'},
         },
         {
             "owner_id": payload.owner_id,
@@ -294,11 +293,11 @@ async def assign_action(action_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["action_assigned"],
-        policy["entity_types"]["action"],
+        'capa_action_assigned',
+        'PreventionAction',
         action_id,
         action["project_id"],
         {"owner_id": payload.owner_id},
@@ -307,19 +306,19 @@ async def assign_action(action_id, payload, user):
 
 
 async def update_action(action_id, payload, user):
-    policy = CAUSAL_POLICY
+    
     action = await causal_analysis_repository.find_action(action_id)
     if not action:
-        raise HTTPException(status_code=404, detail={"code": policy["error_codes"]["entity_not_found"]})
-    await get_project(action["project_id"], user, policy["permissions"]["action_manage"])
-    if payload.status != policy["open_action_status"] and not action.get("owner_id"):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["action_owner_required"]})
-    states = policy["action_states"]
+        raise HTTPException(status_code=404, detail={"code": 'ENTITY_NOT_FOUND'})
+    await get_project(action["project_id"], user, 'preventionaction.manage')
+    if payload.status != 'OPEN' and not action.get("owner_id"):
+        raise HTTPException(status_code=409, detail={"code": 'CAPA_ACTION_OWNER_REQUIRED'})
+    
     if (
-        states.index(payload.status) < states.index(action["status"])
-        or states.index(payload.status) > states.index(action["status"]) + 1
+        ['OPEN', 'IN_PROGRESS', 'IMPLEMENTED', 'EFFECTIVENESS_REVIEW', 'CLOSED'].index(payload.status) < ['OPEN', 'IN_PROGRESS', 'IMPLEMENTED', 'EFFECTIVENESS_REVIEW', 'CLOSED'].index(action["status"])
+        or ['OPEN', 'IN_PROGRESS', 'IMPLEMENTED', 'EFFECTIVENESS_REVIEW', 'CLOSED'].index(payload.status) > ['OPEN', 'IN_PROGRESS', 'IMPLEMENTED', 'EFFECTIVENESS_REVIEW', 'CLOSED'].index(action["status"]) + 1
     ):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["invalid_action_transition"]})
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_CAPA_TRANSITION'})
     changes = {"status": payload.status, "result": payload.result, "updated_at": now()}
     if payload.evidence_refs is not None:
         changes["evidence_refs"] = payload.evidence_refs
@@ -328,16 +327,16 @@ async def update_action(action_id, payload, user):
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     event = (
-        policy["events"]["action_closed"]
-        if payload.status == policy["closed_status"]
-        else policy["events"]["action_updated"]
+        'preventive_action_closed'
+        if payload.status == 'CLOSED'
+        else 'capa_action_updated'
     )
     await audit(
         user.id,
         event,
-        policy["entity_types"]["action"],
+        'PreventionAction',
         action_id,
         action["project_id"],
         {"from": action["status"], "to": payload.status},
@@ -346,23 +345,23 @@ async def update_action(action_id, payload, user):
 
 
 async def submit_review(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
     if not value.get("defect_ids"):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["defect_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_DEFECT_REQUIRED'})
     if not value.get("five_whys"):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["five_whys_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'FIVE_WHYS_REQUIRED'})
     if not value.get("root_causes"):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["root_cause_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'ROOT_CAUSE_REQUIRED'})
     timestamp = now()
     updated = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["draft_status"],
+            "status": 'DRAFT',
         },
         {
-            "status": policy["review_status"],
+            "status": 'IN_REVIEW',
             "submitted_by": user.id,
             "submitted_at": timestamp,
             "review_note": payload.note,
@@ -370,11 +369,11 @@ async def submit_review(analysis_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["submit_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_SUBMIT_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["submitted"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_submitted',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"note": payload.note},
@@ -383,12 +382,12 @@ async def submit_review(analysis_id, payload, user):
 
 
 async def approve_analysis(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["approve"])
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.approve')
     target = (
-        policy["approved_status"]
-        if payload.decision == policy["approve_decision"]
-        else policy["draft_status"]
+        'APPROVED'
+        if payload.decision == 'APPROVE'
+        else 'DRAFT'
     )
     timestamp = now()
     changes = {
@@ -398,7 +397,7 @@ async def approve_analysis(analysis_id, payload, user):
         "reviewed_at": timestamp,
         "updated_at": timestamp,
     }
-    if target == policy["approved_status"]:
+    if target == 'APPROVED':
         changes.update({"approved_by": user.id, "approved_at": timestamp})
     else:
         changes.update({"approved_by": None, "approved_at": None})
@@ -406,21 +405,21 @@ async def approve_analysis(analysis_id, payload, user):
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["review_status"],
+            "status": 'IN_REVIEW',
         },
         changes,
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["review_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_REVIEW_CONFLICT'})
     event = (
-        policy["events"]["approved"]
-        if target == policy["approved_status"]
-        else policy["events"]["reviewed"]
+        'causal_analysis_approved'
+        if target == 'APPROVED'
+        else 'causal_analysis_reviewed'
     )
     await audit(
         user.id,
         event,
-        policy["entity_types"]["analysis"],
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"decision": payload.decision},
@@ -429,19 +428,19 @@ async def approve_analysis(analysis_id, payload, user):
 
 
 async def review_effectiveness(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["update"])
-    if value["status"] != policy["action_in_progress_status"]:
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.update')
+    if value["status"] != 'ACTION_IN_PROGRESS':
         raise HTTPException(
-            status_code=409, detail={"code": policy["error_codes"]["actions_not_in_progress"]}
+            status_code=409, detail={"code": 'CAUSAL_ANALYSIS_ACTIONS_NOT_IN_PROGRESS'}
         )
     actions = await causal_analysis_repository.list_actions(
-        analysis_id, policy["action_limit"]
+        analysis_id, 1000
     )
     if not actions or any(
-        item["status"] not in policy["implemented_action_statuses"] for item in actions
+        item["status"] not in ['IMPLEMENTED', 'EFFECTIVENESS_REVIEW', 'CLOSED'] for item in actions
     ):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["actions_not_implemented"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAPA_ACTIONS_NOT_IMPLEMENTED'})
     review = {
         "decision": payload.decision,
         "result": payload.result,
@@ -451,15 +450,15 @@ async def review_effectiveness(analysis_id, payload, user):
     }
     reviews = [*value.get("effectiveness_reviews", []), review]
     target = (
-        policy["effectiveness_review_status"]
-        if payload.decision == policy["effective_decision"]
-        else policy["action_in_progress_status"]
+        'EFFECTIVENESS_REVIEW'
+        if payload.decision == 'EFFECTIVE'
+        else 'ACTION_IN_PROGRESS'
     )
     updated = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["action_in_progress_status"],
+            "status": 'ACTION_IN_PROGRESS',
         },
         {
             "status": target,
@@ -469,11 +468,11 @@ async def review_effectiveness(analysis_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["revision_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["effectiveness_reviewed"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_effectiveness_reviewed',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"decision": payload.decision, "evidence_refs": payload.evidence_refs},
@@ -482,28 +481,28 @@ async def review_effectiveness(analysis_id, payload, user):
 
 
 async def close_analysis(analysis_id, payload, user):
-    policy = CAUSAL_POLICY
-    value = await get_analysis(analysis_id, user, policy["permissions"]["approve"])
+    
+    value = await get_analysis(analysis_id, user, 'causalanalysis.approve')
     actions = await causal_analysis_repository.list_actions(
-        analysis_id, policy["action_limit"]
+        analysis_id, 1000
     )
-    if not actions or any(item["status"] != policy["closed_status"] for item in actions):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["actions_not_closed"]})
+    if not actions or any(item["status"] != 'CLOSED' for item in actions):
+        raise HTTPException(status_code=409, detail={"code": 'CAPA_ACTIONS_NOT_CLOSED'})
     if (
         not value.get("effectiveness_reviews")
         or value["effectiveness_reviews"][-1].get("decision")
-        != policy["effective_decision"]
+        != 'EFFECTIVE'
     ):
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["effectiveness_approval_required"]})
+        raise HTTPException(status_code=409, detail={"code": 'EFFECTIVENESS_APPROVAL_REQUIRED'})
     timestamp = now()
     updated = await causal_analysis_repository.update_analysis(
         {
             "_id": analysis_id,
             "revision": payload.expected_revision,
-            "status": policy["effectiveness_review_status"],
+            "status": 'EFFECTIVENESS_REVIEW',
         },
         {
-            "status": policy["closed_status"],
+            "status": 'CLOSED',
             "closed_by": user.id,
             "closed_at": timestamp,
             "close_note": payload.note,
@@ -511,11 +510,11 @@ async def close_analysis(analysis_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["error_codes"]["close_conflict"]})
+        raise HTTPException(status_code=409, detail={"code": 'CAUSAL_ANALYSIS_CLOSE_CONFLICT'})
     await audit(
         user.id,
-        policy["events"]["closed"],
-        policy["entity_types"]["analysis"],
+        'causal_analysis_closed',
+        'CausalAnalysis',
         analysis_id,
         value["project_id"],
         {"note": payload.note},
@@ -538,10 +537,10 @@ class CausalAnalysisService:
 
     @staticmethod
     async def get(analysis_id, user):
-        policy = CAUSAL_POLICY
+        
         value = await get_analysis(analysis_id, user)
         value["actions"] = await causal_analysis_repository.list_actions(
-            analysis_id, policy["action_limit"]
+            analysis_id, 1000
         )
         return value
 

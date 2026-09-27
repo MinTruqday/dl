@@ -7,9 +7,8 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, get_project_entity, get_project_role, new_id, now, visible_defect
 from src.core.metrics import STALE, TRACE_ACCEPTANCE_RATE, UNCOVERED
 from src.repositories.traceability import traceability_repository
-from src.services.domain_policy import domain_policy
 
-TRACE_POLICY = domain_policy("traceability")
+
 
 
 def percent(value, total):
@@ -19,16 +18,19 @@ def percent(value, total):
 class TraceabilityService:
     @staticmethod
     async def validate_artifact(artifact_type, artifact_id, project_id):
-        mapping = TRACE_POLICY["artifact_collections"]
+        
         if not await traceability_repository.artifact_exists(
-            mapping[artifact_type], artifact_id, project_id
+            {'requirement_version': 'requirement_versions',
+ 'acceptance_criterion': 'acceptance_criteria',
+ 'test_scenario': 'test_scenarios',
+ 'test_case_version': 'test_case_versions'}[artifact_type], artifact_id, project_id
         ):
-            raise HTTPException(status_code=422, detail={"code": TRACE_POLICY["missing_artifact_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'CROSS_PROJECT_OR_MISSING_ARTIFACT'})
 
     @classmethod
     async def create_link(cls, payload, project_id, user):
         if project_id is not None and payload.project_id != project_id:
-            raise HTTPException(status_code=422, detail={"code": TRACE_POLICY["project_mismatch_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
         await get_project(payload.project_id, user, "trace.create")
         await cls.validate_artifact(payload.source_type, payload.source_id, payload.project_id)
         await cls.validate_artifact(payload.target_type, payload.target_id, payload.project_id)
@@ -44,11 +46,11 @@ class TraceabilityService:
         if existing:
             return existing
         link = {
-            "_id": new_id(TRACE_POLICY["link_id_prefix"]),
+            "_id": new_id('TL'),
             **payload.model_dump(),
-            "status": TRACE_POLICY["confirmed_status"]
-            if payload.origin == TRACE_POLICY["manual_origin"]
-            else TRACE_POLICY["suggested_status"],
+            "status": 'CONFIRMED'
+            if payload.origin == 'manual'
+            else 'SUGGESTED',
             "revision": 1,
             "created_by": user.id,
             "created_at": now(),
@@ -68,34 +70,34 @@ class TraceabilityService:
     @classmethod
     async def confirm_link(cls, link_id, user, project_id=None):
         return await cls.review_link(
-            link_id, TRACE_POLICY["confirmed_status"], user, project_id
+            link_id, 'CONFIRMED', user, project_id
         )
 
     @classmethod
     async def reject_link(cls, link_id, user, project_id=None):
         return await cls.review_link(
-            link_id, TRACE_POLICY["rejected_status"], user, project_id
+            link_id, 'REJECTED', user, project_id
         )
 
     @staticmethod
     async def review_link(link_id, status, user, project_id=None):
         permission = (
             "trace.confirm"
-            if status == TRACE_POLICY["confirmed_status"]
+            if status == 'CONFIRMED'
             else "trace.review"
         )
         link = await get_project_entity("trace_links", link_id, user, permission)
         if project_id is not None and link["project_id"] != project_id:
-            raise HTTPException(status_code=422, detail={"code": TRACE_POLICY["project_mismatch_code"]})
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
         if link.get("status") == status:
             return link
-        if link.get("status") != TRACE_POLICY["suggested_status"]:
-            raise HTTPException(status_code=409, detail={"code": TRACE_POLICY["invalid_transition_code"]})
+        if link.get("status") != 'SUGGESTED':
+            raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
         timestamp = now()
         updated = await traceability_repository.transition_link(
             link_id,
             link["project_id"],
-            TRACE_POLICY["suggested_status"],
+            'SUGGESTED',
             {
                 "status": status,
                 "reviewed_by": user.id,
@@ -104,15 +106,15 @@ class TraceabilityService:
             },
         )
         if not updated:
-            raise HTTPException(status_code=409, detail={"code": TRACE_POLICY["decision_conflict_code"]})
+            raise HTTPException(status_code=409, detail={"code": 'TRACE_DECISION_CONFLICT'})
         reviewed = await traceability_repository.count_links(
             {
                 "project_id": updated["project_id"],
-                "status": {"$in": TRACE_POLICY["reviewed_statuses"]},
+                "status": {"$in": ['CONFIRMED', 'REJECTED']},
             }
         )
         confirmed = await traceability_repository.count_links(
-            {"project_id": updated["project_id"], "status": TRACE_POLICY["confirmed_status"]}
+            {"project_id": updated["project_id"], "status": 'CONFIRMED'}
         )
         TRACE_ACCEPTANCE_RATE.set(confirmed / reviewed if reviewed else 0)
         await audit(user.id, f"trace_link_{status.lower()}", "TraceLink", link_id, updated["project_id"])
@@ -122,25 +124,25 @@ class TraceabilityService:
     async def revoke_link(link_id, project_id, user):
         link = await get_project_entity("trace_links", link_id, user, "trace.revoke")
         if project_id is not None and link["project_id"] != project_id:
-            raise HTTPException(status_code=422, detail={"code": TRACE_POLICY["project_mismatch_code"]})
-        if link.get("status") == TRACE_POLICY["revoked_status"]:
+            raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
+        if link.get("status") == 'REVOKED':
             return link
-        if link.get("status") not in set(TRACE_POLICY["revocable_statuses"]):
-            raise HTTPException(status_code=409, detail={"code": TRACE_POLICY["invalid_transition_code"]})
+        if link.get("status") not in set(['CONFIRMED', 'SUGGESTED']):
+            raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
         timestamp = now()
         updated = await traceability_repository.transition_link(
             link_id,
             link["project_id"],
             link["status"],
             {
-                "status": TRACE_POLICY["revoked_status"],
+                "status": 'REVOKED',
                 "revoked_by": user.id,
                 "revoked_at": timestamp,
                 "updated_at": timestamp,
             },
         )
         if not updated:
-            raise HTTPException(status_code=409, detail={"code": TRACE_POLICY["decision_conflict_code"]})
+            raise HTTPException(status_code=409, detail={"code": 'TRACE_DECISION_CONFLICT'})
         await audit(user.id, "trace_link_revoked", "TraceLink", link_id, updated["project_id"])
         return updated
 
@@ -151,23 +153,23 @@ class TraceabilityService:
         requirements = await traceability_repository.list_records(
             "requirements",
             {"project_id": project_id},
-            TRACE_POLICY["matrix_requirement_limit"],
+            5000,
             ("requirement_key", 1),
         )
         versions = await traceability_repository.list_records(
             "requirement_versions",
             {"_id": {"$in": [item["current_version_id"] for item in requirements]}},
-            TRACE_POLICY["matrix_requirement_limit"],
+            5000,
         )
         criteria = await traceability_repository.list_records(
             "acceptance_criteria",
             {"project_id": project_id},
-            TRACE_POLICY["matrix_criterion_limit"],
+            10000,
         )
         tests = await traceability_repository.list_records(
             "test_cases",
             {"project_id": project_id},
-            TRACE_POLICY["matrix_test_limit"],
+            10000,
             ("test_case_key", 1),
         )
         test_versions = await traceability_repository.list_records(
@@ -181,30 +183,30 @@ class TraceabilityService:
                     ]
                 }
             },
-            TRACE_POLICY["matrix_test_limit"],
+            10000,
         )
         defects = await traceability_repository.list_records(
             "defects",
             {
                 "project_id": project_id,
-                "status": {"$nin": TRACE_POLICY["open_defect_excluded_statuses"]},
+                "status": {"$nin": ['CLOSED', 'REJECTED', 'DUPLICATE']},
             },
-            TRACE_POLICY["defect_limit"],
+            20000,
         )
         defects = [visible_defect(item, role) for item in defects]
         links = await traceability_repository.list_records(
-            "trace_links", {"project_id": project_id}, TRACE_POLICY["link_limit"]
+            "trace_links", {"project_id": project_id}, 50000
         )
         linked_requirement_version_ids = {
             item.get("source_id")
             for item in links
-            if item.get("source_type") == TRACE_POLICY["requirement_source_type"]
+            if item.get("source_type") == 'requirement_version'
             and item.get("source_id")
         }
         linked_test_case_version_ids = {
             item.get("target_id")
             for item in links
-            if item.get("target_type") == TRACE_POLICY["test_version_target_type"]
+            if item.get("target_type") == 'test_case_version'
             and item.get("target_id")
         }
         missing_requirement_versions = linked_requirement_version_ids - {item["_id"] for item in versions}
@@ -214,7 +216,7 @@ class TraceabilityService:
                 await traceability_repository.list_records(
                     "requirement_versions",
                     {"project_id": project_id, "_id": {"$in": list(missing_requirement_versions)}},
-                    TRACE_POLICY["matrix_requirement_limit"],
+                    5000,
                 )
             )
         if missing_test_case_versions:
@@ -222,7 +224,7 @@ class TraceabilityService:
                 await traceability_repository.list_records(
                     "test_case_versions",
                     {"project_id": project_id, "_id": {"$in": list(missing_test_case_versions)}},
-                    TRACE_POLICY["matrix_test_limit"],
+                    10000,
                 )
             )
         requirement_versions_by_id = {item["_id"]: item for item in versions}
@@ -231,12 +233,12 @@ class TraceabilityService:
         obsolete_requirement_ids = {
             item["_id"]
             for item in requirements
-            if item.get("status") == TRACE_POLICY["obsolete_status"]
+            if item.get("status") == 'OBSOLETE'
         }
         obsolete_requirement_versions = await traceability_repository.list_records(
             "requirement_versions",
             {"project_id": project_id, "requirement_id": {"$in": list(obsolete_requirement_ids)}},
-            TRACE_POLICY["matrix_criterion_limit"],
+            10000,
         )
         obsolete_requirement_version_ids = {item["_id"] for item in obsolete_requirement_versions}
         obsolete_criterion_ids = {
@@ -245,30 +247,30 @@ class TraceabilityService:
         obsolete_test_ids = {
             item["_id"]
             for item in tests
-            if item.get("status") == TRACE_POLICY["obsolete_status"]
+            if item.get("status") == 'OBSOLETE'
         }
         obsolete_test_versions = await traceability_repository.list_records(
             "test_case_versions",
             {"project_id": project_id, "test_case_id": {"$in": list(obsolete_test_ids)}},
-            TRACE_POLICY["test_limit"],
+            20000,
         )
         obsolete_test_version_ids = {item["_id"] for item in obsolete_test_versions}
         enriched_links = []
         for link in links:
             reasons = []
             if link.get("source_id") in obsolete_requirement_version_ids | obsolete_criterion_ids:
-                reasons.append(TRACE_POLICY["obsolete_source_reason"])
+                reasons.append('OBSOLETE_SOURCE')
             if link.get("target_id") in obsolete_test_version_ids:
-                reasons.append(TRACE_POLICY["obsolete_target_reason"])
+                reasons.append('OBSOLETE_TARGET')
             source = (
                 requirement_versions_by_id.get(link.get("source_id"))
-                if link.get("source_type") == TRACE_POLICY["requirement_source_type"]
+                if link.get("source_type") == 'requirement_version'
                 else criteria_by_id.get(link.get("source_id"))
             )
             target = test_versions_by_id.get(link.get("target_id"))
             source_label = (
                 f"{source.get('requirement_key', '')} v{source.get('version', '')} {source.get('title', '')}".strip()
-                if link.get("source_type") == TRACE_POLICY["requirement_source_type"] and source
+                if link.get("source_type") == 'requirement_version' and source
                 else source.get("key", link.get("source_id")) if source else link.get("source_id")
             )
             target_label = f"{target.get('test_case_key', '')} v{target.get('version', '')} {target.get('title', '')}".strip() if target else link.get("target_id")
@@ -288,8 +290,8 @@ class TraceabilityService:
         await get_project(project_id, user, "coverage.read")
         requirements = await traceability_repository.list_records(
             "requirements",
-            {"project_id": project_id, "status": TRACE_POLICY["baselined_status"]},
-            TRACE_POLICY["requirement_limit"],
+            {"project_id": project_id, "status": 'BASELINED'},
+            10000,
         )
         requirement_versions = {item["current_version_id"] for item in requirements}
         criteria = await traceability_repository.list_records(
@@ -297,38 +299,38 @@ class TraceabilityService:
             {
                 "project_id": project_id,
                 "requirement_version_id": {"$in": list(requirement_versions)},
-                "status": {"$ne": TRACE_POLICY["criterion_obsolete_status"]},
+                "status": {"$ne": 'obsolete'},
             },
-            TRACE_POLICY["criterion_limit"],
+            20000,
         )
         links = await traceability_repository.list_records(
             "trace_links",
-            {"project_id": project_id, "status": TRACE_POLICY["confirmed_status"]},
-            TRACE_POLICY["link_limit"],
+            {"project_id": project_id, "status": 'CONFIRMED'},
+            50000,
         )
         test_version_ids = {
             link["target_id"]
             for link in links
-            if link["target_type"] == TRACE_POLICY["test_version_target_type"]
+            if link["target_type"] == 'test_case_version'
         }
         test_versions = await traceability_repository.list_records(
             "test_case_versions",
             {"_id": {"$in": list(test_version_ids)}},
-            TRACE_POLICY["link_limit"],
+            50000,
         )
         linked_requirements = {
             link["source_id"]
             for link in links
-            if link["source_type"] == TRACE_POLICY["requirement_source_type"]
+            if link["source_type"] == 'requirement_version'
         }
         linked_criteria = {
             link["source_id"]
             for link in links
-            if link["source_type"] == TRACE_POLICY["criterion_source_type"]
+            if link["source_type"] == 'acceptance_criterion'
         }
         criterion_ids = {item["_id"] for item in criteria}
         categories = {}
-        for category in TRACE_POLICY["coverage_categories"]:
+        for category in ['happy_path', 'negative', 'boundary', 'permission']:
             category_versions = {item["_id"] for item in test_versions if item.get("type") == category}
             covered_sources = {link["source_id"] for link in links if link["target_id"] in category_versions}
             categories[category] = percent(len(requirement_versions & covered_sources), len(requirement_versions))
@@ -336,21 +338,21 @@ class TraceabilityService:
         unlinked_tests = await traceability_repository.list_records(
             "test_cases",
             {"project_id": project_id, "current_version_id": {"$nin": list(test_version_ids)}},
-            TRACE_POLICY["requirement_limit"],
+            10000,
         )
         stale_tests = await traceability_repository.count_records(
             "test_cases",
-            {"project_id": project_id, "status": TRACE_POLICY["needs_update_status"]},
+            {"project_id": project_id, "status": 'NEEDS_UPDATE'},
         )
         active_tests = await traceability_repository.list_records(
             "test_cases",
-            {"project_id": project_id, "status": TRACE_POLICY["active_status"]},
-            TRACE_POLICY["test_limit"],
+            {"project_id": project_id, "status": 'ACTIVE'},
+            20000,
         )
         active_version_ids = {item.get("current_version_id") for item in active_tests if item.get("current_version_id")}
         fresh_requirement_ids = {
             link["source_id"] for link in links
-            if link.get("source_type") == TRACE_POLICY["requirement_source_type"]
+            if link.get("source_type") == 'requirement_version'
             and link.get("target_id") in active_version_ids
         }
         run_query = {"project_id": project_id}
@@ -362,7 +364,7 @@ class TraceabilityService:
             plans = await traceability_repository.list_records(
                 "test_plans",
                 {"project_id": project_id, "release_id": release_id},
-                TRACE_POLICY["plan_limit"],
+                5000,
                 projection={"_id": 1},
             )
             run_query["test_plan_id"] = {"$in": [item["_id"] for item in plans]}
@@ -370,12 +372,12 @@ class TraceabilityService:
             plans = await traceability_repository.list_records(
                 "test_plans",
                 {"project_id": project_id, "release": release},
-                TRACE_POLICY["plan_limit"],
+                5000,
                 projection={"_id": 1},
             )
             run_query["test_plan_id"] = {"$in": [item["_id"] for item in plans]}
         runs = await traceability_repository.list_records(
-            "test_runs", run_query, TRACE_POLICY["run_limit"]
+            "test_runs", run_query, 10000
         )
         run_ids = [item["_id"] for item in runs]
         execution_scope_ids = {version_id for item in runs for version_id in item.get("test_case_version_ids", [])}
@@ -384,9 +386,9 @@ class TraceabilityService:
             {
                 "project_id": project_id,
                 "test_run_id": {"$in": run_ids},
-                "status": {"$in": TRACE_POLICY["terminal_result_statuses"]},
+                "status": {"$in": ['PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE']},
             },
-            TRACE_POLICY["link_limit"],
+            50000,
             ("completed_at", -1),
         )
         executed_version_ids = {item["test_case_version_id"] for item in terminal_results}
@@ -414,24 +416,24 @@ class TraceabilityService:
         versions = await traceability_repository.list_records(
             "requirement_versions",
             {"requirement_id": requirement_id, "project_id": requirement["project_id"]},
-            TRACE_POLICY["version_history_limit"],
+            500,
             ("version", 1),
         )
         links = await traceability_repository.list_records(
             "trace_links",
             {
                 "project_id": requirement["project_id"],
-                "source_type": TRACE_POLICY["requirement_source_type"],
+                "source_type": 'requirement_version',
                 "source_id": {"$in": [item["_id"] for item in versions]},
             },
-            TRACE_POLICY["artifact_trace_limit"],
+            5000,
         )
         return {
             "requirement_id": requirement_id,
             "versions": versions,
             "trace_links": links,
             "covered": any(
-                item.get("status") == TRACE_POLICY["confirmed_status"] for item in links
+                item.get("status") == 'CONFIRMED' for item in links
             ),
         }
 
@@ -459,7 +461,7 @@ class TraceabilityService:
             user,
         )
         snapshot = {
-            "_id": new_id(TRACE_POLICY["coverage_id_prefix"]),
+            "_id": new_id('COV'),
             "project_id": project_id,
             "label": str(payload.get("label") or ""),
             "release_id": str(payload.get("release_id") or "") or None,
@@ -489,10 +491,10 @@ class TraceabilityService:
             "trace_links",
             {
                 "project_id": test_case["project_id"],
-                "target_type": TRACE_POLICY["test_version_target_type"],
+                "target_type": 'test_case_version',
                 "target_id": {"$in": [test_case.get("current_version_id")]},
             },
-            TRACE_POLICY["artifact_trace_limit"],
+            5000,
         )
         return {"test_case": test_case, "trace_links": links}
 
@@ -500,7 +502,7 @@ class TraceabilityService:
     async def export(project_id, user):
         await get_project(project_id, user, "report.export")
         links = await traceability_repository.list_records(
-            "trace_links", {"project_id": project_id}, TRACE_POLICY["link_limit"]
+            "trace_links", {"project_id": project_id}, 50000
         )
         stream = io.StringIO()
         writer = csv.DictWriter(stream, fieldnames=["source_type", "source_id", "target_type", "target_id", "link_type", "status", "confidence", "origin"])
@@ -509,5 +511,5 @@ class TraceabilityService:
             writer.writerow({key: link.get(key) for key in writer.fieldnames})
         return (
             stream.getvalue(),
-            f"{TRACE_POLICY['export_filename_prefix']}-{project_id}.csv",
+            f"{'traceability'}-{project_id}.csv",
         )

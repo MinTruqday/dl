@@ -7,43 +7,42 @@ from src.core.common import audit, new_id, now
 from src.repositories.causal_analysis import causal_analysis_repository
 from src.modules.quality.services.causal_analysis_query import get_analysis
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
-from src.services.domain_policy import domain_policy
 
 
 async def generate_hypotheses(analysis_id, payload, user):
-    policy = domain_policy("causal_analysis")
+    
     value = await get_analysis(analysis_id, user, "causalanalysis.update")
     existing = await causal_analysis_repository.find_ai_result_by_idempotency(
         value["project_id"], payload.idempotency_key
     )
     if existing:
         if (
-            existing.get("result_type") != policy["hypothesis_result_type"]
+            existing.get("result_type") != 'CAUSAL_ANALYSIS_HYPOTHESES'
             or existing.get("subject_id") != analysis_id
         ):
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["error_codes"]["idempotency_reused"]},
+                detail={"code": 'IDEMPOTENCY_KEY_REUSED'},
             )
         return existing
     defects = await causal_analysis_repository.list_defects(
         {"_id": {"$in": value["defect_ids"]}, "project_id": value["project_id"]},
-        policy["hypothesis_defect_limit"],
+        500,
     )
     historical = await causal_analysis_repository.list_defects(
         {
             "project_id": value["project_id"],
             "_id": {"$nin": value["defect_ids"]},
-            "root_cause_category": {"$ne": policy["unknown_root_cause"]},
+            "root_cause_category": {"$ne": 'UNKNOWN'},
         },
-        policy["historical_defect_limit"],
+        100,
         {"_id": 1, "title": 1, "root_cause_category": 1, "root_cause_detail": 1},
     )
     evidence = [
         {
             "artifact_type": "defect",
             "artifact_id": item["_id"],
-            "authority": policy["project_record_authority"],
+            "authority": 'PROJECT_RECORD',
             "text": json.dumps(
                 {
                     key: item.get(key)
@@ -75,9 +74,9 @@ async def generate_hypotheses(analysis_id, payload, user):
         "causal_analysis", value["project_id"], instruction, evidence
     )
     result = {
-        "_id": new_id(policy["ai_result_id_prefix"]),
+        "_id": new_id('AIR'),
         "project_id": value["project_id"],
-        "result_type": policy["hypothesis_result_type"],
+        "result_type": 'CAUSAL_ANALYSIS_HYPOTHESES',
         "subject_id": analysis_id,
         "candidate_only": True,
         "human_confirmation_required": True,

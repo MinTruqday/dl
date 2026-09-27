@@ -2,7 +2,7 @@ import re
 from difflib import SequenceMatcher
 
 from src.core.common import plain_text
-from src.modules.quality.services.quality_policy import evaluate_rules, quality_policy
+from src.modules.quality.services.quality_policy import evaluate_rules
 
 
 def requirement_findings(version, acceptance_criteria=None):
@@ -19,7 +19,7 @@ def requirement_findings(version, acceptance_criteria=None):
                 "id": item.get("_id") if isinstance(item, dict) else None,
                 "key": item.get("key")
                 if isinstance(item, dict)
-                else f"{quality_policy()['duplicate_scoring']['criterion_key_prefix']}{index + 1:02d}",
+                else f"AC-{index + 1:02d}",
                 "text": content,
             }
         )
@@ -41,17 +41,15 @@ def requirement_findings(version, acceptance_criteria=None):
 
 
 def requirement_duplicate_score(left, right):
-    policy = quality_policy()["duplicate_scoring"]
-    scoring = policy["requirement"]
     left_text = _requirement_projection(left)
     right_text = _requirement_projection(right)
     if not left_text or not right_text:
         return 0, []
     if left_text == right_text:
-        return 1, [scoring["exact_reason"]]
+        return 1, ["Nội dung yêu cầu trùng khớp hoàn toàn"]
     lexical = SequenceMatcher(None, left_text, right_text).ratio()
-    left_terms = set(re.findall(policy["term_pattern"], left_text))
-    right_terms = set(re.findall(policy["term_pattern"], right_text))
+    left_terms = set(re.findall(r"[\wÀ-ỹ]+", left_text))
+    right_terms = set(re.findall(r"[\wÀ-ỹ]+", right_text))
     semantic = len(left_terms & right_terms) / max(1, len(left_terms | right_terms))
     left_rules = {
         str(value).strip().lower() for value in left.get("business_rules", []) if str(value).strip()
@@ -68,18 +66,16 @@ def requirement_duplicate_score(left, right):
     )
     score = min(
         1,
-        scoring["lexical_weight"] * lexical
-        + scoring["semantic_weight"] * semantic
-        + scoring["rule_weight"] * rule_overlap,
+        0.65 * lexical + 0.25 * semantic + 0.1 * rule_overlap,
     )
     reasons = []
-    if lexical >= scoring["lexical_reason_threshold"]:
-        reasons.append(scoring["lexical_reason"])
-    if semantic >= scoring["semantic_reason_threshold"]:
-        reasons.append(scoring["semantic_reason"])
-    if rule_overlap > scoring["rule_reason_threshold"]:
-        reasons.append(scoring["rule_reason"])
-    return round(score, policy["precision"]), reasons
+    if lexical >= 0.75:
+        reasons.append("Tiêu đề và nội dung gần giống")
+    if semantic >= 0.55:
+        reasons.append("Có nhiều thuật ngữ nghiệp vụ chung")
+    if rule_overlap > 0:
+        reasons.append("Có quy tắc nghiệp vụ trùng nhau")
+    return round(score, 4), reasons
 
 
 def lint_test_case(draft):
@@ -93,8 +89,6 @@ def lint_test_case(draft):
 
 
 def duplicate_score(left, right):
-    policy = quality_policy()["duplicate_scoring"]
-    scoring = policy["test_case"]
     left_text = _test_projection(left)
     right_text = _test_projection(right)
     lexical = SequenceMatcher(None, left_text, right_text).ratio()
@@ -109,18 +103,16 @@ def duplicate_score(left, right):
     right_steps = len(right.get("steps", []))
     structure = 1 - abs(left_steps - right_steps) / max(1, left_steps, right_steps)
     score = (
-        scoring["lexical_weight"] * lexical
-        + scoring["trace_weight"] * trace
-        + scoring["structure_weight"] * structure
+        0.6 * lexical + 0.25 * trace + 0.15 * structure
     )
     reasons = []
-    if lexical >= scoring["lexical_reason_threshold"]:
-        reasons.append(scoring["lexical_reason"])
-    if trace > scoring["trace_reason_threshold"]:
-        reasons.append(scoring["trace_reason"])
-    if structure >= scoring["structure_reason_threshold"]:
-        reasons.append(scoring["structure_reason"])
-    return round(score, policy["precision"]), reasons
+    if lexical >= 0.75:
+        reasons.append("Nội dung và kết quả mong đợi gần giống")
+    if trace > 0:
+        reasons.append("Cùng liên kết yêu cầu hoặc tiêu chí chấp nhận")
+    if structure >= 0.8:
+        reasons.append("Cấu trúc bước tương đồng")
+    return round(score, 4), reasons
 
 
 def _test_projection(value):

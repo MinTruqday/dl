@@ -3,7 +3,6 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project_entity, new_id, now, plain_text
 from src.repositories.test_run import test_run_repository
-from src.services.domain_policy import domain_policy
 from src.modules.execution.services.execution_policy import (
     EXECUTION_TRANSITIONS,
     enforce_not_applicable_policy,
@@ -15,26 +14,26 @@ from src.modules.execution.services.execution_policy import (
 from src.clients.project_knowledge import index_artifact
 
 
-TEST_RUN_POLICY = domain_policy("test_run")
+
 
 
 async def start_test_run_record(run_id, user):
-    policy = TEST_RUN_POLICY
+    
     run = await get_project_entity(
-        policy["run_collection"], run_id, user, policy["start_permission"]
+        'test_runs', run_id, user, 'testrun.start'
     )
-    if run["status"] == policy["in_progress_status"]:
+    if run["status"] == 'IN_PROGRESS':
         return run
-    if run["status"] not in policy["startable_statuses"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if run["status"] not in ['DRAFT', 'READY']:
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     if run.get("environment_id"):
         environment = await test_run_repository.find_environment(
             run["environment_id"], run["project_id"]
         )
-        if environment and environment.get("availability") != policy["available_environment_status"]:
+        if environment and environment.get("availability") != 'AVAILABLE':
             raise HTTPException(
                 status_code=409,
-                detail={"code": policy["environment_unavailable_code"]},
+                detail={"code": 'TEST_ENVIRONMENT_UNAVAILABLE'},
             )
     scope = frozen_run_scope(run)
     scope_fingerprint = frozen_run_scope_hash(scope)
@@ -42,7 +41,7 @@ async def start_test_run_record(run_id, user):
     updated = await test_run_repository.transition_run(
         {"_id": run_id, "status": run["status"], "revision": run.get("revision", 1)},
         {
-            "status": policy["in_progress_status"],
+            "status": 'IN_PROGRESS',
             "frozen_scope": scope,
             "frozen_scope_hash": scope_fingerprint,
             "started_at": timestamp,
@@ -51,39 +50,39 @@ async def start_test_run_record(run_id, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
-    await audit(user.id, policy["started_event"], policy["run_entity"], run_id, run["project_id"])
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
+    await audit(user.id, 'test_run_started', 'TestRun', run_id, run["project_id"])
     return updated
 
 
 async def resume_test_run_record(project_id, run_id, payload, user):
-    policy = TEST_RUN_POLICY
+    
     run = await get_project_entity(
-        policy["run_collection"], run_id, user, policy["execute_permission"]
+        'test_runs', run_id, user, 'testrun.execute'
     )
     if run["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     existing = await test_run_repository.find_resume_event(run_id, payload.idempotency_key)
     if existing:
         return await replay_resume_event(run, existing), run.get("revision", 1)
-    if run.get("status") != policy["in_progress_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["not_in_progress_code"]})
+    if run.get("status") != 'IN_PROGRESS':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_RUN_NOT_IN_PROGRESS'})
     if run.get("revision", 1) != payload.expected_revision:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["revision_conflict_code"],
+                "code": 'REVISION_CONFLICT',
                 "current_revision": run.get("revision", 1),
             },
         )
     scope = frozen_run_scope(run)
     scope_fingerprint = frozen_run_scope_hash(scope)
     if run.get("frozen_scope_hash") and run["frozen_scope_hash"] != scope_fingerprint:
-        raise HTTPException(status_code=409, detail={"code": policy["scope_changed_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'TEST_RUN_SCOPE_CHANGED'})
     selected = await select_resume_execution(run, user)
     timestamp = now()
     event = {
-        "_id": new_id(policy["resume_id_prefix"]),
+        "_id": new_id('RSM'),
         "project_id": project_id,
         "test_run_id": run_id,
         "idempotency_key": payload.idempotency_key,
@@ -112,7 +111,7 @@ async def resume_test_run_record(project_id, run_id, payload, user):
         {
             "_id": run_id,
             "project_id": project_id,
-            "status": policy["in_progress_status"],
+            "status": 'IN_PROGRESS',
             "revision": payload.expected_revision,
         },
         {
@@ -126,13 +125,13 @@ async def resume_test_run_record(project_id, run_id, payload, user):
     )
     if not updated:
         await test_run_repository.delete_resume_event(event["_id"])
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     await test_run_repository.set_resume_event_revision(event["_id"], updated["revision"])
     event["run_revision"] = updated["revision"]
     await audit(
         user.id,
-        policy["resumed_event"],
-        policy["run_entity"],
+        'test_run_resumed',
+        'TestRun',
         run_id,
         project_id,
         {
@@ -148,35 +147,35 @@ async def resume_test_run_record(project_id, run_id, payload, user):
 
 
 async def record_test_result_entry(run_id, test_case_version_id, payload, user):
-    policy = TEST_RUN_POLICY
+    
     run = await get_project_entity(
-        policy["run_collection"], run_id, user, policy["execute_permission"]
+        'test_runs', run_id, user, 'testrun.execute'
     )
-    if run["status"] != policy["in_progress_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["not_in_progress_code"]})
+    if run["status"] != 'IN_PROGRESS':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_RUN_NOT_IN_PROGRESS'})
     if run.get("execution_paused"):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["paused_by_incident_code"],
+                "code": 'TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT',
                 "incident_id": run.get("paused_by_environment_incident_id"),
             },
         )
     if test_case_version_id not in run["test_case_version_ids"]:
-        raise HTTPException(status_code=422, detail={"code": policy["test_not_in_snapshot_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'TEST_NOT_IN_RUN_SNAPSHOT'})
     existing = await test_run_repository.find_result_for_case(run_id, test_case_version_id)
     if existing and existing.get("idempotency_key") == payload.idempotency_key:
         return existing
     await enforce_not_applicable_policy(run["project_id"], payload.status, payload.step_results)
     if existing:
-        if existing.get("status") != policy["not_run_status"]:
-            raise HTTPException(status_code=409, detail={"code": policy["result_already_recorded_code"]})
+        if existing.get("status") != 'NOT_RUN':
+            raise HTTPException(status_code=409, detail={"code": 'RESULT_ALREADY_RECORDED'})
         timestamp = now()
         result = await test_run_repository.update_result(
             {
                 "_id": existing["_id"],
                 "project_id": run["project_id"],
-                "status": policy["not_run_status"],
+                "status": 'NOT_RUN',
                 "revision": existing.get("revision", 1),
             },
             {
@@ -190,11 +189,11 @@ async def record_test_result_entry(run_id, test_case_version_id, payload, user):
             },
         )
         if not result:
-            raise HTTPException(status_code=409, detail={"code": policy["execution_conflict_code"]})
+            raise HTTPException(status_code=409, detail={"code": 'EXECUTION_CONFLICT'})
     else:
         timestamp = now()
         result = {
-            "_id": new_id(policy["result_id_prefix"]),
+            "_id": new_id('TRES'),
             "project_id": run["project_id"],
             "test_run_id": run_id,
             "test_case_version_id": test_case_version_id,
@@ -214,15 +213,15 @@ async def record_test_result_entry(run_id, test_case_version_id, payload, user):
     await test_run_repository.touch_run(run_id, None, now())
     await audit(
         user.id,
-        policy["result_recorded_event"],
-        policy["result_entity"],
+        'test_result_recorded',
+        'TestResult',
         result["_id"],
         run["project_id"],
         {"status": payload.status},
     )
     await index_artifact(
         run["project_id"],
-        policy["result_artifact_type"],
+        'test_result',
         result["_id"],
         result["_id"],
         result["_id"],
@@ -234,7 +233,7 @@ async def record_test_result_entry(run_id, test_case_version_id, payload, user):
             ]
         ),
         result["status"],
-        policy["project_reference_authority"],
+        'PROJECT_REFERENCE',
         result.get("revision", 1),
         test_run_id=run_id,
         test_case_version_id=test_case_version_id,
@@ -243,12 +242,12 @@ async def record_test_result_entry(run_id, test_case_version_id, payload, user):
 
 
 async def update_test_execution_record(project_id, execution_id, payload, user):
-    policy = TEST_RUN_POLICY
+    
     result = await get_project_entity(
-        policy["result_collection"], execution_id, user, policy["execute_permission"]
+        'test_results', execution_id, user, 'testrun.execute'
     )
     if result["project_id"] != project_id:
-        raise HTTPException(status_code=422, detail={"code": policy["project_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'PROJECT_MISMATCH'})
     existing_event = await test_run_repository.find_execution_update(
         execution_id, payload.idempotency_key
     )
@@ -259,13 +258,13 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
         }
     await enforce_not_applicable_policy(project_id, payload.status, payload.step_results)
     run = await test_run_repository.find_run(result["test_run_id"], project_id)
-    if not run or run.get("status") != policy["in_progress_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["not_in_progress_code"]})
+    if not run or run.get("status") != 'IN_PROGRESS':
+        raise HTTPException(status_code=409, detail={"code": 'TEST_RUN_NOT_IN_PROGRESS'})
     if run.get("execution_paused"):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["paused_by_incident_code"],
+                "code": 'TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT',
                 "incident_id": run.get("paused_by_environment_incident_id"),
             },
         )
@@ -274,14 +273,14 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["invalid_execution_transition_code"],
+                "code": 'INVALID_EXECUTION_TRANSITION',
                 "from": result.get("status"),
                 "to": payload.status,
             },
         )
     expected_revision = payload.expected_revision or result.get("revision", 1)
     timestamp = now()
-    terminal = payload.status in policy["terminal_result_statuses"]
+    terminal = payload.status in ['PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE']
     updated = await test_run_repository.update_result(
         {"_id": execution_id, "project_id": project_id, "revision": expected_revision},
         {
@@ -300,9 +299,9 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
         },
     )
     if not updated:
-        raise HTTPException(status_code=409, detail={"code": policy["revision_conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REVISION_CONFLICT'})
     event = {
-        "_id": new_id(policy["execution_update_id_prefix"]),
+        "_id": new_id('TEU'),
         "project_id": project_id,
         "test_result_id": execution_id,
         "from_status": result.get("status"),
@@ -320,8 +319,8 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
     await test_run_repository.touch_run(result["test_run_id"], project_id, now())
     await audit(
         user.id,
-        policy["execution_updated_event"],
-        policy["execution_entity"],
+        'test_execution_updated',
+        'TestExecution',
         execution_id,
         project_id,
         {"status": payload.status},
@@ -330,9 +329,9 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
 
 
 async def correct_test_result_record(result_id, payload, user):
-    policy = TEST_RUN_POLICY
+    
     result = await get_project_entity(
-        policy["result_collection"], result_id, user, policy["correct_permission"]
+        'test_results', result_id, user, 'testresult.correct'
     )
     existing = await test_run_repository.find_correction(result_id, payload.idempotency_key)
     if existing:
@@ -342,7 +341,7 @@ async def correct_test_result_record(result_id, payload, user):
         }
     await enforce_not_applicable_policy(result["project_id"], payload.status)
     event = {
-        "_id": new_id(policy["correction_id_prefix"]),
+        "_id": new_id('TRC'),
         "project_id": result["project_id"],
         "test_result_id": result_id,
         "from_status": result.get("status"),
@@ -374,8 +373,8 @@ async def correct_test_result_record(result_id, payload, user):
     )
     await audit(
         user.id,
-        policy["result_corrected_event"],
-        policy["result_entity"],
+        'test_result_corrected',
+        'TestResult',
         result_id,
         result["project_id"],
         {"from": result.get("status"), "to": payload.status, "correction_id": event["_id"]},
@@ -387,29 +386,29 @@ async def correct_test_result_record(result_id, payload, user):
 
 
 async def complete_test_run_record(run_id, user):
-    policy = TEST_RUN_POLICY
+    
     run = await get_project_entity(
-        policy["run_collection"], run_id, user, policy["complete_permission"]
+        'test_runs', run_id, user, 'testrun.complete'
     )
-    if run["status"] == policy["completed_status"]:
+    if run["status"] == 'COMPLETED':
         return run
-    if run["status"] != policy["in_progress_status"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if run["status"] != 'IN_PROGRESS':
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     result_count = await test_run_repository.count_results_by_status(
-        run_id, policy["terminal_result_statuses"]
+        run_id, ['PASS', 'FAIL', 'BLOCKED', 'SKIPPED', 'NOT_APPLICABLE']
     )
     total_count = len(run["test_case_version_ids"])
     project = await test_run_repository.project_settings(run["project_id"])
     partial_allowed = bool(
         (project.get("settings") or {}).get(
-            policy["partial_completion_setting"], policy["default_partial_completion"]
+            'partial_complete_allowed', False
         )
     )
     if result_count < total_count and not partial_allowed:
         raise HTTPException(
             status_code=409,
             detail={
-                "code": policy["partial_execution_code"],
+                "code": 'PARTIAL_EXECUTION',
                 "completed": result_count,
                 "total": total_count,
             },
@@ -419,7 +418,7 @@ async def complete_test_run_record(run_id, user):
     updated = await test_run_repository.update_run(
         run_id,
         {
-            "status": policy["completed_status"],
+            "status": 'COMPLETED',
             "completed_at": timestamp,
             "completed_by": user.id,
             "completed_result_count": result_count,
@@ -430,8 +429,8 @@ async def complete_test_run_record(run_id, user):
     )
     await audit(
         user.id,
-        policy["completed_event"],
-        policy["run_entity"],
+        'test_run_completed',
+        'TestRun',
         run_id,
         run["project_id"],
         {"completed": result_count, "total": total_count, "partial_completion": partial_completion},
@@ -440,17 +439,17 @@ async def complete_test_run_record(run_id, user):
 
 
 async def abort_test_run_record(run_id, reason, user):
-    policy = TEST_RUN_POLICY
+    
     run = await get_project_entity(
-        policy["run_collection"], run_id, user, policy["abort_permission"]
+        'test_runs', run_id, user, 'testrun.abort'
     )
-    if run["status"] not in policy["abortable_statuses"]:
-        raise HTTPException(status_code=409, detail={"code": policy["invalid_transition_code"]})
+    if run["status"] not in ['DRAFT', 'READY', 'IN_PROGRESS']:
+        raise HTTPException(status_code=409, detail={"code": 'INVALID_STATE_TRANSITION'})
     timestamp = now()
     updated = await test_run_repository.update_run(
         run_id,
         {
-            "status": policy["aborted_status"],
+            "status": 'ABORTED',
             "abort_reason": reason,
             "aborted_by": user.id,
             "aborted_at": timestamp,
@@ -459,8 +458,8 @@ async def abort_test_run_record(run_id, reason, user):
     )
     await audit(
         user.id,
-        policy["aborted_event"],
-        policy["run_entity"],
+        'test_run_aborted',
+        'TestRun',
         run_id,
         run["project_id"],
         {"reason": reason},

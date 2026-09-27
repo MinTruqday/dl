@@ -16,11 +16,10 @@ from src.core.common import (
 from src.repositories.test_design import test_design_repository
 from src.core.ai_assistance import ai_contract_metadata
 from src.modules.design.services.generation import generate_requirement_drafts
-from src.services.domain_policy import domain_policy
 from src.modules.design.services.test_case_records import validate_design_sources
 
 
-TEST_DESIGN_POLICY = domain_policy("test_design")
+
 
 
 async def create_test_scenario_record(project_id, payload, user):
@@ -32,14 +31,14 @@ async def create_test_scenario_record(project_id, payload, user):
         test_condition_ids=payload.test_condition_ids,
     )
     scenario = {
-        "_id": new_id(TEST_DESIGN_POLICY["scenario_id_prefix"]),
+        "_id": new_id('TS'),
         "project_id": project_id,
         **payload.model_dump(),
         "scenario_key": payload.scenario_key
         or await next_key(
             project_id,
-            TEST_DESIGN_POLICY["scenario_counter_name"],
-            TEST_DESIGN_POLICY["scenario_id_prefix"],
+            'scenario',
+            'TS',
         ),
         "revision": 1,
         "created_by": user.id,
@@ -50,7 +49,7 @@ async def create_test_scenario_record(project_id, payload, user):
         await test_design_repository.insert_scenario(scenario)
     except DuplicateKeyError:
         raise HTTPException(
-            status_code=409, detail={"code": TEST_DESIGN_POLICY["scenario_key_exists_code"]}
+            status_code=409, detail={"code": 'SCENARIO_KEY_EXISTS'}
         )
     await audit(user.id, "test_scenario_created", "TestScenario", scenario["_id"], project_id)
     return scenario
@@ -70,7 +69,7 @@ async def list_test_scenario_records(
         if value:
             query[field] = value
     sort_field, direction = sort_spec(
-        sort, set(TEST_DESIGN_POLICY["scenario_sort_fields"])
+        sort, set(['scenario_key', 'title', 'category', 'risk', 'status', 'created_at', 'updated_at'])
     )
     return await test_design_repository.list_scenarios(
         query, sort_field, direction, limit
@@ -89,7 +88,7 @@ async def update_test_scenario_record(scenario_id, payload, user):
     scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.update")
     if scenario.get("status") != "draft":
         raise HTTPException(
-            status_code=409, detail={"code": TEST_DESIGN_POLICY["scenario_immutable_code"]}
+            status_code=409, detail={"code": 'IMMUTABLE_SCENARIO'}
         )
     await validate_design_sources(
         scenario["project_id"],
@@ -119,11 +118,11 @@ async def clone_test_scenario_record(scenario_id, user):
     timestamp = now()
     cloned = {
         **scenario,
-        "_id": new_id(TEST_DESIGN_POLICY["scenario_id_prefix"]),
+        "_id": new_id('TS'),
         "scenario_key": await next_key(
             scenario["project_id"],
-            TEST_DESIGN_POLICY["scenario_counter_name"],
-            TEST_DESIGN_POLICY["scenario_id_prefix"],
+            'scenario',
+            'TS',
         ),
         "title": f"{scenario['title']} bản sao",
         "status": "draft",

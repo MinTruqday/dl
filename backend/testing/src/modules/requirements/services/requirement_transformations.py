@@ -14,14 +14,12 @@ from src.core.common import (
     validate_doc,
 )
 from src.repositories.requirement import requirement_repository
-from src.services.domain_policy import domain_policy
 from src.modules.requirements.services.requirement_indexing import (
     index_requirement_version,
     validate_requirement_sources,
 )
 from src.modules.requirements.services.requirement_workflow import serialized_content
 
-TRANSFORMATION_POLICY = domain_policy("requirement_transformations")
 
 
 def unique_source_refs(values):
@@ -46,15 +44,15 @@ async def load_requirement_baselines(
     await get_project(project_id, user, permission)
     ordered_ids = list(dict.fromkeys(requirement_ids))
     if len(ordered_ids) != len(requirement_ids):
-        raise HTTPException(status_code=422, detail={"code": TRANSFORMATION_POLICY["duplicate_source_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'DUPLICATE_SOURCE_REQUIREMENT'})
     if set(expected_version_ids) != set(ordered_ids):
-        raise HTTPException(status_code=422, detail={"code": TRANSFORMATION_POLICY["source_version_set_mismatch_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'SOURCE_VERSION_SET_MISMATCH'})
     requirements = await requirement_repository.list_requirements_by_ids(
         project_id, ordered_ids, len(ordered_ids)
     )
     by_id = {item["_id"]: item for item in requirements}
     if set(by_id) != set(ordered_ids):
-        raise HTTPException(status_code=404, detail={"code": TRANSFORMATION_POLICY["source_not_found_code"]})
+        raise HTTPException(status_code=404, detail={"code": 'SOURCE_REQUIREMENT_NOT_FOUND'})
     version_ids = list(expected_version_ids.values())
     versions = await requirement_repository.list_versions_by_ids(
         project_id, version_ids, len(version_ids)
@@ -62,7 +60,7 @@ async def load_requirement_baselines(
     versions_by_id = {item["_id"]: item for item in versions}
     if set(versions_by_id) != set(version_ids):
         raise HTTPException(
-            status_code=404, detail={"code": TRANSFORMATION_POLICY["source_version_not_found_code"]}
+            status_code=404, detail={"code": 'SOURCE_REQUIREMENT_VERSION_NOT_FOUND'}
         )
     sources = []
     for requirement_id in ordered_ids:
@@ -73,19 +71,19 @@ async def load_requirement_baselines(
             raise HTTPException(
                 status_code=409,
                 detail={
-                    "code": TRANSFORMATION_POLICY["stale_source_code"],
+                    "code": 'STALE_SOURCE_REQUIREMENT',
                     "requirement_id": requirement_id,
                     "current_version_id": requirement.get("current_version_id"),
                 },
             )
         if (
-            requirement.get("status") != TRANSFORMATION_POLICY["baselined_status"]
-            or version.get("status") != TRANSFORMATION_POLICY["baselined_status"]
+            requirement.get("status") != 'BASELINED'
+            or version.get("status") != 'BASELINED'
         ):
             raise HTTPException(
                 status_code=409,
                 detail={
-                    "code": TRANSFORMATION_POLICY["source_not_baselined_code"],
+                    "code": 'SOURCE_REQUIREMENT_NOT_BASELINED',
                     "requirement_id": requirement_id,
                 },
             )
@@ -107,28 +105,28 @@ async def claim_requirement_transformation(
     )
     if existing:
         if existing.get("request_fingerprint") != request_fingerprint:
-            raise HTTPException(status_code=409, detail={"code": TRANSFORMATION_POLICY["idempotency_reused_code"]})
-        if existing.get("status") == TRANSFORMATION_POLICY["confirmed_status"]:
+            raise HTTPException(status_code=409, detail={"code": 'IDEMPOTENCY_KEY_REUSED'})
+        if existing.get("status") == 'CONFIRMED':
             return existing, False
-        if existing.get("status") == TRANSFORMATION_POLICY["confirming_status"]:
+        if existing.get("status") == 'CONFIRMING':
             raise HTTPException(
-                status_code=409, detail={"code": TRANSFORMATION_POLICY["in_progress_code"]}
+                status_code=409, detail={"code": 'REQUIREMENT_TRANSFORMATION_IN_PROGRESS'}
             )
         claimed = await requirement_repository.claim_failed_transformation(
             existing["_id"],
             project_id,
-            TRANSFORMATION_POLICY["failed_status"],
-            TRANSFORMATION_POLICY["confirming_status"],
+            'FAILED',
+            'CONFIRMING',
             now(),
         )
         if not claimed:
             raise HTTPException(
-                status_code=409, detail={"code": TRANSFORMATION_POLICY["conflict_code"]}
+                status_code=409, detail={"code": 'REQUIREMENT_TRANSFORMATION_CONFLICT'}
             )
         return claimed, True
     timestamp = now()
     transformation = {
-        "_id": new_id(TRANSFORMATION_POLICY["transformation_id_prefix"]),
+        "_id": new_id('RTX'),
         "project_id": project_id,
         "type": transformation_type,
         "source_requirement_ids": source_requirement_ids,
@@ -138,8 +136,8 @@ async def claim_requirement_transformation(
         "reason": payload.reason,
         "idempotency_key": payload.idempotency_key,
         "request_fingerprint": request_fingerprint,
-        "status": TRANSFORMATION_POLICY["confirming_status"],
-        "attempt": TRANSFORMATION_POLICY["initial_attempt"],
+        "status": 'CONFIRMING',
+        "attempt": 1,
         "created_by": user.id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -153,10 +151,10 @@ async def claim_requirement_transformation(
         if (
             existing
             and existing.get("request_fingerprint") == request_fingerprint
-            and existing.get("status") == TRANSFORMATION_POLICY["confirmed_status"]
+            and existing.get("status") == 'CONFIRMED'
         ):
             return existing, False
-        raise HTTPException(status_code=409, detail={"code": TRANSFORMATION_POLICY["conflict_code"]})
+        raise HTTPException(status_code=409, detail={"code": 'REQUIREMENT_TRANSFORMATION_CONFLICT'})
     return transformation, True
 
 
@@ -166,14 +164,14 @@ async def prepare_requirement_output(
     validate_doc(draft.content_doc)
     keys = [item.key for item in draft.acceptance_criteria]
     if len(keys) != len(set(keys)):
-        raise HTTPException(status_code=422, detail={"code": TRANSFORMATION_POLICY["duplicate_criterion_key_code"]})
+        raise HTTPException(status_code=422, detail={"code": 'DUPLICATE_ACCEPTANCE_CRITERION_KEY'})
     for item in draft.acceptance_criteria:
         validate_doc(item.content_doc)
     source_refs = unique_source_refs(
         list(draft.source_refs)
         + [
             {
-                "type": TRANSFORMATION_POLICY["requirement_source_type"],
+                "type": 'requirement_version',
                 "requirement_id": requirement["_id"],
                 "requirement_version_id": version["_id"],
                 "relation": relation,
@@ -183,19 +181,19 @@ async def prepare_requirement_output(
     )
     await validate_requirement_sources(project_id, source_refs)
     timestamp = now()
-    requirement_id = f"{transformation['_id']}-{TRANSFORMATION_POLICY['requirement_id_segment']}-{index + 1}"
-    version_id = f"{transformation['_id']}-{TRANSFORMATION_POLICY['version_id_segment']}-{index + 1}"
+    requirement_id = f"{transformation['_id']}-{'REQ'}-{index + 1}"
+    version_id = f"{transformation['_id']}-{'REQV'}-{index + 1}"
     requirement_key = draft.requirement_key or await next_key(
         project_id,
-        TRANSFORMATION_POLICY["requirement_counter"],
-        TRANSFORMATION_POLICY["requirement_key_prefix"],
+        'requirement',
+        'REQ',
     )
     version = {
         "_id": version_id,
         "project_id": project_id,
         "requirement_id": requirement_id,
         "requirement_key": requirement_key,
-        "version": TRANSFORMATION_POLICY["initial_version"],
+        "version": 1,
         "title": draft.title,
         "type": draft.type,
         "priority": draft.priority,
@@ -211,8 +209,8 @@ async def prepare_requirement_output(
         "acceptance_criterion_ids": [],
         "parent_version_id": None,
         "change_reason": transformation["reason"],
-        "status": TRANSFORMATION_POLICY["draft_status"],
-        "revision": TRANSFORMATION_POLICY["initial_revision"],
+        "status": 'DRAFT',
+        "revision": 1,
         "origin": relation,
         "transformation_id": transformation["_id"],
         "derived_from": [
@@ -226,9 +224,9 @@ async def prepare_requirement_output(
     criteria = []
     for criterion_index, value in enumerate(draft.acceptance_criteria):
         item = value.model_dump()
-        item["status"] = TRANSFORMATION_POLICY["criterion_draft_status"]
+        item["status"] = 'draft'
         criterion = {
-            "_id": f"{transformation['_id']}-{TRANSFORMATION_POLICY['criterion_id_segment']}-{index + 1}-{criterion_index + 1}",
+            "_id": f"{transformation['_id']}-{'AC'}-{index + 1}-{criterion_index + 1}",
             "project_id": project_id,
             "requirement_version_id": version_id,
             **item,
@@ -242,7 +240,7 @@ async def prepare_requirement_output(
         "project_id": project_id,
         "requirement_key": requirement_key,
         "current_version_id": version_id,
-        "status": TRANSFORMATION_POLICY["draft_status"],
+        "status": 'DRAFT',
         "owner_id": draft.owner_id or user.id,
         "tags": draft.tags,
         "transformation_id": transformation["_id"],
@@ -256,12 +254,12 @@ async def hydrate_requirement_transformation(transformation):
     requirements = await requirement_repository.list_requirements_by_ids(
         transformation["project_id"],
         transformation.get("result_requirement_ids", []),
-        TRANSFORMATION_POLICY["hydration_limit"],
+        100,
     )
     versions = await requirement_repository.list_versions_by_ids(
         transformation["project_id"],
         transformation.get("result_version_ids", []),
-        TRANSFORMATION_POLICY["hydration_limit"],
+        100,
     )
     versions_by_id = {item["_id"]: item for item in versions}
     return {
@@ -291,7 +289,7 @@ async def execute_requirement_transformation(
         keys = [item["requirement_key"] for item in output_requirements]
         if len(keys) != len(set(keys)):
             raise HTTPException(
-                status_code=422, detail={"code": TRANSFORMATION_POLICY["duplicate_output_key_code"]}
+                status_code=422, detail={"code": 'DUPLICATE_OUTPUT_REQUIREMENT_KEY'}
             )
         await requirement_repository.insert_outputs(
             output_requirements, output_versions, output_criteria
@@ -302,41 +300,41 @@ async def execute_requirement_transformation(
             version_updated = await requirement_repository.supersede_version(
                 source_version["_id"],
                 project_id,
-                TRANSFORMATION_POLICY["baselined_status"],
-                TRANSFORMATION_POLICY["superseded_status"],
+                'BASELINED',
+                'SUPERSEDED',
                 result_ids,
                 transformation["_id"],
                 user.id,
                 timestamp,
             )
             if not version_updated:
-                raise HTTPException(status_code=409, detail={"code": TRANSFORMATION_POLICY["stale_source_code"]})
+                raise HTTPException(status_code=409, detail={"code": 'STALE_SOURCE_REQUIREMENT'})
             updated_sources.append((source_requirement["_id"], source_version["_id"]))
             requirement_updated = await requirement_repository.supersede_requirement(
                 source_requirement["_id"],
                 source_version["_id"],
                 project_id,
-                TRANSFORMATION_POLICY["baselined_status"],
-                TRANSFORMATION_POLICY["superseded_status"],
+                'BASELINED',
+                'SUPERSEDED',
                 result_ids,
                 transformation["_id"],
                 user.id,
                 timestamp,
             )
             if not requirement_updated:
-                raise HTTPException(status_code=409, detail={"code": TRANSFORMATION_POLICY["stale_source_code"]})
+                raise HTTPException(status_code=409, detail={"code": 'STALE_SOURCE_REQUIREMENT'})
         transformation = await requirement_repository.confirm_transformation(
             transformation["_id"],
             project_id,
-            TRANSFORMATION_POLICY["confirming_status"],
-            TRANSFORMATION_POLICY["confirmed_status"],
+            'CONFIRMING',
+            'CONFIRMED',
             result_ids,
             [item["_id"] for item in output_versions],
             now(),
         )
         if not transformation:
             raise HTTPException(
-                status_code=409, detail={"code": TRANSFORMATION_POLICY["conflict_code"]}
+                status_code=409, detail={"code": 'REQUIREMENT_TRANSFORMATION_CONFLICT'}
             )
     except Exception as error:
         for requirement_id, version_id in updated_sources:
@@ -345,7 +343,7 @@ async def execute_requirement_transformation(
                 version_id,
                 project_id,
                 transformation["_id"],
-                TRANSFORMATION_POLICY["baselined_status"],
+                'BASELINED',
                 now(),
             )
         await requirement_repository.discard_transformation_outputs(
@@ -356,7 +354,7 @@ async def execute_requirement_transformation(
         await requirement_repository.fail_transformation(
             transformation["_id"],
             project_id,
-            TRANSFORMATION_POLICY["failed_status"],
+            'FAILED',
             getattr(error, "detail", {"code": type(error).__name__}),
             now(),
         )
@@ -364,8 +362,8 @@ async def execute_requirement_transformation(
     indexed = [await index_requirement_version(version) for version in output_versions]
     await audit(
         user.id,
-        TRANSFORMATION_POLICY["relation_events"][relation],
-        TRANSFORMATION_POLICY["transformation_entity"],
+        {'split': 'requirement_split_confirmed', 'merge': 'requirement_merge_confirmed'}[relation],
+        'RequirementTransformation',
         transformation["_id"],
         project_id,
         {
@@ -377,6 +375,6 @@ async def execute_requirement_transformation(
     result = await hydrate_requirement_transformation(transformation)
     return envelope(
         result,
-        status=TRANSFORMATION_POLICY["success_status"] if all(indexed) else TRANSFORMATION_POLICY["degraded_status"],
-        degraded_mode=None if all(indexed) else TRANSFORMATION_POLICY["degraded_vector_mode"],
+        status='SUCCESS' if all(indexed) else 'DEGRADED',
+        degraded_mode=None if all(indexed) else 'DEGRADED_VECTOR',
     )

@@ -3,11 +3,10 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now, optimistic_patch
 from src.repositories.project_notification import project_notification_repository
-from src.services.domain_policy import domain_policy
 
 
-NOTIFICATION_POLICY = domain_policy("project_notification")
-ARTIFACT_COLLECTIONS = NOTIFICATION_POLICY["artifact_collections"]
+
+
 
 
 def artifact_label(artifact):
@@ -22,28 +21,28 @@ def artifact_label(artifact):
 
 def default_rules(project_id):
     return {
-        "_id": f"{NOTIFICATION_POLICY['rule_id_prefix']}{project_id}",
+        "_id": f"{'PNRULE:'}{project_id}",
         "project_id": project_id,
         "enabled_events": [],
-        "channels": NOTIFICATION_POLICY["default_channels"],
-        "target_roles": NOTIFICATION_POLICY["default_target_roles"],
+        "channels": ['in_app'],
+        "target_roles": ['QA'],
         "escalation_minutes": None,
-        "revision": NOTIFICATION_POLICY["initial_revision"],
+        "revision": 0,
     }
 
 
 def default_preferences(project_id, user_id):
     return {
-        "_id": f"{NOTIFICATION_POLICY['preference_id_prefix']}{project_id}:{user_id}",
+        "_id": f"{'NPREF:'}{project_id}:{user_id}",
         "project_id": project_id,
         "user_id": user_id,
-        "digest_frequency": NOTIFICATION_POLICY["default_digest_frequency"],
-        "channels": NOTIFICATION_POLICY["default_channels"],
+        "digest_frequency": 'immediate',
+        "channels": ['in_app'],
         "muted_events": [],
         "quiet_hours_start": None,
         "quiet_hours_end": None,
-        "timezone": NOTIFICATION_POLICY["default_timezone"],
-        "revision": NOTIFICATION_POLICY["initial_revision"],
+        "timezone": 'Asia/Ho_Chi_Minh',
+        "revision": 0,
     }
 
 
@@ -54,14 +53,14 @@ class ProjectNotificationService:
         if not collection:
             raise HTTPException(
                 status_code=422,
-                detail={"code": NOTIFICATION_POLICY["invalid_artifact_type_code"]},
+                detail={"code": 'NOTIFICATION_ARTIFACT_TYPE_INVALID'},
             )
         if not await project_notification_repository.artifact_exists(
             collection, project_id, artifact_id
         ):
             raise HTTPException(
                 status_code=404,
-                detail={"code": NOTIFICATION_POLICY["entity_not_found_code"]},
+                detail={"code": 'ENTITY_NOT_FOUND'},
             )
 
     @staticmethod
@@ -72,7 +71,7 @@ class ProjectNotificationService:
             if artifact_type not in ARTIFACT_COLLECTIONS:
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": NOTIFICATION_POLICY["invalid_artifact_type_code"]},
+                    detail={"code": 'NOTIFICATION_ARTIFACT_TYPE_INVALID'},
                 )
             query["artifact_type"] = artifact_type
         items = await project_notification_repository.list_subscriptions(query)
@@ -110,7 +109,7 @@ class ProjectNotificationService:
         timestamp = now()
         subscription = await project_notification_repository.set_subscription(
             scope,
-            new_id(NOTIFICATION_POLICY["subscription_id_prefix"]),
+            new_id('NSUB'),
             timestamp,
         )
         await audit(user.id, "notification_watch_added", artifact_type, artifact_id, project_id)
@@ -136,16 +135,16 @@ class ProjectNotificationService:
                 changes,
             )
         else:
-            if payload.expected_revision != NOTIFICATION_POLICY["initial_revision"]:
+            if payload.expected_revision != 0:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": NOTIFICATION_POLICY["revision_conflict_code"]},
+                    detail={"code": 'REVISION_CONFLICT'},
                 )
             timestamp = now()
             updated = {
                 **default_rules(project_id),
                 **changes,
-                "revision": NOTIFICATION_POLICY["created_revision"],
+                "revision": 1,
                 "created_by": user.id,
                 "created_at": timestamp,
                 "updated_at": timestamp,
@@ -155,7 +154,7 @@ class ProjectNotificationService:
             except DuplicateKeyError:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": NOTIFICATION_POLICY["revision_conflict_code"]},
+                    detail={"code": 'REVISION_CONFLICT'},
                 )
         await audit(
             user.id,
@@ -186,16 +185,16 @@ class ProjectNotificationService:
                 changes,
             )
         else:
-            if payload.expected_revision != NOTIFICATION_POLICY["initial_revision"]:
+            if payload.expected_revision != 0:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": NOTIFICATION_POLICY["revision_conflict_code"]},
+                    detail={"code": 'REVISION_CONFLICT'},
                 )
             timestamp = now()
             updated = {
                 **default_preferences(project_id, user.id),
                 **changes,
-                "revision": NOTIFICATION_POLICY["created_revision"],
+                "revision": 1,
                 "created_at": timestamp,
                 "updated_at": timestamp,
             }
@@ -204,7 +203,7 @@ class ProjectNotificationService:
             except DuplicateKeyError:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": NOTIFICATION_POLICY["revision_conflict_code"]},
+                    detail={"code": 'REVISION_CONFLICT'},
                 )
         await audit(
             user.id,

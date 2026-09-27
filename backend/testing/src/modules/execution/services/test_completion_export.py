@@ -4,10 +4,9 @@ import json
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from src.services.domain_policy import domain_policy
 
 
-COMPLETION_POLICY = domain_policy("completion")
+
 
 
 def display(value):
@@ -118,5 +117,5 @@ def export_pdf(report):
 def export_completion_report(report, format_name):
     exporters = {"csv": export_csv, "docx": export_docx, "pdf": export_pdf}
     if format_name not in exporters:
-        raise ValueError(COMPLETION_POLICY["error_codes"]["export_format_unsupported"])
+        raise ValueError('COMPLETION_REPORT_EXPORT_FORMAT_UNSUPPORTED')
     return exporters[format_name](report)

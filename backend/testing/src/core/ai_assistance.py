@@ -5,10 +5,9 @@ from typing import Awaitable, Callable
 
 from src.clients.ai_assistance import ai_assistance_client
 from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
-from src.services.domain_policy import domain_policy
 
 
-ASSISTANCE_POLICY = domain_policy("ai_assistance")
+
 
 stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
     "stream_sink", default=None
@@ -18,27 +17,27 @@ stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
 def ai_contract_metadata(result):
     model = result.get("model") if isinstance(result.get("model"), dict) else {}
     return {
-        "capability": result.get("capability", ASSISTANCE_POLICY["unknown_value"]),
+        "capability": result.get("capability", 'unknown'),
         "evidence_refs": result.get("evidence_refs", []),
         "reason_codes": result.get("reason_codes", []),
         "confidence": result.get("confidence", 0),
         "provider": result.get("provider")
         or model.get("provider")
-        or ASSISTANCE_POLICY["unknown_value"],
+        or 'unknown',
         "model": model,
         "prompt_version": result.get("prompt_version")
         or model.get("prompt_version")
-        or ASSISTANCE_POLICY["unknown_value"],
+        or 'unknown',
         "tool_schema_version": result.get("tool_schema_version")
         or model.get("tool_schema_version")
-        or ASSISTANCE_POLICY["unknown_value"],
+        or 'unknown',
         "retrieval_version": result.get("retrieval_version")
         or model.get("retrieval_version")
-        or ASSISTANCE_POLICY["unknown_value"],
+        or 'unknown',
         "created_at": result.get("created_at")
         or model.get("created_at")
         or datetime.now(timezone.utc).isoformat(),
-        "status": result.get("status", ASSISTANCE_POLICY["degraded_status"]),
+        "status": result.get("status", 'DEGRADED'),
         "degraded_mode": result.get("degraded_mode"),
         "warnings": result.get("warnings", []),
     }
@@ -58,21 +57,21 @@ async def request_ai_assistance(capability, project_id, instruction, evidence):
             sink,
         )
         if result.get("capability") != capability:
-            raise ValueError(ASSISTANCE_POLICY["capability_mismatch_error"])
+            raise ValueError('AI capability mismatch')
         result["latency_ms"] = round((time.perf_counter() - started_at) * 1000, 3)
         AI_GENERATION_LATENCY.labels(capability).observe(result["latency_ms"] / 1000)
         outcome = (
-            ASSISTANCE_POLICY["success_metric"]
-            if result.get("status") == ASSISTANCE_POLICY["success_status"]
+            'success'
+            if result.get("status") == 'SUCCESS'
             and not result.get("degraded_mode")
-            else ASSISTANCE_POLICY["degraded_metric"]
+            else 'degraded'
         )
         AI_REQUESTS.labels(capability, outcome).inc()
         return result
     except Exception as error:
         latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
         AI_GENERATION_LATENCY.labels(capability).observe(latency_ms / 1000)
-        AI_REQUESTS.labels(capability, ASSISTANCE_POLICY["degraded_metric"]).inc()
+        AI_REQUESTS.labels(capability, 'degraded').inc()
         return {
             "capability": capability,
             "suggestions": [],
@@ -83,22 +82,22 @@ async def request_ai_assistance(capability, project_id, instruction, evidence):
             ],
             "confidence": 0,
             "warnings": [
-                ASSISTANCE_POLICY["provider_unavailable_code"],
-                ASSISTANCE_POLICY["manual_review_code"],
+                'AI_PROVIDER_UNAVAILABLE',
+                'MANUAL_REVIEW_REQUIRED',
             ],
             "reason_codes": [
-                ASSISTANCE_POLICY["provider_unavailable_code"],
-                ASSISTANCE_POLICY["manual_review_code"],
+                'AI_PROVIDER_UNAVAILABLE',
+                'MANUAL_REVIEW_REQUIRED',
             ],
-            "status": ASSISTANCE_POLICY["degraded_status"],
-            "degraded_mode": ASSISTANCE_POLICY["degraded_mode"],
-            "provider": ASSISTANCE_POLICY["unavailable_value"],
+            "status": 'DEGRADED',
+            "degraded_mode": 'DEGRADED_AI',
+            "provider": 'unavailable',
             "model": {
-                "provider": ASSISTANCE_POLICY["unavailable_value"],
+                "provider": 'unavailable',
             },
-            "prompt_version": ASSISTANCE_POLICY["unavailable_value"],
-            "tool_schema_version": ASSISTANCE_POLICY["tool_schema_version"],
-            "retrieval_version": ASSISTANCE_POLICY["retrieval_version"],
+            "prompt_version": 'unavailable',
+            "tool_schema_version": '1',
+            "retrieval_version": 'project_evidence',
             "created_at": datetime.now(timezone.utc).isoformat(),
             "error_type": type(error).__name__,
             "latency_ms": latency_ms,
