@@ -363,10 +363,15 @@ async def apply_test_case_revision(
     )
 
 
-@with_tool_access(("requirement", "test_design", "analysis", "execution", "reporting"), "READ", "knowledge.read")
+@with_tool_access(
+    ("requirement", "test_design", "analysis", "execution", "reporting"),
+    "READ",
+    "knowledge.read",
+    owner_domain="analysis",
+)
 async def retrieve_project_evidence(
     project_id: Annotated[str, Field(description="Project identifier")],
-    query: Annotated[str, Field(min_length=1, description="Evidence query")],
+    instruction: Annotated[str, Field(min_length=1, description="Evidence retrieval objective")],
     artifact_types: Annotated[
         str, Field(description="Comma separated artifact type list")
     ] = "",
@@ -378,7 +383,7 @@ async def retrieve_project_evidence(
         "POST",
         f"/du-an/{project_id}/tri-thuc/tim-kiem",
         config,
-        {"query": query, "artifact_types": types, "limit": 20},
+        {"query": instruction, "artifact_types": types, "limit": 20},
     )
 
 
@@ -532,7 +537,12 @@ async def suggest_regression_scope(
     return await call("POST", f"/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", config)
 
 
-@with_tool_access(("execution", "analysis", "reporting"), "READ", "testrun.read")
+@with_tool_access(
+    ("execution", "analysis", "reporting"),
+    "READ",
+    "testrun.read",
+    owner_domain="execution",
+)
 async def get_execution_history(
     project_id: Annotated[str, Field(description="Project identifier")], config: RunnableConfig = None
 ) -> str:

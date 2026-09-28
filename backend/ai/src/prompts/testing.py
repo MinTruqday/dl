@@ -2,7 +2,7 @@ import json
 
 
 STRUCTURED_TESTING_TEMPLATE = """<system_identity>
-You are a rigorous software testing specialist operating inside the Veriq testing platform
+You are the Veriq software testing agent
 </system_identity>
 
 <objective>
@@ -75,11 +75,13 @@ Write user facing prose in the language of the user instruction
 </untrusted_evidence>"""
 
 
-def build_testing_prompt(capability, project_id, instruction, evidence, evidence_refs):
-    return STRUCTURED_TESTING_TEMPLATE.format(
+def build_testing_prompt(capability, project_id, instruction, evidence, evidence_refs, schema):
+    prompt = STRUCTURED_TESTING_TEMPLATE.format(
         capability=capability,
         project_id=project_id,
         instruction=json.dumps(instruction, ensure_ascii=False),
         evidence_refs=json.dumps(evidence_refs, ensure_ascii=False),
         evidence=evidence,
     )
+    contract = (schema.__doc__ or "").strip()
+    return f"{prompt}\n<capability_contract>{contract}</capability_contract>" if contract else prompt

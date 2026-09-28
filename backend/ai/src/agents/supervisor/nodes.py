@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from src.agents.specialist import specialists
+from src.agents.agent import execute_task
 from src.knowledge.evidence import package
 from src.knowledge.hybrid import hybrid_evidence
 from src.prompts.agents import (
@@ -63,7 +63,7 @@ def available_tools(permissions, intent="", compact=False):
             values.append(
                 {
                     "name": access.name,
-                    "specialists": sorted(access.specialists),
+                    "domains": sorted(access.domains),
                     "action": access.action,
                     "requires_approval": access.requires_approval,
                     "arguments": arguments,
@@ -75,14 +75,19 @@ def available_tools(permissions, intent="", compact=False):
 def direct_capability_task(run, evidence_refs):
     tool = registered_tools().get(run.intent)
     access = tool_access(tool)
-    if not access or access.permission not in run.permissions or len(access.specialists) != 1:
+    if not access or access.permission not in run.permissions:
+        return None
+    domain = access.owner_domain
+    if domain is None and len(access.domains) == 1:
+        domain = next(iter(access.domains))
+    if domain is None:
         return None
     properties = tool.args_schema.model_json_schema().get("properties", {})
     arguments = {"instruction": run.objective} if "instruction" in properties else {}
     tasks = validated_tasks(
         [
             PlannedTask(
-                specialist=next(iter(access.specialists)),
+                domain=domain,
                 objective=run.objective,
                 evidence_refs=evidence_refs,
                 tool_calls=[ToolCall(tool_name=access.name, arguments=arguments)],
@@ -159,7 +164,7 @@ def validated_tasks(tasks, run, evidence_refs, maximum=None, known_identifiers=N
         for call in task.tool_calls[: limits.tool_calls_per_task]:
             tool = tool_values.get(call.tool_name)
             access = tool_access(tool)
-            if not access or task.specialist not in access.specialists:
+            if not access or task.domain not in access.domains:
                 continue
             arguments = dict(call.arguments)
             schema = tool.args_schema.model_json_schema()
@@ -187,7 +192,7 @@ def validated_tasks(tasks, run, evidence_refs, maximum=None, known_identifiers=N
             AgentTask(
                 run_id=run.run_id,
                 project_id=run.project_id,
-                specialist=task.specialist,
+                domain=task.domain,
                 objective=task.objective,
                 evidence_refs=task.evidence_refs or evidence_refs,
                 constraints=task.constraints,
@@ -359,7 +364,7 @@ async def plan(state):
     }
 
 
-async def execute_specialist(state):
+async def execute_agent(state):
     run = state_run(state)
     tasks = [AgentTask(**item) for item in state.get("tasks", [])]
     index = int(state.get("task_index", 0))
@@ -376,7 +381,7 @@ async def execute_specialist(state):
             reason_codes=["TASK_DEPENDENCY_INCOMPLETE"],
         )
         run.completed_tasks.append(task.model_dump(mode="json"))
-        run.specialist_results.append(result.model_dump(mode="json"))
+        run.agent_results.append(result.model_dump(mode="json"))
         run.current_step += 1
         return {
             "run": run.model_dump(mode="python"),
@@ -395,7 +400,7 @@ async def execute_specialist(state):
     ]
     if not task_evidence:
         task_evidence = [EvidenceItem(**item) for item in state.get("evidence", [])]
-    result, observations = await specialists[task.specialist].execute(
+    result, observations = await execute_task(
         task,
         task_evidence,
         run.permissions,
@@ -403,7 +408,7 @@ async def execute_specialist(state):
         run.approval_status,
     )
     run.completed_tasks.append(task.model_dump(mode="json"))
-    run.specialist_results.append(result.model_dump(mode="json"))
+    run.agent_results.append(result.model_dump(mode="json"))
     run.observations.extend(observations)
     run.tool_calls.extend(
         {
@@ -422,7 +427,7 @@ async def execute_specialist(state):
     }
 
 
-def route_after_specialist(state):
+def route_after_agent(state):
     return "execute" if int(state.get("task_index", 0)) < len(state.get("tasks", [])) else "review"
 
 

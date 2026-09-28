@@ -19,10 +19,24 @@ def reference_ids(properties, artifact_id):
     return [value for value in dict.fromkeys(values) if value != str(artifact_id)]
 
 
+def reference_fields(properties, artifact_id):
+    values = {}
+    for field, value in properties.items():
+        if not str(field).endswith(("_id", "_ids")):
+            continue
+        candidates = value if isinstance(value, list) else [value]
+        for candidate in candidates:
+            identifier = str(candidate)
+            if candidate and identifier != str(artifact_id):
+                values.setdefault(identifier, []).append(str(field))
+    return {identifier: list(dict.fromkeys(fields)) for identifier, fields in values.items()}
+
+
 async def sync_indexed_artifact(project_id, artifact_type, artifact_id, version_id, properties):
     node_id = str(version_id or artifact_id)
     node_scope_id = scope_id(project_id, artifact_type, node_id)
     references = reference_ids(properties, node_id)
+    fields_by_reference = reference_fields(properties, node_id)
     await graph_repository.upsert_artifact(
         project_id,
         artifact_type,
@@ -31,6 +45,8 @@ async def sync_indexed_artifact(project_id, artifact_type, artifact_id, version_
         properties,
         references,
     )
+    for reference, fields in fields_by_reference.items():
+        await graph_repository.link(project_id, node_scope_id, reference, fields)
     if artifact_id and str(artifact_id) != node_id:
         parent_type = str(artifact_type).removesuffix("_version")
         parent_scope_id = scope_id(project_id, parent_type, artifact_id)

@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from src.schemas.agent import (
     AgentApprovalStatus,
     AgentTask,
-    SpecialistName,
+    CapabilityDomain,
     ToolAccess,
     ToolDecision,
     ToolExecutionStatus,
@@ -18,16 +18,18 @@ from src.services.token_accounting import add_tool_usage
 
 
 def with_tool_access(
-    specialists: tuple[SpecialistName, ...],
+    domains: tuple[CapabilityDomain, ...],
     action: Literal["READ", "PROPOSE", "MUTATE"],
     permission: str,
     requires_approval: bool = False,
     verification: dict[str, Any] | None = None,
+    owner_domain: CapabilityDomain | None = None,
 ) -> Callable:
     def decorate(function: Callable):
         value = tool(function)
         value.metadata = {
-            "specialists": list(specialists),
+            "domains": list(domains),
+            "owner_domain": owner_domain,
             "action": action,
             "permission": permission,
             "requires_approval": requires_approval,
@@ -58,8 +60,8 @@ def authorize_tool(task, tool_name, permissions, approval_status=None):
     access = tool_access(registered_tools().get(tool_name))
     if not access:
         return ToolDecision(allowed=False, reason_code="TOOL_UNAVAILABLE")
-    if task.specialist not in access.specialists:
-        return ToolDecision(allowed=False, reason_code="TOOL_SPECIALIST_DENIED", access=access)
+    if task.domain not in access.domains:
+        return ToolDecision(allowed=False, reason_code="TOOL_DOMAIN_DENIED", access=access)
     if access.permission not in permissions:
         return ToolDecision(allowed=False, reason_code="PERMISSION_DENIED", access=access)
     if access.requires_approval and approval_status != AgentApprovalStatus.APPROVED:

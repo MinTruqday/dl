@@ -93,12 +93,14 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
     if not inspected.get("is_safe", False):
         raise HTTPException(status_code=422, detail={"code": "qa_evidence_unsafe"})
     allowed_evidence_refs = evidence_reference_ids(evidence)
+    schema = output_schema(req.capability)
     prompt = build_testing_prompt(
         req.capability,
         req.project_id,
         req.instruction,
         str(inspected.get("sanitized_text") or ""),
         allowed_evidence_refs,
+        schema,
     )
     model = {
         **model_metadata(),
@@ -110,7 +112,7 @@ async def generate_ai_assistance(req: TestingAssistanceRequest):
     try:
         generated = await structured(
             prompt,
-            output_schema(req.capability),
+            schema,
             timeout_seconds=settings.MODEL_TIMEOUT_SECONDS,
             provider_schema=False,
         )

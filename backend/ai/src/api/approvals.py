@@ -140,7 +140,7 @@ async def decide_agent_run(
                     "token": f"Bearer {token}",
                     "evidence": [],
                     "tasks": run.supervisor_plan,
-                    "results": run.specialist_results,
+                    "results": run.agent_results,
                     "task_index": len(run.supervisor_plan),
                     "success_criteria": (run.proposal or {}).get("success_criteria_met", []),
                 }

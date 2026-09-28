@@ -26,25 +26,25 @@ class GraphRepository:
             {"scope_id": scope_id, "properties": values},
         )
 
-    async def link(self, project_id, source_scope_id, target_identifier):
+    async def link(self, project_id, source_scope_id, target_identifier, reference_fields=None):
         return await graph_client.execute(
             "MATCH (source:Artifact {scope_id: $source_scope_id, project_id: $project_id}) "
             "MATCH (target:Artifact {project_id: $project_id}) "
             "WHERE source.scope_id <> target.scope_id "
             "AND $target_identifier IN [target.artifact_id, target.artifact_version_id] "
             "MERGE (source)-[relation:RELATED]->(target) "
+            "SET relation.reference_fields = $reference_fields "
             "RETURN type(relation) AS relationship",
             {
                 "project_id": project_id,
                 "source_scope_id": source_scope_id,
                 "target_identifier": str(target_identifier),
+                "reference_fields": list(dict.fromkeys(reference_fields or [])),
             },
         )
 
     async def reconcile(self, project_id, scope_id, identifiers):
-        values = list(dict.fromkeys(str(value) for value in identifiers if value))
-        for identifier in values:
-            await self.link(project_id, scope_id, identifier)
+        values = list(dict.fromkeys(str(identifier) for identifier in identifiers if identifier))
         if not values:
             return []
         return await graph_client.execute(

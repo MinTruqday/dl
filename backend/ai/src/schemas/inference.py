@@ -129,6 +129,7 @@ class TestingAssistanceResult(BaseModel):
 
 
 class ProjectQuestionOutput(BaseModel):
+    """Answer in at most five sentences and cite only evidence references actually used"""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["project_question"]
@@ -222,6 +223,7 @@ class RequirementRevisionSuggestionOutput(BaseModel):
 
 
 class RequirementQualityModelOutput(BaseModel):
+    """Evaluate content actors business rules acceptance criteria and dependencies separately. Treat absent behavior actors or business rules as blocking. Return every field finding with an evidence grounded revision, make target_fields match non-null revised values, merge related revisions, and never apply changes automatically."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["requirement_quality_analysis"] = "requirement_quality_analysis"
@@ -253,6 +255,7 @@ class GeneratedCaseOutput(BaseModel):
 
 
 class GeneratedCasesOutput(BaseModel):
+    """Generate exactly the requested count for each category. Every candidate needs concrete input and a verifiable result, may use only acceptance criterion identifiers present in evidence, and must avoid generic templates."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["scenario_generation", "test_generation"]
@@ -278,6 +281,7 @@ class TestConditionSuggestionOutput(BaseModel):
 
 
 class TestConditionSuggestionsOutput(BaseModel):
+    """Generate only condition candidates. Include evidence grounded positive, negative, and boundary coverage with concrete title, description, coverage item, level, type, risk, priority, techniques, and testability. Never invent limits or behavior."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["test_condition_generation"]
@@ -375,6 +379,7 @@ ImpactClassificationSuggestionOutput.model_rebuild()
 
 
 class ImpactClassificationOutput(BaseModel):
+    """Classify every test case version in evidence. A needs-update result contains only evidence grounded maintenance changes, missing coverage becomes a new test candidate, and no change is applied automatically."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["impact_analysis"]
@@ -399,6 +404,7 @@ class SecuritySuggestionOutput(BaseModel):
 
 
 class SecuritySuggestionsOutput(BaseModel):
+    """Generate concrete evidence grounded security tests in the language of the user instruction. Never claim a vulnerability scan was executed and use only requirement version identifiers present in evidence."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["security_test_generation"]
@@ -422,6 +428,7 @@ class PerformanceSuggestionOutput(BaseModel):
 
 
 class PerformanceSuggestionsOutput(BaseModel):
+    """Generate an evidence grounded performance plan in the language of the user instruction. Include requested workload types only, do not claim load execution, and do not invent targets outside the instruction."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["performance_plan_generation"]
@@ -439,6 +446,7 @@ class AutomationScriptSuggestionOutput(BaseModel):
 
 
 class AutomationScriptOutput(BaseModel):
+    """Create exactly one complete automation script draft in the requested framework and language without markdown. Use secret placeholders only, use environment variables for unknown locators or URLs, report them in warnings, and never write to a repository."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["automation_script_generation"]
@@ -475,6 +483,7 @@ class CausalHypothesisSuggestionOutput(BaseModel):
 
 
 class CausalHypothesesOutput(BaseModel):
+    """Propose root cause hypotheses, defect clusters, contributing factors, and missing test coverage. Never confirm a cause or approve CAPA. Every hypothesis cites evidence references."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["causal_analysis"]
@@ -498,6 +507,7 @@ class StatusReportNarrativeSuggestionOutput(BaseModel):
 
 
 class StatusReportNarrativeOutput(BaseModel):
+    """Draft only from supplied metrics and evidence. Never alter metrics, approve the report, or add unsupported conclusions."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["status_report_narrative"]
@@ -517,6 +527,7 @@ class CompletionReportNarrativeSuggestionOutput(BaseModel):
 
 
 class CompletionReportNarrativeOutput(BaseModel):
+    """Draft only from supplied metrics and evidence. Never change the quality gate recommendation or approve the report."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["completion_report_narrative"]
@@ -537,6 +548,7 @@ class LessonsLearnedClusterSuggestionOutput(BaseModel):
 
 
 class LessonsLearnedClustersOutput(BaseModel):
+    """Cluster lessons learned by theme, preserve source-index grounding, and propose improvement candidates without applying them."""
     model_config = ConfigDict(extra="forbid")
 
     capability: Literal["lessons_learned_clustering"]

@@ -6,7 +6,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 
-SpecialistName = Literal["requirement", "test_design", "analysis", "execution", "reporting"]
+CapabilityDomain = Literal["requirement", "test_design", "analysis", "execution", "reporting"]
 
 
 class AgentTaskStatus(str, Enum):
@@ -70,7 +70,7 @@ class AgentTask(BaseModel):
     task_id: str = Field(default_factory=lambda: f"TASK-{uuid4().hex}")
     run_id: str
     project_id: str
-    specialist: SpecialistName
+    domain: CapabilityDomain
     objective: str
     evidence_refs: list[str] = Field(default_factory=list)
     constraints: dict[str, Any] = Field(default_factory=dict)
@@ -79,7 +79,7 @@ class AgentTask(BaseModel):
 
 
 class PlannedTask(BaseModel):
-    specialist: SpecialistName
+    domain: CapabilityDomain
     objective: str
     evidence_refs: list[str] = Field(default_factory=list)
     constraints: dict[str, Any] = Field(default_factory=dict)
@@ -96,7 +96,7 @@ class AgentResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
-class SpecialistReview(BaseModel):
+class AgentReview(BaseModel):
     continue_execution: bool
     reason_codes: list[str] = Field(default_factory=list)
 
@@ -133,7 +133,7 @@ class VeriqRunState(BaseModel):
     supervisor_plan: list[dict[str, Any]] = Field(default_factory=list)
     active_task: dict[str, Any] | None = None
     completed_tasks: list[dict[str, Any]] = Field(default_factory=list)
-    specialist_results: list[dict[str, Any]] = Field(default_factory=list)
+    agent_results: list[dict[str, Any]] = Field(default_factory=list)
     observations: list[dict[str, Any]] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
@@ -185,7 +185,8 @@ class ToolVerification(BaseModel):
 
 class ToolAccess(BaseModel):
     name: str
-    specialists: set[SpecialistName]
+    domains: set[CapabilityDomain]
+    owner_domain: CapabilityDomain | None = None
     action: Literal["READ", "PROPOSE", "MUTATE"]
     permission: str
     requires_approval: bool

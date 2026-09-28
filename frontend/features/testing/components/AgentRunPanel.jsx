@@ -8,33 +8,33 @@ import { ErrorState, Panel, StatusPill } from "./WorkspacePrimitives";
 const INTENTS = [
   { value: "project_question", label: "Hỏi đáp dự án", permission: "ai.ask_project" },
   {
-    value: "requirement_analysis",
+    value: "requirement_quality_analysis",
     label: "Phân tích yêu cầu",
     permission: "ai.run_lint",
   },
   {
-    value: "generate_test_cases",
+    value: "test_generation",
     label: "Sinh ca kiểm thử",
     permission: "ai.generate_testcase",
   },
-  { value: "change_impact", label: "Phân tích ảnh hưởng", permission: "ai.run_impact" },
+  { value: "impact_analysis", label: "Phân tích ảnh hưởng", permission: "ai.run_impact" },
   {
-    value: "regression_recommendation",
+    value: "retrieve_project_evidence",
     label: "Đề xuất hồi quy",
     permission: "ai.generate_regression",
   },
   {
-    value: "execution_failure_analysis",
+    value: "get_execution_history",
     label: "Phân tích lỗi thực thi",
     permission: "testrun.read",
   },
   {
-    value: "status_report",
+    value: "status_report_narrative",
     label: "Báo cáo trạng thái",
     permission: "teststatusreport.update",
   },
   {
-    value: "completion_report",
+    value: "completion_report_narrative",
     label: "Báo cáo hoàn tất",
     permission: "testcompletion.update",
   },

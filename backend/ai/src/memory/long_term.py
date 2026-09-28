@@ -18,7 +18,7 @@ class LongTermMemory:
             in {None, AgentApprovalStatus.APPROVED, AgentApprovalStatus.REJECTED}
             and all(
                 result.get("status") == AgentTaskStatus.COMPLETED
-                for result in state.specialist_results
+                for result in state.agent_results
             )
         ):
             return None

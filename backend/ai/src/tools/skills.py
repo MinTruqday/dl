@@ -28,7 +28,7 @@ async def execute_skill(capability, project_id, instruction, config):
     return result.model_dump_json()
 
 
-def testing_skill(capability, description, specialists, permission):
+def testing_skill(capability, description, domains, permission):
     async def invoke(
         project_id: str,
         instruction: str = "",
@@ -43,7 +43,8 @@ def testing_skill(capability, description, specialists, permission):
         args_schema=TestingSkillInput,
     )
     value.metadata = {
-        "specialists": specialists,
+        "domains": domains,
+        "owner_domain": domains[0] if len(domains) == 1 else None,
         "action": "PROPOSE",
         "permission": permission,
         "requires_approval": False,
