@@ -75,6 +75,7 @@ class AgentTask(BaseModel):
     evidence_refs: list[str] = Field(default_factory=list)
     constraints: dict[str, Any] = Field(default_factory=dict)
     tool_calls: list[ToolCall] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list, max_length=100)
 
 
 class PlannedTask(BaseModel):

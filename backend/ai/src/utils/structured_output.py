@@ -131,7 +131,7 @@ def validate_structured_output(text: Any, schema: Type[Any]) -> Any:
     for value in extract_json_values(text):
         try:
             if hasattr(schema, "model_validate"):
-                return schema.model_validate(normalize_schema_collections(value, schema), strict=True)
+                return schema.model_validate(normalize_schema_collections(value, schema))
             return schema.parse_obj(value)
         except Exception as error:
             errors.append(error)

@@ -38,9 +38,14 @@ from src.tools.registry import (
 def available_tools(permissions, intent="", compact=False):
     values = []
     tools = registered_tools()
+    intent_tool_exists = bool(intent and tool_access(tools.get(intent)))
     for tool in tools.values():
         access = tool_access(tool)
-        if access and access.permission in permissions:
+        if (
+            access
+            and access.permission in permissions
+            and (not intent_tool_exists or access.name == intent)
+        ):
             schema = tool.args_schema.model_json_schema()
             arguments = schema
             if compact:
@@ -67,8 +72,79 @@ def available_tools(permissions, intent="", compact=False):
     return values
 
 
+def direct_capability_task(run, evidence_refs):
+    tool = registered_tools().get(run.intent)
+    access = tool_access(tool)
+    if not access or access.permission not in run.permissions or len(access.specialists) != 1:
+        return None
+    properties = tool.args_schema.model_json_schema().get("properties", {})
+    arguments = {"instruction": run.objective} if "instruction" in properties else {}
+    tasks = validated_tasks(
+        [
+            PlannedTask(
+                specialist=next(iter(access.specialists)),
+                objective=run.objective,
+                evidence_refs=evidence_refs,
+                tool_calls=[ToolCall(tool_name=access.name, arguments=arguments)],
+            )
+        ],
+        run,
+        evidence_refs,
+        known_identifiers=evidence_refs,
+    )
+    return tasks[0] if tasks and tasks[0].tool_calls else None
+
+
 def bounded_tasks(tasks, run):
     return list(tasks)[: limits.supervisor_steps]
+
+
+def task_scope(task):
+    identifiers = sorted(
+        {
+            str(value)
+            for call in task.tool_calls
+            for key, value in call.arguments.items()
+            if key != "project_id" and key.endswith("_id") and value
+        }
+    )
+    if identifiers:
+        return tuple(identifiers)
+    references = sorted(set(task.evidence_refs))
+    if references:
+        return tuple(references)
+    return (" ".join(task.objective.casefold().split()),)
+
+
+def task_tools(task):
+    return tuple(sorted({call.tool_name for call in task.tool_calls}))
+
+
+def coordinate_tasks(tasks, existing=()):
+    accepted = list(existing)
+    signatures = {(task_scope(task), task_tools(task)) for task in accepted}
+    objectives = {
+        (task_scope(task), " ".join(task.objective.casefold().split()))
+        for task in accepted
+    }
+    coordinated = []
+    for task in tasks:
+        scope = task_scope(task)
+        tools = task_tools(task)
+        objective = " ".join(task.objective.casefold().split())
+        if not tools or (scope, tools) in signatures or (scope, objective) in objectives:
+            continue
+        dependencies = [
+            previous.task_id
+            for previous in accepted
+            if task_scope(previous) == scope and task_tools(previous) != tools
+        ]
+        task = task.model_copy(update={"depends_on": dependencies})
+        accepted.append(task)
+        coordinated.append(task)
+        signatures.add((scope, tools))
+        objectives.add((scope, objective))
+    return coordinated
 
 
 def validated_tasks(tasks, run, evidence_refs, maximum=None, known_identifiers=None):
@@ -187,6 +263,18 @@ async def plan(state):
         item.get("artifact_version_id") or item.get("artifact_id")
         for item in state.get("evidence", [])
     ]
+    direct_task = direct_capability_task(run, evidence_refs)
+    if direct_task:
+        run.supervisor_plan = [direct_task.model_dump(mode="json")]
+        run.status = AgentRunStatus.RUNNING
+        run.current_step = 1
+        return {
+            "run": run.model_dump(mode="python"),
+            "tasks": [direct_task.model_dump(mode="python")],
+            "success_criteria": [run.objective],
+            "task_index": 0,
+            "results": [],
+        }
     prompt = supervisor_plan_prompt(
         run.project_id,
         run.run_id,
@@ -246,7 +334,7 @@ async def plan(state):
         evidence_refs,
         known_identifiers=allowed_identifiers,
     )
-    tasks = [task for task in tasks if task.tool_calls]
+    tasks = coordinate_tasks(task for task in tasks if task.tool_calls)
     results = []
     if not tasks:
         results.append(
@@ -278,6 +366,23 @@ async def execute_specialist(state):
     if index >= len(tasks):
         return {}
     task = tasks[index]
+    completed_ids = {item.get("task_id") for item in run.completed_tasks}
+    if not set(task.depends_on).issubset(completed_ids):
+        result = AgentResult(
+            task_id=task.task_id,
+            status=AgentTaskStatus.INSUFFICIENT_EVIDENCE,
+            summary="Nhiệm vụ phụ thuộc chưa hoàn tất",
+            evidence_refs=task.evidence_refs,
+            reason_codes=["TASK_DEPENDENCY_INCOMPLETE"],
+        )
+        run.completed_tasks.append(task.model_dump(mode="json"))
+        run.specialist_results.append(result.model_dump(mode="json"))
+        run.current_step += 1
+        return {
+            "run": run.model_dump(mode="python"),
+            "task_index": index + 1,
+            "results": [*state.get("results", []), result.model_dump(mode="python")],
+        }
     run.active_task = task.model_dump(mode="json")
     evidence_by_ref = {
         item.get("artifact_version_id") or item.get("artifact_id"): item
@@ -384,13 +489,11 @@ async def re_evaluate(state):
         remaining,
         allowed_identifiers,
     )
-    new_tasks = [task for task in new_tasks if task.tool_calls]
-    existing = {
-        (item.get("specialist"), item.get("objective")) for item in state.get("tasks", [])
-    }
-    new_tasks = [
-        item for item in new_tasks if (item.specialist, item.objective) not in existing
-    ]
+    existing = [AgentTask(**item) for item in state.get("tasks", [])]
+    new_tasks = coordinate_tasks(
+        (task for task in new_tasks if task.tool_calls),
+        existing,
+    )
     complete = review.goal_complete or not new_tasks
     run.observations.append(
         {
