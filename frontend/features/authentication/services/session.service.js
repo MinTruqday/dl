@@ -81,8 +81,10 @@ export async function login(email, password) {
     body: formData.toString(),
     credentials: "include",
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(errorMessage(json, "Lỗi xác thực thông tin đăng nhập"));
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.data) {
+    throw new Error(errorMessage(json, "Lỗi xác thực thông tin đăng nhập"));
+  }
   return json.data;
 }
 export async function register(email, password, full_name, slug, agreed_to_terms) {
