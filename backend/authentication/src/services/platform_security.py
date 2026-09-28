@@ -5,7 +5,7 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from src.core.dependency import CurrentUser
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import (
@@ -19,7 +19,7 @@ from src.schemas.platform import (
 from src.services.platform import account_or_404, record_audit
 
 
-SECURITY_POLICY = platform_policy()["platform_security"]
+SECURITY_POLICY = policy_section("platform_security")
 
 
 def masked_reference(value: dict):

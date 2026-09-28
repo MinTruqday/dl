@@ -6,15 +6,15 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository as IdentityRepository
 from src.schemas.identity import UserCreate, UserInDB
 from src.services.email import EmailService
 
 
-ACCOUNT_POLICY = platform_policy()["account"]
-SESSION_POLICY = platform_policy()["session"]
+ACCOUNT_POLICY = policy_section("account")
+SESSION_POLICY = policy_section("session")
 
 
 class SessionService:

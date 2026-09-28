@@ -472,6 +472,7 @@ services:
     environment:
       <<: [*service-environment, *object-storage-environment]
       CLOUD_DB_NAME: ${CLOUD_DB_NAME:?CLOUD_DB_NAME is required}
+      COMPRESSIBLE_TEXT_EXTENSIONS: ${COMPRESSIBLE_TEXT_EXTENSIONS:?COMPRESSIBLE_TEXT_EXTENSIONS is required}
       AUTHENTICATION_URL: ${AUTHENTICATION_URL:?AUTHENTICATION_URL is required}
       OBJECT_STORAGE_LEGACY_BUCKET: ${OBJECT_STORAGE_LEGACY_BUCKET:?OBJECT_STORAGE_LEGACY_BUCKET is required}
     depends_on:
@@ -502,6 +503,7 @@ services:
       MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
+      WORKER_QUEUE_NAME: ${WORKER_QUEUE_NAME:?WORKER_QUEUE_NAME is required}
       TESTING_URL: ${TESTING_URL:?TESTING_URL is required}
     depends_on:
       mongodb:

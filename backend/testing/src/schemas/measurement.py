@@ -1,6 +1,10 @@
 from typing import Any, Literal
+from functools import lru_cache
 
 from pydantic import BaseModel, Field, model_validator
+from pymongo import MongoClient
+
+from src.core.configuration import settings
 
 MetricKey = Literal[
     "REQUIREMENT_COVERAGE",
@@ -25,15 +29,20 @@ MetricKey = Literal[
     "ESCAPED_DEFECT_RATE",
     "DEFECT_REMOVAL_EFFICIENCY",
 ]
-LOWER_IS_BETTER = {
-    "BLOCKED_RATE",
-    "DEFECT_REOPEN_RATE",
-    "CRITICAL_DEFECT_AGING",
-    "MEAN_TIME_TO_RETEST",
-    "STALE_TEST_RATIO",
-    "REQUIREMENT_VOLATILITY",
-    "ESCAPED_DEFECT_RATE",
-}
+@lru_cache(maxsize=1)
+def lower_is_better():
+    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
+            {"_id": "measurement"}, {"_id": 0, "values.lower_is_better": 1}
+        )
+    finally:
+        client.close()
+    values = document.get("values") if isinstance(document, dict) else None
+    directions = values.get("lower_is_better") if isinstance(values, dict) else None
+    if not isinstance(directions, list) or not all(isinstance(value, str) for value in directions):
+        raise RuntimeError("Thiếu chính sách hướng đánh giá chỉ số")
+    return set(directions)
 
 
 def validate_threshold_order(key, target, warning_threshold, critical_threshold):
@@ -46,7 +55,7 @@ def validate_threshold_order(key, target, warning_threshold, critical_threshold)
     populated = [
         value for value in (target, warning_threshold, critical_threshold) if value is not None
     ]
-    expected = sorted(populated) if key in LOWER_IS_BETTER else sorted(populated, reverse=True)
+    expected = sorted(populated) if key in lower_is_better() else sorted(populated, reverse=True)
     if populated != expected:
         raise ValueError("Thứ tự ngưỡng không phù hợp với chiều đánh giá của metric")
 

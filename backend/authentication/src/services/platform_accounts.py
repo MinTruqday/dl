@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.identity import SystemRole, UserCreate
@@ -22,7 +22,7 @@ from src.services.platform import account_or_404, account_view, protect_last_adm
 from src.services.session import SessionService
 
 
-ACCOUNT_CONTROL_POLICY = platform_policy()["account_controls"]
+ACCOUNT_CONTROL_POLICY = policy_section("account_controls")
 
 
 class PlatformAccountService:

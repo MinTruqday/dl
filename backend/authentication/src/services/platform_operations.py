@@ -8,13 +8,13 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import health_request, internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import ActionReason, SmtpTestRequest
 from src.services.email import EmailService
 from src.services.platform import record_audit
 
-OPERATIONS_POLICY = platform_policy()["operations"]
+OPERATIONS_POLICY = policy_section("operations")
 
 
 class PlatformOperationsService:

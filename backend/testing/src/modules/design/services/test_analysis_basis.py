@@ -1,21 +1,28 @@
 import re
+from functools import lru_cache
 
 from fastapi import HTTPException
+from pymongo import MongoClient
 
 from src.core.common import get_project
+from src.core.configuration import settings
 from src.repositories.requirement_analysis import requirement_analysis_repository
 from src.modules.quality.services.quality_policy import evaluate_rules
 
-BASIS_COLLECTIONS = {
-    "REQUIREMENT_VERSION": "requirement_versions",
-    "ACCEPTANCE_CRITERION": "acceptance_criteria",
-    "API_OPERATION": "api_operations",
-    "KNOWLEDGE_SOURCE": "requirement_documents",
-    "BUSINESS_RULE": "business_rules",
-    "RISK_RANKING": "risk_rankings",
-    "DEFECT": "defects",
-    "REGULATION": "requirement_documents",
-}
+@lru_cache(maxsize=1)
+def basis_collections():
+    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
+            {"_id": "test_analysis_basis"}, {"_id": 0, "values": 1}
+        )
+    finally:
+        client.close()
+    values = document.get("values") if isinstance(document, dict) else None
+    collections = values.get("collections") if isinstance(values, dict) else None
+    if not isinstance(collections, dict):
+        raise RuntimeError("Thiếu chính sách cơ sở phân tích kiểm thử")
+    return collections
 
 
 
@@ -36,7 +43,7 @@ async def resolve_basis(project_id, refs):
         if key in seen:
             raise HTTPException(status_code=422, detail={"code": 'DUPLICATE_TEST_BASIS_REF'})
         seen.add(key)
-        collection = BASIS_COLLECTIONS[ref.artifact_type]
+        collection = basis_collections()[ref.artifact_type]
         identifier = ref.artifact_version_id or ref.artifact_id
         query = {"_id": identifier, "project_id": project_id}
         if ref.artifact_type == 'REGULATION':
@@ -96,10 +103,11 @@ async def resolve_basis(project_id, refs):
 
 async def list_test_basis(project_id, user, artifact_type="", query_text="", limit=200):
     await get_project(project_id, user, "testanalysis.read")
-    types = [artifact_type] if artifact_type else list(BASIS_COLLECTIONS)
+    collections = basis_collections()
+    types = [artifact_type] if artifact_type else list(collections)
     items = []
     for kind in types:
-        collection_name = BASIS_COLLECTIONS.get(kind)
+        collection_name = collections.get(kind)
         if not collection_name:
             raise HTTPException(status_code=422, detail={"code": 'TEST_BASIS_TYPE_INVALID'})
         query = {"project_id": project_id}

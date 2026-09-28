@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.announcement import router as announcement_router
-from src.core.function_ids import apply_function_ids
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
@@ -48,7 +47,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(announcement_router)
-apply_function_ids(app)
 
 
 @app.get("/suc-khoe")

@@ -8,12 +8,11 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "./ToastContext";
 const AnnouncementContext = createContext(undefined);
 export function AnnouncementProvider({ children }) {
-  const notificationEnabled = true;
   const { user } = useAuth();
   const { showToast } = useToast();
   const [announcements, setAnnouncements] = useState([]);
   const fetchAnnouncements = useCallback(async () => {
-    if (!user || !notificationEnabled) return;
+    if (!user) return;
     try {
       const data = await getAnnouncementsAPI();
       let arr = data.data || data || [];
@@ -22,7 +21,7 @@ export function AnnouncementProvider({ children }) {
     } catch (e) {
       console.error("Error fetching global announcements:", e);
     }
-  }, [notificationEnabled, user]);
+  }, [user]);
   const markAsRead = useCallback(async (id) => {
     try {
       await markAnnouncementReadAPI(id);
@@ -41,7 +40,7 @@ export function AnnouncementProvider({ children }) {
     }
   }, []);
   useEffect(() => {
-    if (!user || !notificationEnabled) {
+    if (!user) {
       setAnnouncements([]);
       return;
     }
@@ -52,7 +51,7 @@ export function AnnouncementProvider({ children }) {
     return () => {
       clearInterval(interval);
     };
-  }, [notificationEnabled, user, fetchAnnouncements]);
+  }, [user, fetchAnnouncements]);
   const unreadCount = Array.isArray(announcements)
     ? announcements.filter((n) => !n.is_read).length
     : 0;

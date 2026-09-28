@@ -20,6 +20,7 @@ class Settings:
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     AUTHENTICATION_URL: str = os.environ["AUTHENTICATION_URL"]
     CLOUD_DB_NAME: str = os.environ["CLOUD_DB_NAME"]
+    COMPRESSIBLE_TEXT_EXTENSIONS: str = os.environ["COMPRESSIBLE_TEXT_EXTENSIONS"]
 
 
 settings = Settings()

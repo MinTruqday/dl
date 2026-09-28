@@ -333,9 +333,6 @@ async def run_playwright(job_id, payload, job_payload):
     return {"execution_id": execution_id, "status": status, "summary": callback["summary"]}
 
 
-HANDLERS = {"qa_job_queue": handle_testing_job}
-
-
 async def mark_failed(queue_name: str, payload: dict, error: Exception):
     message = str(error)[-1000:]
     job_id = str(payload.get("job_id") or "")
@@ -358,8 +355,7 @@ class WorkerRunner:
     def __init__(self):
         self.tasks = []
 
-    async def consume(self, queue_name: str):
-        handler = HANDLERS[queue_name]
+    async def consume(self, queue_name: str, handler):
         while True:
             channel = None
             try:
@@ -421,8 +417,10 @@ class WorkerRunner:
                 logger.warning("Worker message queue connection delayed attempt={}", attempt)
                 await asyncio.sleep(min(attempt, 5))
         self.tasks = [
-            asyncio.create_task(self.consume(queue_name), name=f"worker:{queue_name}")
-            for queue_name in HANDLERS
+            asyncio.create_task(
+                self.consume(settings.WORKER_QUEUE_NAME, handle_testing_job),
+                name=f"worker:{settings.WORKER_QUEUE_NAME}",
+            )
         ]
 
     async def close(self):

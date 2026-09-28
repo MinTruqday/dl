@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.schemas.platform import (
     ActionReason,
@@ -17,7 +17,7 @@ from src.schemas.platform import (
 )
 from src.services.platform import account_or_404, record_audit
 
-PROJECT_POLICY = platform_policy()["projects"]
+PROJECT_POLICY = policy_section("projects")
 
 
 class PlatformProjectService:

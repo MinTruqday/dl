@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from src.repositories.jobs import worker_job_repository
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
+from src.core.infrastructure.configuration import settings
 from src.schemas import DiscardJobRequest, TestingJobRequest
 
 
@@ -30,8 +31,8 @@ class WorkerJobService:
             },
         )
         try:
-            await mq.publish("qa_job_queue", task_payload)
-            metrics_collector.change_queue_depth("qa_job_queue", 1)
+            await mq.publish(settings.WORKER_QUEUE_NAME, task_payload)
+            metrics_collector.change_queue_depth(settings.WORKER_QUEUE_NAME, 1)
         except Exception as error:
             await worker_job_repository.record(job_id, {"status": "failed", "error": "Queue unavailable"})
             raise HTTPException(status_code=503, detail="Worker queue is unavailable") from error
@@ -60,8 +61,8 @@ class WorkerJobService:
                 "error_code": None,
             },
         )
-        await mq.publish("qa_job_queue", request)
-        metrics_collector.change_queue_depth("qa_job_queue", 1)
+        await mq.publish(settings.WORKER_QUEUE_NAME, request)
+        metrics_collector.change_queue_depth(settings.WORKER_QUEUE_NAME, 1)
         return {"job_id": job_id, "status": "queued", "manual_retry_count": retry_count + 1}
 
     @staticmethod

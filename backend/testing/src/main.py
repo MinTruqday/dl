@@ -10,7 +10,6 @@ from src.core.ai_streaming import AIStreamingMiddleware
 from src.core.common import failure_metadata, new_id
 from src.core.configuration import settings
 from src.core.database import close_database, connect_database, database
-from src.core.function_ids import apply_function_ids
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.modules.design.router import router as design_router
 from src.modules.execution.router import router as execution_router
@@ -47,7 +46,6 @@ app.include_router(design_router)
 app.include_router(quality_router)
 app.include_router(integrations_router)
 app.include_router(operations_router)
-apply_function_ids(app)
 
 
 @app.exception_handler(HTTPException)
@@ -152,6 +150,14 @@ async def ready():
         if database.client is None:
             raise RuntimeError
         await database.client.admin.command("ping")
+        policies = await database.value.runtime_policies.find(
+            {}, {"_id": 1, "values": 1}
+        ).to_list(length=1000)
+        if not policies or any(
+            not isinstance(policy.get("values"), dict) or not policy["values"]
+            for policy in policies
+        ):
+            raise RuntimeError
         return {"status": "ready", "service": "testing"}
     except Exception:
         return JSONResponse(status_code=503, content={"status": "not_ready", "service": "testing"})

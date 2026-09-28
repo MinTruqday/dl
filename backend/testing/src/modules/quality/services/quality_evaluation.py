@@ -1,11 +1,29 @@
+from functools import lru_cache
+
 from fastapi import HTTPException
+from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
+from src.core.configuration import settings
 from src.repositories.quality import quality_repository
 from src.modules.execution.services.test_monitoring import effective_snapshot
 
 
+
+
+@lru_cache(maxsize=1)
+def quality_evaluation_policy():
+    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
+            {"_id": "quality_evaluation"}, {"_id": 0, "values": 1}
+        )
+    finally:
+        client.close()
+    if not isinstance(document, dict) or not isinstance(document.get("values"), dict):
+        raise RuntimeError("Thiếu chính sách đánh giá chất lượng")
+    return document["values"]
 
 
 def system_recommendation(gate_status, critical_risks):
@@ -89,7 +107,7 @@ async def list_evaluations(project_id, release_id, user):
 
 
 async def create_evaluation(project_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     await get_project(project_id, user, 'qualityevaluation.create')
     if payload.idempotency_key:
         existing = await quality_repository.find_evaluation_by_idempotency_key(
@@ -211,7 +229,7 @@ async def create_evaluation(project_id, payload, user):
 
 
 async def update_evaluation(evaluation_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(evaluation_id, user, 'qualityevaluation.create')
     if value["status"] != 'DRAFT':
         raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
@@ -249,7 +267,7 @@ async def update_evaluation(evaluation_id, payload, user):
 
 
 async def submit_evaluation(evaluation_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(evaluation_id, user, 'qualityevaluation.review')
     if value["status"] != 'DRAFT':
         raise HTTPException(
@@ -286,7 +304,7 @@ async def submit_evaluation(evaluation_id, payload, user):
 
 
 async def review_evaluation(evaluation_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(evaluation_id, user, 'qualityevaluation.review')
     if value["status"] != 'IN_REVIEW':
         raise HTTPException(status_code=409, detail={"code": codes["not_in_review"]})
@@ -319,7 +337,7 @@ async def review_evaluation(evaluation_id, payload, user):
 
 
 async def add_waiver(evaluation_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(evaluation_id, user, 'qualityevaluation.create')
     if value["status"] not in ['DRAFT', 'IN_REVIEW']:
         raise HTTPException(status_code=409, detail={"code": codes["immutable"]})
@@ -362,7 +380,7 @@ async def add_waiver(evaluation_id, payload, user):
 
 
 async def decide_waiver(evaluation_id, waiver_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(
         evaluation_id, user, 'qualityevaluation.waiver.approve'
     )
@@ -411,7 +429,7 @@ async def decide_waiver(evaluation_id, waiver_id, payload, user):
 
 
 async def approve_evaluation(evaluation_id, payload, user):
-    codes = {'not_found': 'ENTITY_NOT_FOUND', 'idempotency_reused': 'IDEMPOTENCY_KEY_REUSED', 'source_not_in_project': 'QUALITY_EVALUATION_SOURCE_NOT_IN_PROJECT', 'measurement_release_mismatch': 'MEASUREMENT_RELEASE_MISMATCH', 'source_incomplete': 'QUALITY_EVALUATION_SOURCE_INCOMPLETE', 'recommendation_mismatch': 'SYSTEM_RECOMMENDATION_MISMATCH', 'immutable': 'QUALITY_EVALUATION_IMMUTABLE', 'recommendation_immutable': 'SYSTEM_RECOMMENDATION_IMMUTABLE', 'revision_conflict': 'REVISION_CONFLICT', 'invalid_transition': 'INVALID_QUALITY_EVALUATION_TRANSITION', 'not_in_review': 'QUALITY_EVALUATION_NOT_IN_REVIEW', 'waiver_expiry_future': 'WAIVER_EXPIRY_MUST_BE_FUTURE', 'waiver_owner_not_member': 'WAIVER_OWNER_NOT_PROJECT_MEMBER', 'stale_revision': 'STALE_REVISION', 'waiver_not_found': 'WAIVER_NOT_FOUND', 'waiver_already_decided': 'WAIVER_ALREADY_DECIDED', 'endorsement_required': 'QUALITY_EVALUATION_ENDORSEMENT_REQUIRED', 'pending_waiver': 'PENDING_QUALITY_WAIVER', 'failed_gate_waiver_required': 'FAILED_GATE_REQUIRES_APPROVED_WAIVER'}
+    codes = quality_evaluation_policy()["codes"]
     value = await get_evaluation(evaluation_id, user, 'qualityevaluation.approve')
     if value["status"] != 'IN_REVIEW':
         raise HTTPException(status_code=409, detail={"code": codes["not_in_review"]})

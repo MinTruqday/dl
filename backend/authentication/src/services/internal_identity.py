@@ -1,11 +1,11 @@
 from fastapi import HTTPException
 
 from src.repositories.identity import IdentityRepository
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.services.platform import account_view
 
 
-ACCOUNT_POLICY = platform_policy()["account"]
+ACCOUNT_POLICY = policy_section("account")
 
 
 class InternalIdentityService:

@@ -53,7 +53,7 @@ async def ready():
     except Exception:
         checks["mongodb"] = "unavailable"
     try:
-        await mq.get_queue("qa_job_queue")
+        await mq.get_queue(settings.WORKER_QUEUE_NAME)
         checks["rabbitmq"] = "ready"
     except Exception:
         checks["rabbitmq"] = "unavailable"

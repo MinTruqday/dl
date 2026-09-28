@@ -3,12 +3,12 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from src.core.policies import platform_policy
+from src.core.policies import policy_section
 from src.core.security.access import get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository
 from src.services.session import SessionService
 
-ACCOUNT_POLICY = platform_policy()["account"]
+ACCOUNT_POLICY = policy_section("account")
 
 
 class AccountService:

@@ -7,7 +7,7 @@ from src.schemas.contracts.requirements import RequirementCompareInput
 from src.schemas.contracts.utility import GenerateInput
 from src.modules.quality.services.change_set import create_change_set_record
 from src.modules.quality.services.impact_analysis import create_impact_analysis_record
-from src.modules.operations.services.job_policy import ALLOWED_JOB_EVENTS, JOB_EVENT_PERMISSIONS
+from src.modules.operations.services.job_policy import job_event_permissions
 from src.clients.project_knowledge import index_artifact
 from src.modules.design.services.test_case_assistance import (
     find_duplicate_test_case_records,
@@ -22,7 +22,8 @@ async def process_delegated_job(
     requester_email: str,
 ):
     
-    if event not in ALLOWED_JOB_EVENTS:
+    permissions_by_event = job_event_permissions()
+    if event not in permissions_by_event:
         raise HTTPException(
             status_code=422, detail={"code": 'UNSUPPORTED_JOB_EVENT'}
         )
@@ -36,7 +37,7 @@ async def process_delegated_job(
         email=requester_email or 'worker@internal',
         system_role='USER',
     )
-    for permission in JOB_EVENT_PERMISSIONS[event]:
+    for permission in permissions_by_event[event]:
         await get_project(project_id, user, permission)
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute_job(event, body, payload, user)

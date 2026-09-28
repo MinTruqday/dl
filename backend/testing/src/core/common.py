@@ -5,12 +5,7 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from src.clients.authentication import load_accounts, resolve_account
-from src.core.auth import (
-    ARCHIVE_READ_PERMISSIONS,
-    PROJECT_PERMISSIONS,
-    CurrentUser,
-    permissions_for_role,
-)
+from src.core.auth import CurrentUser, archive_read_permissions, permissions_for_role, project_permissions
 from src.repositories.common import common_repository
 
 
@@ -194,7 +189,7 @@ async def get_project(
     grant = await common_repository.find_active_grant(
         project_id, user.id, 'ACTIVE', now()
     )
-    grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+    grant_permissions = set(grant.get("permissions", [])) & project_permissions() if grant else set()
     if not membership and permission not in grant_permissions:
         await audit(
             user.id,
@@ -241,13 +236,13 @@ async def get_project(
         )
     if (
         project.get("status", 'active').lower() == 'archived'
-        and permission not in ARCHIVE_READ_PERMISSIONS
+        and permission not in archive_read_permissions()
         and permission != 'project.restore'
     ):
         raise HTTPException(status_code=409, detail={"code": 'PROJECT_ARCHIVED'})
     if (
         project.get("status", 'active').lower() == 'archived'
-        and permission in ARCHIVE_READ_PERMISSIONS
+        and permission in archive_read_permissions()
         and permission != 'project.read'
         and (project.get("settings") or {}).get("read_after_archive_policy", 'ALLOW_READ')
         == 'DENY_READ'

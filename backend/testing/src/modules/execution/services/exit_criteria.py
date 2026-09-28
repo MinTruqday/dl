@@ -1,18 +1,32 @@
+from functools import lru_cache
+
+from pymongo import MongoClient
+
+from src.core.configuration import settings
 from src.schemas.test_monitoring import ExitCriterionDefinition
 
-METRIC_BY_RULE = {'EXECUTION_PERCENT_MIN': 'execution_percent', 'PASS_RATE_MIN': 'pass_rate', 'OPEN_BLOCKER_MAX': 'open_blocker', 'OPEN_CRITICAL_MAX': 'open_critical', 'REQUIREMENT_COVERAGE_MIN': 'requirement_coverage', 'AC_COVERAGE_MIN': 'acceptance_criteria_coverage', 'CONDITION_COVERAGE_MIN': 'test_condition_coverage', 'STALE_TESTCASE_MAX': 'stale_testcases', 'ENVIRONMENT_INCIDENT_MAX': 'open_environment_incidents'}
-MINIMUM_RULES = set(['EXECUTION_PERCENT_MIN', 'PASS_RATE_MIN', 'REQUIREMENT_COVERAGE_MIN', 'AC_COVERAGE_MIN', 'CONDITION_COVERAGE_MIN'])
-DENOMINATOR_BY_RULE = {'EXECUTION_PERCENT_MIN': 'execution_denominator', 'PASS_RATE_MIN': 'pass_rate_denominator', 'REQUIREMENT_COVERAGE_MIN': 'requirement_coverage_denominator', 'AC_COVERAGE_MIN': 'acceptance_criteria_coverage_denominator', 'CONDITION_COVERAGE_MIN': 'test_condition_coverage_denominator'}
+
+@lru_cache(maxsize=1)
+def exit_criteria_policy():
+    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
+            {"_id": "exit_criteria"}, {"_id": 0, "values": 1}
+        )
+    finally:
+        client.close()
+    if not isinstance(document, dict) or not isinstance(document.get("values"), dict):
+        raise RuntimeError("Thiếu chính sách tiêu chí kết thúc")
+    return document["values"]
 
 
 def normalize_criterion(raw, index):
     rule_type = str(raw.get("type") or raw.get("key") or "").upper()
-    rule_type = {'EXECUTION_PROGRESS': 'EXECUTION_PERCENT_MIN', 'EXECUTION_PERCENT': 'EXECUTION_PERCENT_MIN', 'PASS_RATE': 'PASS_RATE_MIN', 'OPEN_BLOCKER': 'OPEN_BLOCKER_MAX', 'OPEN_CRITICAL': 'OPEN_CRITICAL_MAX', 'REQUIREMENT_COVERAGE': 'REQUIREMENT_COVERAGE_MIN', 'AC_COVERAGE': 'AC_COVERAGE_MIN', 'ACCEPTANCE_CRITERION_COVERAGE': 'AC_COVERAGE_MIN', 'CONDITION_COVERAGE': 'CONDITION_COVERAGE_MIN', 'STALE_TESTCASES': 'STALE_TESTCASE_MAX', 'OPEN_ENVIRONMENT_INCIDENT': 'ENVIRONMENT_INCIDENT_MAX', 'OPEN_ENVIRONMENT_INCIDENT_MAX': 'ENVIRONMENT_INCIDENT_MAX'}.get(rule_type, rule_type)
+    rule_type = exit_criteria_policy()["normalized_types"].get(rule_type, rule_type)
     threshold = raw.get("threshold", raw.get("value"))
-    supported = set(METRIC_BY_RULE) | {
-        'REQUIRED_RUNS_COMPLETED',
-        'CUSTOM_MANUAL_GATE',
-    }
+    supported = set(exit_criteria_policy()["metric_by_rule"]) | set(
+        exit_criteria_policy()["supported_manual_types"]
+    )
     if rule_type not in supported:
         rule_type = 'CUSTOM_MANUAL_GATE'
         threshold = False
@@ -29,7 +43,10 @@ def normalize_criterion(raw, index):
 
 
 def evaluate_exit_criteria(definitions, metrics, completed_run_ids):
-    statuses = {'pass': 'PASS', 'fail': 'FAIL', 'warning': 'WARN', 'insufficient_data': 'INSUFFICIENT_DATA', 'manual_required': 'MANUAL_REQUIRED'}
+    policy = exit_criteria_policy()
+    metric_by_rule = policy["metric_by_rule"]
+    minimum_rules = set(policy["minimum_rules"])
+    denominator_by_rule = policy["denominator_by_rule"]
     results = []
     for index, raw in enumerate(definitions, 1):
         definition = normalize_criterion(raw, index)
@@ -42,22 +59,22 @@ def evaluate_exit_criteria(definitions, metrics, completed_run_ids):
             actual = {"completed": sorted(required & set(completed_run_ids)), "missing": missing}
             status = 'PASS' if not missing else 'FAIL'
         else:
-            actual = metrics.get(METRIC_BY_RULE[definition.type], 0)
+            actual = metrics.get(metric_by_rule[definition.type], 0)
             threshold = float(definition.threshold)
-            denominator_key = DENOMINATOR_BY_RULE.get(definition.type)
+            denominator_key = denominator_by_rule.get(definition.type)
             if denominator_key and not metrics.get(denominator_key, 0):
                 actual = None
                 status = 'INSUFFICIENT_DATA'
             else:
                 if (
-                    definition.type in MINIMUM_RULES
+                    definition.type in minimum_rules
                     and 0
                     <= threshold
                     <= 1
                 ):
                     threshold *= 100
                 passed = (
-                    actual >= threshold if definition.type in MINIMUM_RULES else actual <= threshold
+                    actual >= threshold if definition.type in minimum_rules else actual <= threshold
                 )
                 status = 'PASS' if passed else 'FAIL'
         results.append(
@@ -73,7 +90,6 @@ def evaluate_exit_criteria(definitions, metrics, completed_run_ids):
 
 
 def quality_gate_status(evaluations):
-    statuses = {'pass': 'PASS', 'fail': 'FAIL', 'warning': 'WARN', 'insufficient_data': 'INSUFFICIENT_DATA', 'manual_required': 'MANUAL_REQUIRED'}
     if any(item["status"] == 'FAIL' for item in evaluations):
         return 'FAIL'
     incomplete = {'INSUFFICIENT_DATA', 'MANUAL_REQUIRED'}

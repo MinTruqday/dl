@@ -1,10 +1,27 @@
+from functools import lru_cache
+
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
+from pymongo import MongoClient
 
 from src.core.common import audit, get_project, new_id, now, optimistic_patch
+from src.core.configuration import settings
 from src.repositories.project_notification import project_notification_repository
 
 
+@lru_cache(maxsize=1)
+def notification_policy():
+    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
+            {"_id": "project_notification"}, {"_id": 0, "values": 1}
+        )
+    finally:
+        client.close()
+    values = document.get("values") if isinstance(document, dict) else None
+    if not isinstance(values, dict) or not isinstance(values.get("artifact_collections"), dict):
+        raise RuntimeError("Thiếu chính sách thông báo dự án")
+    return values
 
 
 
@@ -20,62 +37,67 @@ def artifact_label(artifact):
 
 
 def default_rules(project_id):
+    policy = notification_policy()
     return {
-        "_id": f"{'PNRULE:'}{project_id}",
+        "_id": f"{policy['rule_id_prefix']}{project_id}",
         "project_id": project_id,
         "enabled_events": [],
-        "channels": ['in_app'],
-        "target_roles": ['QA'],
+        "channels": policy["default_channels"],
+        "target_roles": policy["default_target_roles"],
         "escalation_minutes": None,
-        "revision": 0,
+        "revision": policy["initial_revision"],
     }
 
 
 def default_preferences(project_id, user_id):
+    policy = notification_policy()
     return {
-        "_id": f"{'NPREF:'}{project_id}:{user_id}",
+        "_id": f"{policy['preference_id_prefix']}{project_id}:{user_id}",
         "project_id": project_id,
         "user_id": user_id,
-        "digest_frequency": 'immediate',
-        "channels": ['in_app'],
+        "digest_frequency": policy["default_digest_frequency"],
+        "channels": policy["default_channels"],
         "muted_events": [],
         "quiet_hours_start": None,
         "quiet_hours_end": None,
-        "timezone": 'Asia/Ho_Chi_Minh',
-        "revision": 0,
+        "timezone": policy["default_timezone"],
+        "revision": policy["initial_revision"],
     }
 
 
 class ProjectNotificationService:
     @staticmethod
     async def require_artifact(project_id, artifact_type, artifact_id):
-        collection = ARTIFACT_COLLECTIONS.get(artifact_type)
+        policy = notification_policy()
+        collection = policy["artifact_collections"].get(artifact_type)
         if not collection:
             raise HTTPException(
                 status_code=422,
-                detail={"code": 'NOTIFICATION_ARTIFACT_TYPE_INVALID'},
+                detail={"code": policy["invalid_artifact_type_code"]},
             )
         if not await project_notification_repository.artifact_exists(
             collection, project_id, artifact_id
         ):
             raise HTTPException(
                 status_code=404,
-                detail={"code": 'ENTITY_NOT_FOUND'},
+                detail={"code": policy["entity_not_found_code"]},
             )
 
     @staticmethod
     async def list_watches(project_id, artifact_type, user):
         await get_project(project_id, user, "notification.watch.manage")
+        policy = notification_policy()
+        collections = policy["artifact_collections"]
         query = {"project_id": project_id, "user_id": user.id}
         if artifact_type:
-            if artifact_type not in ARTIFACT_COLLECTIONS:
+            if artifact_type not in collections:
                 raise HTTPException(
                     status_code=422,
-                    detail={"code": 'NOTIFICATION_ARTIFACT_TYPE_INVALID'},
+                    detail={"code": policy["invalid_artifact_type_code"]},
                 )
             query["artifact_type"] = artifact_type
         items = await project_notification_repository.list_subscriptions(query)
-        for artifact_type_value, collection_name in ARTIFACT_COLLECTIONS.items():
+        for artifact_type_value, collection_name in collections.items():
             matching = [
                 item for item in items if item.get("artifact_type") == artifact_type_value
             ]
@@ -135,16 +157,16 @@ class ProjectNotificationService:
                 changes,
             )
         else:
-            if payload.expected_revision != 0:
+            if payload.expected_revision != notification_policy()["initial_revision"]:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": 'REVISION_CONFLICT'},
+                    detail={"code": notification_policy()["revision_conflict_code"]},
                 )
             timestamp = now()
             updated = {
                 **default_rules(project_id),
                 **changes,
-                "revision": 1,
+                "revision": notification_policy()["created_revision"],
                 "created_by": user.id,
                 "created_at": timestamp,
                 "updated_at": timestamp,
@@ -154,7 +176,7 @@ class ProjectNotificationService:
             except DuplicateKeyError:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": 'REVISION_CONFLICT'},
+                    detail={"code": notification_policy()["revision_conflict_code"]},
                 )
         await audit(
             user.id,
@@ -185,16 +207,16 @@ class ProjectNotificationService:
                 changes,
             )
         else:
-            if payload.expected_revision != 0:
+            if payload.expected_revision != notification_policy()["initial_revision"]:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": 'REVISION_CONFLICT'},
+                    detail={"code": notification_policy()["revision_conflict_code"]},
                 )
             timestamp = now()
             updated = {
                 **default_preferences(project_id, user.id),
                 **changes,
-                "revision": 1,
+                "revision": notification_policy()["created_revision"],
                 "created_at": timestamp,
                 "updated_at": timestamp,
             }
@@ -203,7 +225,7 @@ class ProjectNotificationService:
             except DuplicateKeyError:
                 raise HTTPException(
                     status_code=409,
-                    detail={"code": 'REVISION_CONFLICT'},
+                    detail={"code": notification_policy()["revision_conflict_code"]},
                 )
         await audit(
             user.id,

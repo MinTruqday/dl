@@ -58,7 +58,6 @@ export default function AppShell({ children, requireAuth }) {
   const projectId = projectIdFromPath(pathname);
   const { user, isLoading, logoutState } = useAuth();
   const { unreadCount } = useAnnouncements();
-  const notificationEnabled = true;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(routeQuery);
@@ -280,18 +279,16 @@ export default function AppShell({ children, requireAuth }) {
                     <Search size={19} strokeWidth={1.75} />
                   </Link>
                 )}
-                {notificationEnabled && (
-                  <Link
-                    href="/thong-bao"
-                    className="relative flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink"
-                    aria-label={unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"}
-                  >
-                    <Bell size={19} strokeWidth={1.75} />
-                    {unreadCount > 0 && (
-                      <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-danger" />
-                    )}
-                  </Link>
-                )}
+                <Link
+                  href="/thong-bao"
+                  className="relative flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink"
+                  aria-label={unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"}
+                >
+                  <Bell size={19} strokeWidth={1.75} />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-danger" />
+                  )}
+                </Link>
                 <div className="relative" ref={accountRef}>
                   <button
                     type="button"

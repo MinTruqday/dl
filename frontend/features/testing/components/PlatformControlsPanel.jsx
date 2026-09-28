@@ -213,11 +213,11 @@ export default function PlatformControlsPanel() {
         <Panel title="Hàng đợi và consumer">
           <div className="grid grid-cols-2 gap-4 p-5 text-[13px]">
             <div>
-              <p className="field-label">Worker</p>
+              <p className="field-label">Dịch vụ xử lý nền</p>
               <StatusPill value={String(data?.queue?.worker_status || "UNKNOWN").toUpperCase()} />
             </div>
             <div>
-              <p className="field-label">Consumer</p>
+              <p className="field-label">Tiến trình nhận tác vụ</p>
               <StatusPill value={String(data?.queue?.consumer_status || "UNKNOWN").toUpperCase()} />
             </div>
           </div>

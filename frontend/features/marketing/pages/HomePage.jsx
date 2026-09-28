@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2, GitBranch, SearchCheck, Sparkles } from "lucide-react";
+import { ArrowRight, GitBranch, SearchCheck, Sparkles } from "lucide-react";
 
 const capabilities = [
   {
@@ -64,7 +64,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <section className="mx-auto grid w-full max-w-[1200px] gap-12 px-5 py-16 md:px-8 md:py-24 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:items-center">
+      <section className="mx-auto w-full max-w-[1200px] px-5 py-16 md:px-8 md:py-24">
         <div>
           <h1 className="max-w-3xl text-[44px] font-semibold leading-[1.02] tracking-[-0.055em] sm:text-[58px] lg:text-[66px]">
             Quản lý kiểm thử phần mềm
@@ -77,49 +77,6 @@ export default function HomePage() {
             <Link href="/dang-nhap" className="secondary-button px-6">
               Vào không gian kiểm thử
             </Link>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="absolute -inset-8 rounded-full bg-brand/10 blur-3xl" />
-          <div className="relative overflow-hidden rounded-3xl border border-brand/15 bg-[#193d34] p-6 text-white shadow-[0_30px_90px_rgba(26,61,52,0.22)] md:p-8">
-            <div className="flex items-center justify-between border-b border-white/15 pb-5">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-white/60">
-                  Tổng quan dự án
-                </p>
-                <h2 className="mt-2 text-[22px] font-semibold">Dự án mẫu</h2>
-              </div>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold">
-                Đang hoạt động
-              </span>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              {[
-                ["96%", "Độ phủ yêu cầu"],
-                ["84", "Ca kiểm thử"],
-                ["7", "Thay đổi cần duyệt"],
-                ["3", "Lỗi đang mở"],
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-                  <p className="text-[28px] font-semibold tracking-[-0.04em]">{value}</p>
-                  <p className="mt-2 text-[12px] leading-5 text-white/65">{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 rounded-2xl bg-white p-5 text-ink">
-              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-brand">
-                Quyết định chờ duyệt
-              </p>
-              <div className="mt-4 space-y-3">
-                {["Xác nhận liên kết truy vết", "Áp dụng đề xuất bảo trì"].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-[13px] font-semibold">
-                    <CheckCircle2 className="text-brand" size={17} />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>

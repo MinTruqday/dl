@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from src.clients.worker import WorkerClientError, worker_client
 from src.core.auth import CurrentUser
 from src.core.common import get_project
-from src.modules.operations.services.job_policy import JOB_EVENT_PERMISSIONS
+from src.modules.operations.services.job_policy import job_event_permissions
 
 
 class DelegatedJobService:
@@ -11,9 +11,10 @@ class DelegatedJobService:
     async def enqueue(project_id: str, body: dict, user: CurrentUser):
         
         event = body.get("event")
-        if event not in JOB_EVENT_PERMISSIONS:
+        permissions_by_event = job_event_permissions()
+        if event not in permissions_by_event:
             raise HTTPException(status_code=422, detail={"code": 'UNSUPPORTED_JOB_EVENT'})
-        for permission in JOB_EVENT_PERMISSIONS[event]:
+        for permission in permissions_by_event[event]:
             await get_project(project_id, user, permission)
         artifact_version_id = str(body.get("artifact_version_id") or "")
         model_version = str(body.get("model_version") or "")

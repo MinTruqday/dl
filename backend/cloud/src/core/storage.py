@@ -15,7 +15,6 @@ OBJECT_STORAGE_PUBLIC_BUCKET = settings.OBJECT_STORAGE_PUBLIC_BUCKET
 OBJECT_STORAGE_LEGACY_BUCKET = settings.OBJECT_STORAGE_LEGACY_BUCKET
 OBJECT_STORAGE_PUBLIC_URL = settings.OBJECT_STORAGE_PUBLIC_URL
 OBJECT_STORAGE_REGION = settings.OBJECT_STORAGE_REGION
-TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "veriq", "veriqx"}
 
 
 def should_brotli_compress(
@@ -28,7 +27,10 @@ def should_brotli_compress(
         "application/xml",
     }
     return content_length >= 1024 and (
-        requested or text_type or extension in TEXT_EXTENSIONS
+        requested
+        or text_type
+        or extension
+        in {item.strip().lower() for item in settings.COMPRESSIBLE_TEXT_EXTENSIONS.split(",") if item.strip()}
     )
 
 

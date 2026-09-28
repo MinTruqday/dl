@@ -5,13 +5,15 @@ from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from src.core.infrastructure.configuration import settings
+
 
 class MetricsCollector:
     def __init__(self):
         self._request_count = defaultdict(int)
         self._request_duration = defaultdict(float)
         self._error_count = defaultdict(int)
-        self._queue_depth = defaultdict(int, {"qa_job_queue": 0})
+        self._queue_depth = defaultdict(int, {settings.WORKER_QUEUE_NAME: 0})
 
     def change_queue_depth(self, queue_name: str, amount: int):
         self._queue_depth[queue_name] = max(0, self._queue_depth[queue_name] + amount)

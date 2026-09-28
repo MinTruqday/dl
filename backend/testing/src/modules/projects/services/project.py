@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.clients.authentication import get_project_creation_policy
-from src.core.auth import PROJECT_PERMISSIONS, permissions_for_role
+from src.core.auth import permissions_for_role, project_permissions
 from src.core.common import (
     audit,
     get_project,
@@ -25,7 +25,7 @@ def project_access(project, membership, grant):
         if membership
         else set()
     )
-    grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+    grant_permissions = set(grant.get("permissions", [])) & project_permissions() if grant else set()
     return {
         **project,
         "current_membership": membership,

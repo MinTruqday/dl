@@ -12,7 +12,7 @@ from src.core.common import (
 )
 from src.repositories.defect import defect_repository
 from src.modules.execution.services.execution_context import resolve_execution_context
-from src.modules.execution.services.execution_policy import DEFECT_TRANSITIONS
+from src.modules.execution.services.execution_policy import defect_transitions
 
 
 
@@ -170,7 +170,7 @@ async def transition_defect_record(defect_id, payload, user):
             f"defect.{payload.to_status.lower()}",
             set(['QA']),
         )
-    allowed = DEFECT_TRANSITIONS.get(defect["status"], set())
+    allowed = defect_transitions().get(defect["status"], set())
     if payload.to_status not in allowed:
         raise HTTPException(
             status_code=409,

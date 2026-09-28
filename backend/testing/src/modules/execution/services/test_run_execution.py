@@ -4,7 +4,7 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project_entity, new_id, now, plain_text
 from src.repositories.test_run import test_run_repository
 from src.modules.execution.services.execution_policy import (
-    EXECUTION_TRANSITIONS,
+    execution_transitions,
     enforce_not_applicable_policy,
     frozen_run_scope,
     frozen_run_scope_hash,
@@ -268,7 +268,7 @@ async def update_test_execution_record(project_id, execution_id, payload, user):
                 "incident_id": run.get("paused_by_environment_incident_id"),
             },
         )
-    allowed = EXECUTION_TRANSITIONS.get(result.get("status"), set())
+    allowed = execution_transitions().get(result.get("status"), set())
     if payload.status not in allowed:
         raise HTTPException(
             status_code=409,

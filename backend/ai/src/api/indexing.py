@@ -12,7 +12,8 @@ from src.schemas.ingestion import AttachmentConversionRequest, IngestRequest, In
 from src.schemas.response import APIResponse
 from src.services.ingestion import convert_attachment as convert_attachment_data
 from src.services.ingestion import extract_document as extract_document_text
-from src.services.ingestion import index_document, remove_document
+from src.services.ingestion import index_document as index_document_data
+from src.services.ingestion import remove_document as remove_document_data
 
 router = APIRouter(prefix="/tiep-nap")
 indexing_router = APIRouter(dependencies=[Depends(verify_internal_token)])
@@ -24,16 +25,19 @@ async def ingest_endpoint(
 ):
     logger.info(f"Started document ingestion process document_id={req.document_id}")
     try:
-        result = await index_document(
+        result = await index_document_data(
             req.document_id,
             str(current_user.id),
             current_user.system_role == SystemRole.ADMIN,
         )
         logger.info(f"Document ingestion completed document_id={req.document_id}")
         return result
-    except Exception:
-        logger.exception("Document ingestion pipeline error")
-        raise
+    except Exception as error:
+        if isinstance(error, (HTTPException, PermissionError, ValueError)):
+            logger.warning("Document ingestion rejected error_type={}", type(error).__name__)
+        else:
+            logger.exception("Document ingestion pipeline error")
+        raise document_error(error) from error
 
 
 @router.delete("/tai-lieu/{document_id}")
@@ -42,16 +46,19 @@ async def delete_document_endpoint(
 ):
     logger.info(f"Started document deletion from vector store document_id={document_id}")
     try:
-        await remove_document(
+        await remove_document_data(
             document_id,
             str(current_user.id),
             current_user.system_role == SystemRole.ADMIN,
         )
         logger.info(f"Document deletion completed document_id={document_id}")
         return {"status": "success", "message_code": "document_vectors_deleted"}
-    except Exception:
-        logger.exception("Document deletion error")
-        raise
+    except Exception as error:
+        if isinstance(error, (HTTPException, PermissionError, ValueError)):
+            logger.warning("Document deletion rejected error_type={}", type(error).__name__)
+        else:
+            logger.exception("Document deletion error")
+        raise document_error(error) from error
 
 
 def resolve_requester(req: IngestRequest, user: CurrentUser):
@@ -83,7 +90,7 @@ async def ingest_document(
 ):
     requester_id, is_admin = resolve_requester(req, user)
     try:
-        result = await index_document(req.document_id, requester_id, is_admin)
+        result = await index_document_data(req.document_id, requester_id, is_admin)
     except Exception as error:
         raise document_error(error)
     return APIResponse(
@@ -147,7 +154,7 @@ async def delete_document(
     if not resolved_id:
         raise HTTPException(status_code=403, detail="Missing document requester")
     try:
-        result = await remove_document(document_id, resolved_id, resolved_admin)
+        result = await remove_document_data(document_id, resolved_id, resolved_admin)
     except Exception as error:
         raise document_error(error)
     return APIResponse(data=result, message="Xóa chỉ mục tài liệu thành công")
