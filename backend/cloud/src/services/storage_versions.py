@@ -8,7 +8,7 @@ from src.repositories.storage import storage_repository
 from src.schemas.storage import FileVersion, StorageItemInDB
 from src.services.activity import ActivityService
 from src.services.storage_analytics import get_storage_quota
-from src.services.storage_policy import object_prefixes, storage_policy
+from src.services.storage_paths import object_prefixes
 
 
 async def _owned_item(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
@@ -66,7 +66,7 @@ async def add_version(
         update["$push"] = {
             "versions": {
                 "$each": [old_version.model_dump()],
-                "$slice": -int(storage_policy()["maximum_versions"]),
+                "$slice": -10,
             }
         }
     await storage_repository.replace_version(
@@ -181,7 +181,7 @@ async def rollback_version(
                 "versions": [
                     version.model_dump()
                     for version in remaining_versions[
-                        : int(storage_policy()["maximum_versions"])
+                        : 10
                     ]
                 ],
                 "updated_at": datetime.now(timezone.utc),

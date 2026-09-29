@@ -1,5 +1,4 @@
 from src.repositories.storage import storage_repository
-from src.services.storage_policy import storage_policy
 
 
 async def get_storage_quota(owner_id: str) -> dict:
@@ -42,10 +41,13 @@ async def get_quota_analytics(owner_id: str) -> dict:
     total_used = quota["used"]
     free_bytes = max(0, total_limit - total_used)
     usage_pct = round((total_used / total_limit * 100) if total_limit > 0 else 0.0, 2)
-    configured_categories = storage_policy()["file_categories"]
     categories = {
-        name: {"extensions": extensions, "count": 0, "size": 0}
-        for name, extensions in configured_categories.items()
+        "documents": {"extensions": [".pdf", ".doc", ".docx", ".txt", ".odt", ".rtf", ".pages", ".md"], "count": 0, "size": 0},
+        "images": {"extensions": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico"], "count": 0, "size": 0},
+        "videos": {"extensions": [".mp4", ".mkv", ".mov", ".avi", ".webm"], "count": 0, "size": 0},
+        "audio": {"extensions": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"], "count": 0, "size": 0},
+        "archives": {"extensions": [".zip", ".rar", ".7z", ".tar", ".gz"], "count": 0, "size": 0},
+        "code": {"extensions": [".py", ".ts", ".js", ".json", ".html", ".css", ".cpp", ".java", ".sql", ".sh", ".yml", ".yaml"], "count": 0, "size": 0},
     }
     categories["others"] = {"extensions": [], "count": 0, "size": 0}
     files = await storage_repository.find_many(

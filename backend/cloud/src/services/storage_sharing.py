@@ -6,7 +6,6 @@ from src.clients.accounts import AccountClient
 from src.repositories.storage import storage_repository
 from src.schemas.storage import StorageItemInDB
 from src.services.activity import ActivityService
-from src.services.storage_policy import storage_policy
 
 
 async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
@@ -17,7 +16,7 @@ async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
 
 
 async def share_item(item_id: str, email: str, role: str, owner_id: str) -> dict:
-    if role not in set(storage_policy()["share_roles"]):
+    if role not in {"viewer", "editor"}:
         raise HTTPException(status_code=422, detail="Vai trò chia sẻ không hợp lệ")
     target_user = await AccountClient.get_by_email(email)
     if not target_user:

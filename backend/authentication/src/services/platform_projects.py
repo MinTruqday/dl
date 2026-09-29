@@ -5,7 +5,6 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.schemas.platform import (
     ActionReason,
@@ -16,9 +15,6 @@ from src.schemas.platform import (
     ProjectStatusUpdate,
 )
 from src.services.platform import account_or_404, record_audit
-
-PROJECT_POLICY = policy_section("projects")
-
 
 class PlatformProjectService:
     @staticmethod
@@ -31,7 +27,7 @@ class PlatformProjectService:
         )
         response.raise_for_status()
         await record_audit(
-            current_user, PROJECT_POLICY["audit_actions"]["metadata_viewed"], "platform", "operations"
+            current_user, "ADMIN_PROJECT_METADATA_VIEWED", "platform", "operations"
         )
         return response.json()
 
@@ -57,7 +53,7 @@ class PlatformProjectService:
             project["job_count"] = None
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["metadata_viewed"],
+            "ADMIN_PROJECT_METADATA_VIEWED",
             project_id,
             "support metadata",
         )
@@ -82,7 +78,7 @@ class PlatformProjectService:
         response.raise_for_status()
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["status_updated"],
+            "ADMIN_PROJECT_STATUS_UPDATED",
             project_id,
             payload.reason,
             {"status": payload.status},
@@ -107,7 +103,7 @@ class PlatformProjectService:
         response.raise_for_status()
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["quota_updated"],
+            "ADMIN_PROJECT_QUOTA_UPDATED",
             project_id,
             payload.reason,
             quota,
@@ -117,11 +113,11 @@ class PlatformProjectService:
     @staticmethod
     async def policy():
         config = await IdentityRepository.get_system_config_by_type(
-            PROJECT_POLICY["creation_config_type"]
+            "project_creation"
         )
         return {
             "project_creation_policy": (config or {}).get(
-                "project_creation_policy", PROJECT_POLICY["default_creation_policy"]
+                "project_creation_policy", "AUTHENTICATED"
             ),
             "updated_at": (config or {}).get("updated_at"),
         }
@@ -130,7 +126,7 @@ class PlatformProjectService:
     async def update_policy(payload: ProjectPolicyUpdate, current_user: CurrentUser):
         timestamp = datetime.now(timezone.utc)
         await IdentityRepository.update_system_config(
-            PROJECT_POLICY["creation_config_type"],
+            "project_creation",
             {
                 "$set": {
                     "project_creation_policy": payload.project_creation_policy,
@@ -138,7 +134,7 @@ class PlatformProjectService:
                     "updated_by": current_user.id,
                 },
                 "$setOnInsert": {
-                    "type": PROJECT_POLICY["creation_config_type"],
+                    "type": "project_creation",
                     "created_at": timestamp,
                 },
             },
@@ -146,7 +142,7 @@ class PlatformProjectService:
         )
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["policy_updated"],
+            "ADMIN_PROJECT_POLICY_UPDATED",
             "platform",
             payload.reason,
             {"project_creation_policy": payload.project_creation_policy},
@@ -163,7 +159,7 @@ class PlatformProjectService:
         response.raise_for_status()
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["memberships_viewed"],
+            "ADMIN_PROJECT_MEMBERSHIPS_VIEWED",
             project_id,
             "support metadata",
         )
@@ -188,7 +184,7 @@ class PlatformProjectService:
         result = response.json()
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["hard_deleted"],
+            "ADMIN_PROJECT_HARD_DELETED",
             project_id,
             payload.reason,
             {"project_key": result.get("project_key"), "deleted": result["deleted"]},
@@ -223,7 +219,7 @@ class PlatformProjectService:
         grant = response.json()
         await record_audit(
             current_user,
-            PROJECT_POLICY["audit_actions"]["break_glass_granted"],
+            "ADMIN_BREAK_GLASS_GRANTED",
             grant["_id"],
             payload.reason,
             {
@@ -249,6 +245,6 @@ class PlatformProjectService:
         response.raise_for_status()
         grant = response.json()
         await record_audit(
-            current_user, PROJECT_POLICY["audit_actions"]["break_glass_revoked"], grant_id, payload.reason
+            current_user, "ADMIN_BREAK_GLASS_REVOKED", grant_id, payload.reason
         )
         return grant

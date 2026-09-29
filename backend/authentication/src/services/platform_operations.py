@@ -8,14 +8,10 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import health_request, internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import policy_section
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import ActionReason, SmtpTestRequest
 from src.services.email import EmailService
 from src.services.platform import record_audit
-
-OPERATIONS_POLICY = policy_section("operations")
-
 
 class PlatformOperationsService:
     @staticmethod
@@ -35,7 +31,7 @@ class PlatformOperationsService:
             ) from error
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["jobs_viewed"],
+            "ADMIN_OPERATIONS_JOBS_VIEWED",
             "platform",
             "operations",
         )
@@ -45,9 +41,9 @@ class PlatformOperationsService:
     async def retry_job(job_id: str, current_user: CurrentUser):
         return await PlatformOperationsService._job_action(
             job_id,
-            OPERATIONS_POLICY["job_actions"]["retry"],
+            "thu-lai",
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["job_retried"],
+            "ADMIN_OPERATIONS_JOB_RETRIED",
             "operations retry",
             "Tác vụ không tồn tại hoặc không đủ điều kiện chạy lại",
             "Không thể chạy lại tác vụ nền",
@@ -57,9 +53,9 @@ class PlatformOperationsService:
     async def cancel_job(job_id: str, current_user: CurrentUser):
         return await PlatformOperationsService._job_action(
             job_id,
-            OPERATIONS_POLICY["job_actions"]["cancel"],
+            "huy",
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["job_canceled"],
+            "ADMIN_OPERATIONS_JOB_CANCELED",
             "operations cancel",
             "Tác vụ không tồn tại hoặc không thể hủy",
             "Không thể hủy tác vụ nền",
@@ -73,7 +69,7 @@ class PlatformOperationsService:
                 "worker",
                 "/xu-ly-nen/noi-bo/tac-vu",
                 params={
-                    "status": OPERATIONS_POLICY["background_job_failed_status"],
+                    "status": "failed",
                     "limit": limit,
                 },
             )
@@ -108,7 +104,7 @@ class PlatformOperationsService:
             ) from error
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["dead_letter_discarded"],
+            "ADMIN_DLQ_JOB_DISCARDED",
             job_id,
             payload.reason,
         )
@@ -121,14 +117,14 @@ class PlatformOperationsService:
         except Exception as error:
             await record_audit(
                 current_user,
-                OPERATIONS_POLICY["audit_actions"]["smtp_test_failed"],
+                "ADMIN_SMTP_TEST_FAILED",
                 str(payload.recipient),
                 payload.reason,
             )
             raise HTTPException(status_code=503, detail="Không thể gửi thư kiểm tra") from error
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["smtp_tested"],
+            "ADMIN_SMTP_TESTED",
             str(payload.recipient),
             payload.reason,
         )
@@ -147,8 +143,8 @@ class PlatformOperationsService:
         except (httpx.HTTPError, KeyError, ValueError):
             overview = {"jobs_by_status": {}}
             worker = {
-                "status": OPERATIONS_POLICY["unavailable_status"],
-                "checks": {"consumers": OPERATIONS_POLICY["unavailable_status"]},
+                "status": "unavailable",
+                "checks": {"consumers": "unavailable"},
             }
         return {
             "jobs_by_status": overview["jobs_by_status"],
@@ -177,7 +173,7 @@ class PlatformOperationsService:
             ) from error
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["dead_letter_requeued"],
+            "ADMIN_DLQ_JOB_REQUEUED",
             job_id,
             payload.reason,
         )
@@ -199,14 +195,14 @@ class PlatformOperationsService:
 
     @staticmethod
     async def platform_health(current_user: CurrentUser):
-        services = OPERATIONS_POLICY["platform_health_services"]
+        services = ("authentication", "testing", "worker", "ai", "content")
         results = await asyncio.gather(
             *(PlatformOperationsService.service_health(name) for name in services)
         )
         results.append(await PlatformOperationsService._mongodb_health())
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["platform_health_viewed"],
+            "ADMIN_PLATFORM_HEALTH_VIEWED",
             "platform",
             "operations",
         )
@@ -227,7 +223,7 @@ class PlatformOperationsService:
         result = await PlatformOperationsService.service_health("cloud")
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["storage_tested"],
+            "ADMIN_STORAGE_TESTED",
             "storage",
             "connectivity test",
             {"healthy": result["healthy"]},
@@ -238,7 +234,7 @@ class PlatformOperationsService:
 
     @staticmethod
     async def integration_health():
-        targets = OPERATIONS_POLICY["integration_health_services"]
+        targets = ("worker", "ai", "cloud", "testing")
         services = await asyncio.gather(
             *(PlatformOperationsService.service_health(name) for name in targets)
         )
@@ -270,17 +266,17 @@ class PlatformOperationsService:
     @staticmethod
     async def export_audit(current_user: CurrentUser):
         events = await PlatformRepository.list_audit_logs(
-            {}, OPERATIONS_POLICY["audit_export_maximum_records"]
+            {}, 100000
         )
         stream = io.StringIO()
-        fields = OPERATIONS_POLICY["audit_export_fields"]
+        fields = ("timestamp", "action", "actor_email", "target_user_id", "reason")
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         for event in events:
             writer.writerow({field: event.get(field) for field in fields})
         await record_audit(
             current_user,
-            OPERATIONS_POLICY["audit_actions"]["global_audit_exported"],
+            "ADMIN_GLOBAL_AUDIT_EXPORTED",
             "platform",
             "audit export",
         )
@@ -301,7 +297,7 @@ class PlatformOperationsService:
                 "service": name,
                 "healthy": False,
                 "status_code": None,
-                "details": {"status": OPERATIONS_POLICY["unavailable_status"]},
+                "details": {"status": "unavailable"},
             }
 
     @staticmethod
@@ -338,18 +334,18 @@ class PlatformOperationsService:
         try:
             await PlatformRepository.database_ready()
             result = {
-                "service": OPERATIONS_POLICY["mongodb_service"],
+                "service": "mongodb",
                 "healthy": True,
-                "details": {"status": OPERATIONS_POLICY["ready_status"]},
+                "details": {"status": "ready"},
             }
             if include_status_code:
                 result["status_code"] = 200
             return result
         except Exception:
             result = {
-                "service": OPERATIONS_POLICY["mongodb_service"],
+                "service": "mongodb",
                 "healthy": False,
-                "details": {"status": OPERATIONS_POLICY["unavailable_status"]},
+                "details": {"status": "unavailable"},
             }
             if include_status_code:
                 result["status_code"] = None

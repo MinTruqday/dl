@@ -10,7 +10,7 @@ from src.repositories.storage import temporary_file_repository
 from src.repositories.storage import upload_reservation_repository
 from src.schemas.storage import StorageItemCreate
 from src.services.storage import StorageService
-from src.services.storage_policy import object_prefixes, storage_policy
+from src.services.storage_paths import object_prefixes
 
 
 class UploadPolicyService:
@@ -65,12 +65,11 @@ class UploadPolicyService:
     async def can_download(file_path: str, user_id: str, is_system_admin: bool):
         if ".." in file_path or file_path.startswith("/"):
             return False
-        policy = storage_policy()
-        if file_path.startswith(policy["public_prefix"]):
+        if file_path.startswith("public/"):
             return True
         if file_path.startswith(object_prefixes(user_id)):
             return True
-        if file_path.startswith(policy["temporary_prefix"].format(owner_id=user_id)):
+        if file_path.startswith(f"temp/{user_id}/"):
             return True
         item = await storage_repository.find_one(
             {
@@ -81,14 +80,14 @@ class UploadPolicyService:
             {"_id": 1},
         )
         return bool(item) or bool(
-            is_system_admin and file_path.startswith(policy["system_prefix"])
+            is_system_admin and file_path.startswith("system/")
         )
 
     @staticmethod
     async def reserve(file_path: str, reservation: dict):
         await upload_reservation_repository.reserve(
             file_path,
-            int(storage_policy()["upload_reservation_ttl_seconds"]),
+            3600,
             reservation,
         )
 
@@ -124,6 +123,6 @@ class UploadPolicyService:
                 "original_filename": filename,
                 "created_at": now,
                 "expires_at": now
-                + timedelta(days=int(storage_policy()["temporary_file_retention_days"])),
+                + timedelta(days=14),
             }
         )

@@ -11,7 +11,6 @@ from src.repositories.test_condition import test_condition_repository
 from src.repositories.test_analysis import test_analysis_repository
 from src.core.ai_assistance import ai_contract_metadata, request_ai_assistance
 from src.modules.design.services.test_analysis_basis import (
-    basis_collections,
     deterministic_testability_findings,
     list_test_basis,
     resolve_basis,
@@ -451,7 +450,7 @@ async def create_analysis_finding(project_id, payload, user):
     
     await get_project(project_id, user, 'testanalysis.finding.create')
     ref_type = payload.artifact_type.upper()
-    collection_name = basis_collections().get(ref_type)
+    collection_name = "requirement_versions" if ref_type == "REQUIREMENT_VERSION" else "acceptance_criteria" if ref_type == "ACCEPTANCE_CRITERION" else "api_operations" if ref_type == "API_OPERATION" else "requirement_documents" if ref_type in {"KNOWLEDGE_SOURCE", "REGULATION"} else "business_rules" if ref_type == "BUSINESS_RULE" else "risk_rankings" if ref_type == "RISK_RANKING" else "defects" if ref_type == "DEFECT" else None
     if not collection_name:
         raise HTTPException(
             status_code=422, detail={"code": 'TEST_BASIS_TYPE_INVALID'}

@@ -150,14 +150,6 @@ async def ready():
         if database.client is None:
             raise RuntimeError
         await database.client.admin.command("ping")
-        policies = await database.value.runtime_policies.find(
-            {}, {"_id": 1, "values": 1}
-        ).to_list(length=1000)
-        if not policies or any(
-            not isinstance(policy.get("values"), dict) or not policy["values"]
-            for policy in policies
-        ):
-            raise RuntimeError
         return {"status": "ready", "service": "testing"}
     except Exception:
         return JSONResponse(status_code=503, content={"status": "not_ready", "service": "testing"})

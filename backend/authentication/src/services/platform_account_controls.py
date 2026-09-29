@@ -5,7 +5,6 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from src.core.dependency import CurrentUser
-from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import (
@@ -16,9 +15,6 @@ from src.schemas.platform import (
 from src.services.platform import account_or_404, protect_last_admin, record_audit
 from src.services.session import SessionService
 
-ACCOUNT_CONTROL_POLICY = policy_section("account_controls")
-
-
 class PlatformAccountControlService:
     @staticmethod
     async def resend_activation(
@@ -27,9 +23,9 @@ class PlatformAccountControlService:
         account = await account_or_404(user_id)
         await SessionService.forgot_password(account["email"], client_ip)
         await record_audit(
-            current_user, ACCOUNT_CONTROL_POLICY["activation_resent_audit_action"], user_id, payload.reason
+            current_user, "ADMIN_USER_ACTIVATION_RESENT", user_id, payload.reason
         )
-        return {"user_id": user_id, "delivery_status": ACCOUNT_CONTROL_POLICY["activation_delivery_status"]}
+        return {"user_id": user_id, "delivery_status": "ACCEPTED"}
 
     @staticmethod
     async def anonymize(
@@ -49,26 +45,26 @@ class PlatformAccountControlService:
             {"_id": user_id},
             {
                 "$set": {
-                    "email": f"{ACCOUNT_CONTROL_POLICY['deleted_email_prefix']}{digest}{ACCOUNT_CONTROL_POLICY['deleted_email_suffix']}",
-                    "slug": f"{ACCOUNT_CONTROL_POLICY['deleted_email_prefix']}{digest}",
-                    "full_name": ACCOUNT_CONTROL_POLICY["deleted_full_name"],
+                    "email": f"deleted-{digest}@invalid.local",
+                    "slug": f"deleted-{digest}",
+                    "full_name": "Tài khoản đã xóa",
                     "is_active": False,
-                    "account_status": ACCOUNT_CONTROL_POLICY["deleted_status"],
-                    "system_role": ACCOUNT_CONTROL_POLICY["default_system_role"],
+                    "account_status": "DELETED",
+                    "system_role": "USER",
                     "permissions": [],
                     "passkeys": [],
                     "deleted_at": timestamp,
                     "deleted_by": current_user.id,
                     "updated_at": timestamp,
                 },
-                "$unset": {field: "" for field in ACCOUNT_CONTROL_POLICY["sensitive_account_fields"]},
+                "$unset": {field: "" for field in ("password_hash", "bio", "avatar_url", "social_links", "donation_link")},
             },
         )
         await IdentityRepository.revoke_all_sessions(user_id)
         await record_audit(
-            current_user, ACCOUNT_CONTROL_POLICY["anonymized_audit_action"], user_id, payload.reason
+            current_user, "ADMIN_USER_ANONYMIZED", user_id, payload.reason
         )
-        return {"user_id": user_id, "status": ACCOUNT_CONTROL_POLICY["deleted_status"], "anonymized": True}
+        return {"user_id": user_id, "status": "DELETED", "anonymized": True}
 
     @staticmethod
     async def preview_bulk(payload: BulkUserPreviewRequest, current_user: CurrentUser):
@@ -80,14 +76,14 @@ class PlatformAccountControlService:
         )
         now = datetime.now(timezone.utc)
         operation = {
-            "_id": f"{ACCOUNT_CONTROL_POLICY['bulk_operation_identifier_prefix']}{uuid4().hex}",
-            "kind": ACCOUNT_CONTROL_POLICY["bulk_operation_kind"],
+            "_id": f"bulk-user-{uuid4().hex}",
+            "kind": "USER_BULK_ACTION",
             "action": payload.action,
             "user_ids": [item["_id"] for item in accounts],
             "requested_user_ids": user_ids,
             "missing_user_ids": sorted(set(user_ids) - {item["_id"] for item in accounts}),
             "reason": payload.reason,
-            "status": ACCOUNT_CONTROL_POLICY["bulk_preview_status"],
+            "status": "PREVIEW_READY",
             "created_by": current_user.id,
             "created_at": now,
             "expires_at": now + timedelta(minutes=15),
@@ -101,13 +97,13 @@ class PlatformAccountControlService:
         operation = await PlatformRepository.claim_admin_operation(
             {
                 "_id": operation_id,
-                "kind": ACCOUNT_CONTROL_POLICY["bulk_operation_kind"],
-                "status": ACCOUNT_CONTROL_POLICY["bulk_preview_status"],
+                "kind": "USER_BULK_ACTION",
+                "status": "PREVIEW_READY",
                 "created_by": current_user.id,
                 "expires_at": {"$gt": now},
             },
             now,
-            ACCOUNT_CONTROL_POLICY["applying_status"],
+            "APPLYING",
         )
         if not operation:
             raise HTTPException(
@@ -115,7 +111,7 @@ class PlatformAccountControlService:
             )
         user_ids = [item for item in operation["user_ids"] if item != current_user.id]
         affected = 0
-        if operation["action"] == ACCOUNT_CONTROL_POLICY["disable_action"]:
+        if operation["action"] == "DISABLE":
             accounts = await IdentityRepository.find_auth_credentials(
                 {"_id": {"$in": user_ids}}, limit=len(user_ids)
             )
@@ -126,7 +122,7 @@ class PlatformAccountControlService:
                 {
                     "$set": {
                         "is_active": False,
-                        "account_status": ACCOUNT_CONTROL_POLICY["disabled_status"],
+                        "account_status": "DISABLED",
                         "updated_at": datetime.now(timezone.utc),
                     }
                 },
@@ -134,7 +130,7 @@ class PlatformAccountControlService:
             affected = result.modified_count
             for user_id in user_ids:
                 await IdentityRepository.revoke_all_sessions(user_id)
-        elif operation["action"] == ACCOUNT_CONTROL_POLICY["revoke_sessions_action"]:
+        elif operation["action"] == "REVOKE_SESSIONS":
             for user_id in user_ids:
                 await IdentityRepository.revoke_all_sessions(user_id)
                 affected += 1
@@ -144,24 +140,24 @@ class PlatformAccountControlService:
             )
             for account in accounts:
                 await SessionService.forgot_password(
-                    account["email"], ACCOUNT_CONTROL_POLICY["bulk_password_reset_client_ip"]
+                    account["email"], "admin-bulk"
                 )
                 affected += 1
         await PlatformRepository.complete_admin_operation(
             operation_id,
             affected,
             datetime.now(timezone.utc),
-            ACCOUNT_CONTROL_POLICY["completed_status"],
+            "COMPLETED",
         )
         await record_audit(
             current_user,
-            ACCOUNT_CONTROL_POLICY["bulk_completed_audit_action"],
+            "ADMIN_USER_BULK_COMPLETED",
             operation_id,
             operation["reason"],
             {"action": operation["action"], "affected": affected},
         )
         return {
             "operation_id": operation_id,
-            "status": ACCOUNT_CONTROL_POLICY["completed_status"],
+            "status": "COMPLETED",
             "affected": affected,
         }

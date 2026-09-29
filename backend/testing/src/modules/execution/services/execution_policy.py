@@ -1,11 +1,6 @@
 import hashlib
-from functools import lru_cache
-
 from bson.json_util import dumps as bson_dumps
 from fastapi import HTTPException
-from pymongo import MongoClient
-
-from src.core.configuration import settings
 from src.repositories.execution_policy import execution_policy_repository
 
 
@@ -22,34 +17,12 @@ FROZEN_RUN_SCOPE_FIELDS = tuple(['test_plan_id',
  'device_matrix_id',
  'device_profile_keys',
  'device_matrix_snapshot'])
-@lru_cache(maxsize=1)
-def execution_lifecycle_policy():
-    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
-    try:
-        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
-            {"_id": "execution_lifecycle"}, {"_id": 0, "values": 1}
-        )
-    finally:
-        client.close()
-    if not isinstance(document, dict) or not isinstance(document.get("values"), dict):
-        raise RuntimeError("Thiếu chính sách vòng đời thực thi")
-    return document["values"]
-
-
-def lifecycle_transitions(name):
-    return {
-        status: set(targets)
-        for status, targets in execution_lifecycle_policy().get(name, {}).items()
-        if isinstance(status, str) and isinstance(targets, list)
-    }
-
-
 def defect_transitions():
-    return lifecycle_transitions("defect_transitions")
+    return {"NEW": {"CONFIRMED", "DUPLICATE", "REJECTED"}, "CONFIRMED": {"DUPLICATE", "IN_PROGRESS", "REJECTED"}, "IN_PROGRESS": {"RESOLVED"}, "RESOLVED": {"READY_FOR_RETEST", "REOPENED"}, "READY_FOR_RETEST": set(), "REOPENED": {"IN_PROGRESS", "RESOLVED"}, "CLOSED": {"REOPENED"}, "REJECTED": {"REOPENED"}, "DUPLICATE": {"REOPENED"}}
 
 
 def execution_transitions():
-    return lifecycle_transitions("execution_transitions")
+    return {"NOT_RUN": {"IN_PROGRESS", "SKIPPED"}, "IN_PROGRESS": {"BLOCKED", "FAIL", "NOT_APPLICABLE", "PASS", "SKIPPED"}, "PASS": set(), "FAIL": set(), "BLOCKED": set(), "SKIPPED": set(), "NOT_APPLICABLE": set()}
 
 
 def frozen_run_scope(run):

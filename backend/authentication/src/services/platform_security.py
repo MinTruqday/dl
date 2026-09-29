@@ -5,7 +5,6 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from src.core.dependency import CurrentUser
-from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import (
@@ -17,9 +16,6 @@ from src.schemas.platform import (
     ServiceIdentityRotateRequest,
 )
 from src.services.platform import account_or_404, record_audit
-
-
-SECURITY_POLICY = policy_section("platform_security")
 
 
 def masked_reference(value: dict):
@@ -46,7 +42,7 @@ class PlatformSecurityService:
             "name": payload.name,
             "secret_reference": payload.secret_reference,
             "scopes": sorted(set(payload.scopes)),
-            "status": SECURITY_POLICY["active_status"],
+            "status": "ACTIVE",
             "revision": 1,
             "created_by": current_user.id,
             "created_at": timestamp,
@@ -73,7 +69,7 @@ class PlatformSecurityService:
                 "rotated_at": datetime.now(timezone.utc),
                 "updated_by": current_user.id,
             },
-            SECURITY_POLICY["revoked_status"],
+            "REVOKED",
         )
         if not value:
             raise HTTPException(status_code=404, detail="Không tìm thấy danh tính dịch vụ")
@@ -98,7 +94,7 @@ class PlatformSecurityService:
             result = await PlatformRepository.update_service_identities(
                 {"_id": payload.target_id},
                 {
-                    "status": SECURITY_POLICY["revoked_status"],
+                    "status": "REVOKED",
                     "revoked_at": timestamp,
                     "revoked_by": current_user.id,
                 },
@@ -106,9 +102,9 @@ class PlatformSecurityService:
             affected = result.modified_count
         else:
             result = await PlatformRepository.update_service_identities(
-                {"status": {"$ne": SECURITY_POLICY["revoked_status"]}},
+                {"status": {"$ne": "REVOKED"}},
                 {
-                    "status": SECURITY_POLICY["revoked_status"],
+                    "status": "REVOKED",
                     "revoked_at": timestamp,
                     "revoked_by": current_user.id,
                 },
@@ -186,7 +182,7 @@ class PlatformSecurityService:
         reference_id: str, payload: ActionReason, current_user: CurrentUser
     ):
         if await PlatformRepository.count_service_identities(
-            {"secret_reference": reference_id, "status": SECURITY_POLICY["active_status"]}
+            {"secret_reference": reference_id, "status": "ACTIVE"}
         ):
             raise HTTPException(status_code=409, detail="Tham chiếu bí mật đang được sử dụng")
         result = await PlatformRepository.delete_secret_reference(reference_id)

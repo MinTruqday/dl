@@ -1,32 +1,10 @@
 import re
-from functools import lru_cache
 
 from fastapi import HTTPException
-from pymongo import MongoClient
 
 from src.core.common import get_project
-from src.core.configuration import settings
 from src.repositories.requirement_analysis import requirement_analysis_repository
 from src.modules.quality.services.quality_policy import evaluate_rules
-
-@lru_cache(maxsize=1)
-def basis_collections():
-    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
-    try:
-        document = client[settings.TESTING_DB_NAME].runtime_policies.find_one(
-            {"_id": "test_analysis_basis"}, {"_id": 0, "values": 1}
-        )
-    finally:
-        client.close()
-    values = document.get("values") if isinstance(document, dict) else None
-    collections = values.get("collections") if isinstance(values, dict) else None
-    if not isinstance(collections, dict):
-        raise RuntimeError("Thiếu chính sách cơ sở phân tích kiểm thử")
-    return collections
-
-
-
-
 
 def basis_text(value):
     for field in ['plain_text_projection', 'plain_text', 'normalized_content', 'description', 'title', 'name']:
@@ -43,7 +21,9 @@ async def resolve_basis(project_id, refs):
         if key in seen:
             raise HTTPException(status_code=422, detail={"code": 'DUPLICATE_TEST_BASIS_REF'})
         seen.add(key)
-        collection = basis_collections()[ref.artifact_type]
+        collection = "requirement_versions" if ref.artifact_type == "REQUIREMENT_VERSION" else "acceptance_criteria" if ref.artifact_type == "ACCEPTANCE_CRITERION" else "api_operations" if ref.artifact_type == "API_OPERATION" else "requirement_documents" if ref.artifact_type in {"KNOWLEDGE_SOURCE", "REGULATION"} else "business_rules" if ref.artifact_type == "BUSINESS_RULE" else "risk_rankings" if ref.artifact_type == "RISK_RANKING" else "defects" if ref.artifact_type == "DEFECT" else None
+        if collection is None:
+            raise HTTPException(status_code=422, detail={"code": "TEST_BASIS_TYPE_INVALID"})
         identifier = ref.artifact_version_id or ref.artifact_id
         query = {"_id": identifier, "project_id": project_id}
         if ref.artifact_type == 'REGULATION':
@@ -103,11 +83,10 @@ async def resolve_basis(project_id, refs):
 
 async def list_test_basis(project_id, user, artifact_type="", query_text="", limit=200):
     await get_project(project_id, user, "testanalysis.read")
-    collections = basis_collections()
-    types = [artifact_type] if artifact_type else list(collections)
+    types = [artifact_type] if artifact_type else ["REQUIREMENT_VERSION", "ACCEPTANCE_CRITERION", "API_OPERATION", "KNOWLEDGE_SOURCE", "BUSINESS_RULE", "RISK_RANKING", "DEFECT", "REGULATION"]
     items = []
     for kind in types:
-        collection_name = collections.get(kind)
+        collection_name = "requirement_versions" if kind == "REQUIREMENT_VERSION" else "acceptance_criteria" if kind == "ACCEPTANCE_CRITERION" else "api_operations" if kind == "API_OPERATION" else "requirement_documents" if kind in {"KNOWLEDGE_SOURCE", "REGULATION"} else "business_rules" if kind == "BUSINESS_RULE" else "risk_rankings" if kind == "RISK_RANKING" else "defects" if kind == "DEFECT" else None
         if not collection_name:
             raise HTTPException(status_code=422, detail={"code": 'TEST_BASIS_TYPE_INVALID'})
         query = {"project_id": project_id}

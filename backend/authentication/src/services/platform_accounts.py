@@ -7,7 +7,6 @@ from fastapi import HTTPException
 
 from src.clients.service_gateway import internal_request
 from src.core.dependency import CurrentUser
-from src.core.policies import policy_section
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.identity import SystemRole, UserCreate
@@ -20,9 +19,6 @@ from src.schemas.platform import (
 )
 from src.services.platform import account_or_404, account_view, protect_last_admin, record_audit
 from src.services.session import SessionService
-
-
-ACCOUNT_CONTROL_POLICY = policy_section("account_controls")
 
 
 class PlatformAccountService:
@@ -120,9 +116,9 @@ class PlatformAccountService:
             **account_view(account),
             "account_status": account.get(
                 "account_status",
-                ACCOUNT_CONTROL_POLICY["active_status"]
+                "ACTIVE"
                 if account.get("is_active", True)
-                else ACCOUNT_CONTROL_POLICY["disabled_status"],
+                else "DISABLED",
             ),
             "active_session_count": session_count,
             "passkey_count": len(account.get("passkeys", [])),
@@ -159,7 +155,7 @@ class PlatformAccountService:
         current_user: CurrentUser,
     ):
         account = await account_or_404(user_id)
-        active = desired_status == ACCOUNT_CONTROL_POLICY["active_status"]
+        active = desired_status == "ACTIVE"
         await protect_last_admin(account, desired_active=active)
         if user_id == current_user.id and not active:
             raise HTTPException(status_code=422, detail="Không thể tự vô hiệu hóa tài khoản hiện tại")
@@ -183,25 +179,25 @@ class PlatformAccountService:
     @staticmethod
     async def activate(user_id: str, payload: ActionReason, current_user: CurrentUser):
         return await PlatformAccountService.change_status(
-            user_id, ACCOUNT_CONTROL_POLICY["active_status"], payload, current_user
+            user_id, "ACTIVE", payload, current_user
         )
 
     @staticmethod
     async def disable(user_id: str, payload: ActionReason, current_user: CurrentUser):
         return await PlatformAccountService.change_status(
-            user_id, ACCOUNT_CONTROL_POLICY["disabled_status"], payload, current_user
+            user_id, "DISABLED", payload, current_user
         )
 
     @staticmethod
     async def lock(user_id: str, payload: ActionReason, current_user: CurrentUser):
         return await PlatformAccountService.change_status(
-            user_id, ACCOUNT_CONTROL_POLICY["locked_status"], payload, current_user
+            user_id, "LOCKED", payload, current_user
         )
 
     @staticmethod
     async def unlock(user_id: str, payload: ActionReason, current_user: CurrentUser):
         return await PlatformAccountService.change_status(
-            user_id, ACCOUNT_CONTROL_POLICY["active_status"], payload, current_user
+            user_id, "ACTIVE", payload, current_user
         )
 
     @staticmethod

@@ -7,7 +7,6 @@ from src.schemas.contracts.requirements import RequirementCompareInput
 from src.schemas.contracts.utility import GenerateInput
 from src.modules.quality.services.change_set import create_change_set_record
 from src.modules.quality.services.impact_analysis import create_impact_analysis_record
-from src.modules.operations.services.job_policy import job_event_permissions
 from src.clients.project_knowledge import index_artifact
 from src.modules.design.services.test_case_assistance import (
     find_duplicate_test_case_records,
@@ -22,8 +21,7 @@ async def process_delegated_job(
     requester_email: str,
 ):
     
-    permissions_by_event = job_event_permissions()
-    if event not in permissions_by_event:
+    if event not in {"impact.analysis.requested", "duplicate.scan.requested", "test.generate.requested", "requirement.semantic_diff.requested", "knowledge.index.requested", "requirement.extract.requested", "document.parse.requested"}:
         raise HTTPException(
             status_code=422, detail={"code": 'UNSUPPORTED_JOB_EVENT'}
         )
@@ -37,8 +35,18 @@ async def process_delegated_job(
         email=requester_email or 'worker@internal',
         system_role='USER',
     )
-    for permission in permissions_by_event[event]:
-        await get_project(project_id, user, permission)
+    if event == "impact.analysis.requested":
+        await get_project(project_id, user, "impact.execute")
+    elif event == "duplicate.scan.requested":
+        await get_project(project_id, user, "ai.run_duplicate_check")
+    elif event == "test.generate.requested":
+        await get_project(project_id, user, "ai.generate_testcase")
+    elif event == "requirement.semantic_diff.requested":
+        await get_project(project_id, user, "changeset.create")
+    elif event == "knowledge.index.requested":
+        await get_project(project_id, user, "knowledge.manage")
+    else:
+        await get_project(project_id, user, "requirement_document.extract")
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute_job(event, body, payload, user)
     completed = not (isinstance(result, dict) and result.get("indexed") is False)

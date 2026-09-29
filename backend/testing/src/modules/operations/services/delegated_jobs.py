@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from src.clients.worker import WorkerClientError, worker_client
 from src.core.auth import CurrentUser
 from src.core.common import get_project
-from src.modules.operations.services.job_policy import job_event_permissions
 
 
 class DelegatedJobService:
@@ -11,11 +10,20 @@ class DelegatedJobService:
     async def enqueue(project_id: str, body: dict, user: CurrentUser):
         
         event = body.get("event")
-        permissions_by_event = job_event_permissions()
-        if event not in permissions_by_event:
+        if event not in {"impact.analysis.requested", "duplicate.scan.requested", "test.generate.requested", "requirement.semantic_diff.requested", "knowledge.index.requested", "requirement.extract.requested", "document.parse.requested"}:
             raise HTTPException(status_code=422, detail={"code": 'UNSUPPORTED_JOB_EVENT'})
-        for permission in permissions_by_event[event]:
-            await get_project(project_id, user, permission)
+        if event == "impact.analysis.requested":
+            await get_project(project_id, user, "impact.execute")
+        elif event == "duplicate.scan.requested":
+            await get_project(project_id, user, "ai.run_duplicate_check")
+        elif event == "test.generate.requested":
+            await get_project(project_id, user, "ai.generate_testcase")
+        elif event == "requirement.semantic_diff.requested":
+            await get_project(project_id, user, "changeset.create")
+        elif event == "knowledge.index.requested":
+            await get_project(project_id, user, "knowledge.manage")
+        else:
+            await get_project(project_id, user, "requirement_document.extract")
         artifact_version_id = str(body.get("artifact_version_id") or "")
         model_version = str(body.get("model_version") or "")
         if not artifact_version_id or not model_version:

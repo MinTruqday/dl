@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from fastapi import Depends, HTTPException
 
 from src.core.dependency import CurrentUser, SystemRole, get_current_user
-from src.core.policies import platform_policy
 from src.core.response import APIResponse
 from src.repositories.identity import IdentityRepository
 
@@ -76,10 +75,9 @@ async def require_system_admin(current_user: CurrentUser = Depends(get_current_u
 
 
 def masked_config(config):
-    policy = platform_policy()["configuration"]
     data = {key: value for key, value in config.items() if key not in {"_id", "type"}}
     for key in list(data):
-        if any(marker in key.lower() for marker in policy["sensitive_key_markers"]):
+        if any(marker in key.lower() for marker in ("secret", "token", "password", "credential")):
             data[key] = "Đã cấu hình" if data[key] else None
     return data
 
@@ -94,11 +92,10 @@ async def get_platform_config(config_type, current_user):
 
 
 async def update_platform_config(config_type, payload, current_user):
-    maximum_key_characters = platform_policy()["configuration"]["maximum_key_characters"]
     allowed = {
         key: value
         for key, value in payload.values.items()
-        if isinstance(key, str) and len(key) <= maximum_key_characters
+        if isinstance(key, str) and len(key) <= 100
     }
     if not allowed:
         raise HTTPException(status_code=422, detail="Không có cấu hình hợp lệ")

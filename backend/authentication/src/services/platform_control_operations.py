@@ -4,7 +4,6 @@ from fastapi import HTTPException
 from src.clients.service_gateway import health_request, internal_request
 from src.core.dependency import CurrentUser
 from src.core.infrastructure.configuration import settings
-from src.core.policies import platform_policy
 from src.repositories.cache import CacheRepository
 from src.schemas.platform import CacheClearRequest, RagReindexRequest
 from src.services.platform import record_audit
@@ -13,7 +12,6 @@ from src.services.platform import record_audit
 class PlatformControlOperationsService:
     @staticmethod
     async def request_rag_reindex(payload: RagReindexRequest, current_user: CurrentUser):
-        policy = platform_policy()["control_operations"]
         candidates_response = await internal_request(
             "POST",
             "testing",
@@ -33,7 +31,7 @@ class PlatformControlOperationsService:
                 "event": "knowledge.index.requested",
                 "project_id": payload.project_id,
                 "artifact_version_id": artifact_id,
-                "model_version": policy["rag_reindex_model_version"],
+                "model_version": "admin_reindex",
                 "requester_id": current_user.id,
                 "requester_email": current_user.email,
                 "payload": {},
@@ -62,18 +60,23 @@ class PlatformControlOperationsService:
 
     @staticmethod
     async def inspect_caches():
-        policy = platform_policy()["control_operations"]
         counts = {}
-        for name in policy["inspect_cache_scopes"]:
-            counts[name] = await CacheRepository.count_patterns(
-                policy["cache_patterns"][name]
-            )
+        for name, patterns in (("RATE_LIMITS", ["rate_limit:*"]), ("PASSKEY_CHALLENGES", ["passkey_challenge:*"]), ("PROJECT_METADATA", ["project_metadata:*"])):
+            counts[name] = await CacheRepository.count_patterns(patterns)
         return counts
 
     @staticmethod
     async def clear_caches(payload: CacheClearRequest, current_user: CurrentUser):
-        patterns = platform_policy()["control_operations"]["cache_patterns"][payload.scope]
-        deleted = await CacheRepository.delete_patterns(patterns)
+        if payload.scope == "RATE_LIMITS":
+            deleted = await CacheRepository.delete_patterns(["rate_limit:*"])
+        elif payload.scope == "PASSKEY_CHALLENGES":
+            deleted = await CacheRepository.delete_patterns(["passkey_challenge:*"])
+        elif payload.scope == "PROJECT_METADATA":
+            deleted = await CacheRepository.delete_patterns(["project_metadata:*"])
+        elif payload.scope == "SAFE_ALL":
+            deleted = await CacheRepository.delete_patterns(["rate_limit:*", "passkey_challenge:*", "project_metadata:*"])
+        else:
+            raise HTTPException(status_code=422, detail="Phạm vi bộ nhớ đệm không hợp lệ")
         await record_audit(
             current_user,
             "ADMIN_SAFE_CACHE_CLEARED",
@@ -85,9 +88,8 @@ class PlatformControlOperationsService:
 
     @staticmethod
     async def runtime_versions():
-        policy = platform_policy()["control_operations"]
         results = []
-        for name in policy["runtime_services"]:
+        for name in ("authentication", "testing", "worker", "ai", "cloud"):
             try:
                 response = await health_request(name)
                 results.append(

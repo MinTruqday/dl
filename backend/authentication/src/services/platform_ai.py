@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from src.clients.service_gateway import health_request
 from src.core.dependency import CurrentUser
 from src.core.infrastructure.configuration import settings
-from src.core.policies import platform_policy
 from src.repositories.identity import IdentityRepository
 from src.repositories.platform import PlatformRepository
 from src.schemas.platform import ConfigUpdate, ModelRegistryEntry, ProviderUpdate
@@ -115,11 +114,10 @@ class PlatformAiService:
 
     @staticmethod
     async def update_model(model_id: str, payload: ConfigUpdate, current_user: CurrentUser):
-        allowed_keys = set(platform_policy()["ai"]["model_update_allowed_keys"])
         changes = {
             key: value
             for key, value in payload.values.items()
-            if key in allowed_keys
+            if key in {"enabled", "version", "capabilities", "model", "provider_id"}
         }
         if not changes:
             raise HTTPException(status_code=422, detail="Không có thay đổi mô hình hợp lệ")
@@ -143,8 +141,7 @@ class PlatformAiService:
 
     @staticmethod
     async def update_defaults(payload: ConfigUpdate, current_user: CurrentUser):
-        policy = platform_policy()["ai"]
-        allowed_keys = set(policy["default_allowed_keys"])
+        allowed_keys = {"chat_model_id", "structured_model_id", "fallback_model_ids", "timeout_seconds", "max_output_tokens", "concurrency"}
         if not set(payload.values) <= allowed_keys:
             raise HTTPException(
                 status_code=422, detail="Cấu hình mặc định AI chứa trường không hợp lệ"
@@ -152,7 +149,7 @@ class PlatformAiService:
         model_ids = [
             value
             for key, value in payload.values.items()
-            if key in policy["primary_model_reference_keys"] and value
+            if key in {"chat_model_id", "structured_model_id"} and value
         ]
         model_ids.extend(payload.values.get("fallback_model_ids") or [])
         if model_ids:
