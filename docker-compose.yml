@@ -527,5 +527,3 @@ volumes:
   prometheus_data: null
   grafana_data: null
   hf_cache:
-    name: ${VERIQ_HF_CACHE_VOLUME:?VERIQ_HF_CACHE_VOLUME is required}
-    external: true
