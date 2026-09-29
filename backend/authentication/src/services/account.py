@@ -3,12 +3,10 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from src.core.policies import policy_section
 from src.core.security.access import get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository
+from src.schemas.identity import SystemRole
 from src.services.session import SessionService
-
-ACCOUNT_POLICY = policy_section("account")
 
 
 class AccountService:
@@ -29,10 +27,10 @@ class AccountService:
                 "email": account.get("email", current_user.email),
                 "full_name": account.get("full_name")
                 or current_user.full_name
-                or ACCOUNT_POLICY["default_full_name"],
+                or current_user.email,
                 "slug": account.get("slug")
                 or str(account.get("email", current_user.email)).split("@", 1)[0],
-                "system_role": account.get("system_role", ACCOUNT_POLICY["default_system_role"]),
+                "system_role": account.get("system_role", SystemRole.USER.value),
                 "permissions": account.get("permissions") or [],
                 "created_at": account.get("created_at") or datetime.now(timezone.utc),
                 "has_passkey": bool(passkeys),
@@ -54,7 +52,7 @@ class AccountService:
         if not account:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["profile_updated"], changes=sorted(changes)
+            current_user, "ACCOUNT_PROFILE_UPDATED", changes=sorted(changes)
         )
         account["_id"] = str(account["_id"])
         account.pop("password_hash", None)
@@ -84,11 +82,11 @@ class AccountService:
             },
         )
         await SessionService.issue_email_verification(
-            current_user.id, new_email, ACCOUNT_POLICY["verified_client_ip"]
+            current_user.id, new_email, "authenticated"
         )
         await IdentityRepository.revoke_all_sessions(current_user.id)
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["email_changed"], new_email=new_email
+            current_user, "ACCOUNT_EMAIL_CHANGED", new_email=new_email
         )
         return {"email": new_email, "reauth_required": True}
 
@@ -116,7 +114,7 @@ class AccountService:
             {"$set": {f"preferences.{key}": value for key, value in changes.items()}},
         )
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["preferences_updated"], changes=sorted(changes)
+            current_user, "ACCOUNT_PREFERENCES_UPDATED", changes=sorted(changes)
         )
         return changes
 
@@ -127,7 +125,7 @@ class AccountService:
             {"$set": {f"notification_settings.{key}": value for key, value in values.items()}},
         )
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["notifications_updated"], changes=sorted(values)
+            current_user, "ACCOUNT_NOTIFICATIONS_UPDATED", changes=sorted(values)
         )
         return values
 
@@ -139,13 +137,12 @@ class AccountService:
             {
                 "$set": {
                     "is_active": False,
-                    "account_status": ACCOUNT_POLICY["disabled_status"],
                     "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
         await IdentityRepository.revoke_all_sessions(current_user.id)
-        await AccountService._audit(current_user, ACCOUNT_POLICY["audit_actions"]["deactivated"])
+        await AccountService._audit(current_user, "ACCOUNT_DEACTIVATED")
         return {"deactivated": True}
 
     @staticmethod
@@ -171,7 +168,7 @@ class AccountService:
         )
         await IdentityRepository.retain_session_cache(current_user.id, current_user.session_id)
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["password_changed"], timestamp=timestamp
+            current_user, "ACCOUNT_PASSWORD_CHANGED", timestamp=timestamp
         )
         return {"other_sessions_revoked": True}
 
@@ -189,7 +186,7 @@ class AccountService:
             raise HTTPException(status_code=404, detail="Không tìm thấy phiên đăng nhập")
         await IdentityRepository.revoke_session(current_user.id, session_id)
         await AccountService._audit(
-            current_user, ACCOUNT_POLICY["audit_actions"]["session_revoked"], session_id=session_id
+            current_user, "ACCOUNT_SESSION_REVOKED", session_id=session_id
         )
         return {"revoked": True, "session_id": session_id}
 

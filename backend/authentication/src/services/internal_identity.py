@@ -1,11 +1,7 @@
 from fastapi import HTTPException
 
 from src.repositories.identity import IdentityRepository
-from src.core.policies import policy_section
 from src.services.platform import account_view
-
-
-ACCOUNT_POLICY = policy_section("account")
 
 
 class InternalIdentityService:
@@ -50,8 +46,6 @@ class InternalIdentityService:
         valid = bool(
             account
             and account.get("is_active", True) is not False
-            and account.get("account_status", ACCOUNT_POLICY["active_status"])
-            == ACCOUNT_POLICY["active_status"]
             and session
             and session.get("revoked_at") is None
             and await IdentityRepository.has_cached_session(user_id, session_id)

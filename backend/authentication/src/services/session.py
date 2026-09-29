@@ -6,15 +6,10 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.policies import policy_section
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 from src.repositories.identity import IdentityRepository as IdentityRepository
 from src.schemas.identity import UserCreate, UserInDB
 from src.services.email import EmailService
-
-
-ACCOUNT_POLICY = policy_section("account")
-SESSION_POLICY = policy_section("session")
 
 
 class SessionService:
@@ -119,21 +114,13 @@ class SessionService:
                 "actor_email": email.lower(),
                 "target_user_id": user_id,
                 "ip": client_ip,
-                "delivery_status": (
-                    SESSION_POLICY["email_delivery_sent_status"]
-                    if delivered
-                    else SESSION_POLICY["email_delivery_failed_status"]
-                ),
+                "delivered": delivered,
                 "timestamp": timestamp,
             }
         )
         return {
             "status": "ok",
-            "delivery_status": (
-                SESSION_POLICY["email_delivery_sent_status"]
-                if delivered
-                else SESSION_POLICY["email_delivery_failed_status"]
-            ),
+            "delivered": delivered,
         }
 
     @staticmethod
@@ -202,13 +189,7 @@ class SessionService:
         user_id_str = str(auth_cred["_id"])
 
         is_active = auth_cred.get("is_active", True)
-        account_status = auth_cred.get(
-            "account_status",
-            ACCOUNT_POLICY["active_status"]
-            if is_active
-            else ACCOUNT_POLICY["disabled_status"],
-        )
-        if not is_active or account_status != ACCOUNT_POLICY["active_status"]:
+        if not is_active:
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",
@@ -326,8 +307,6 @@ class SessionService:
     async def issue_token_for_user(user_doc: dict, client_ip: str):
         if (
             not user_doc.get("is_active", True)
-            or user_doc.get("account_status", ACCOUNT_POLICY["active_status"])
-            != ACCOUNT_POLICY["active_status"]
         ):
             raise HTTPException(
                 status_code=403,
